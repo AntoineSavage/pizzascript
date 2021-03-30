@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 88cf9ff56ecfe9d6a2a7ba2c205f9e9011173567d464eaddfcd8a89195d4f5ec
+-- hash: afd531e7ffc08602c267c5fe1c1c18cf826ce56fb20e5dd60b3bca6ad2607853
 
 name:           pizzascript
 version:        0.1.0.0
@@ -29,6 +29,7 @@ library
   exposed-modules:
       Data.Atom
       Lib
+      Utils
   other-modules:
       Paths_pizzascript
   hs-source-dirs:

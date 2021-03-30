@@ -1,13 +1,45 @@
-module Data.Atom (Atom, parser) where
+module Data.Atom (Atom(..), parser, nameParser, fromName, toName, atomNameFirsts, atomNameNexts) where
 
+import Control.Monad
 import Text.Parsec
 import Text.Parsec.String (Parser)
+
+import Utils
+
+type AtomName = String
 
 data Atom
     = AtomNone
     | AtomFalse
     | AtomTrue
-    | Atom String
+    | Atom AtomName
+    deriving (Eq, Ord, Show, Read)
 
 parser :: Parser Atom
-parser = char ':' >> return AtomNone
+parser = char ':' >> (fromName <$> nameParser)
+
+nameParser :: Parser AtomName
+nameParser = liftM2 (:) (oneOf atomNameFirsts) (many $ oneOf atomNameNexts)
+
+fromName :: String -> Atom
+fromName atomName =
+    case atomName of
+        "none" -> AtomNone
+        "false" -> AtomFalse
+        "true" -> AtomTrue
+        name -> Atom name
+
+toName :: Atom -> String
+toName atom =
+    case atom of
+        AtomNone -> "none"
+        AtomFalse -> "false"
+        AtomTrue -> "true"
+        Atom name -> name
+
+-- Internals, exposed for testing
+atomNameFirsts :: String
+atomNameFirsts = letterUpper ++ letterLower ++ [ underscore] 
+
+atomNameNexts :: String
+atomNameNexts = atomNameFirsts ++ digits
