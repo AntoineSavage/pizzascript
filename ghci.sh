@@ -1,1 +1,0 @@
-stack ghci --package hspec QuickCheck

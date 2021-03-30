@@ -1,17 +1,14 @@
 module Data.AtomSpec where
 
-import Data.Atom
 import Test.Hspec
 import Test.QuickCheck
 
+import Data.Atom (parser)
+import Data.Either
+import Text.Parsec
+
 spec :: Spec
 spec = do
-  describe "Prelude.head" $ do
-    it "returns the first element of a list" $ do
-      head [23 ..] `shouldBe` (23 :: Int)
-
-    it "returns the first element of an *arbitrary* list" $
-      property $ \x xs -> head (x:xs) == (x :: Int)
-
-    it "throws an exception if used with an empty list" $ do
-      evaluate (head []) `shouldThrow` anyException
+  describe "parser" $ do
+    it "fails for empty string" $ do
+      isLeft(parse parser "tests" "") `shouldBe` True
