@@ -1,10 +1,9 @@
 module Data.Atom (Atom(..), parser, nameParser, fromName, toName, atomNameFirsts, atomNameNexts) where
 
-import Control.Monad
-import Text.Parsec
+import Control.Monad ( liftM2 )
+import Text.Parsec ( many, oneOf, char )
 import Text.Parsec.String (Parser)
-
-import Utils
+import Utils ( digits, underscore, letterLower, letterUpper )
 
 type AtomName = String
 
