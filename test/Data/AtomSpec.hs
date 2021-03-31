@@ -11,10 +11,43 @@ import Utils
 
 spec :: Spec
 spec = do
+  parseVsUnparseSpec
+  unparseSpec
   parserSpec
   nameParserSpec
   fromNameSpec
   toNameSpec
+
+parseVsUnparseSpec :: Spec
+parseVsUnparseSpec = do
+  describe "unparse vs parse" $ do
+    it "unparse then parse returns same atom" $ do
+      property $ \(AtomNameArb first nexts) -> do
+        forM_ [AtomNone, AtomFalse, AtomTrue, Atom $ first : nexts] $ \atom -> do
+          parse parser "tests" (unparse atom) `shouldBe` Right atom
+
+    it "parse then unparse returns same str" $ do
+      property $ \(AtomNameArb first nexts) -> do
+        forM_ [AtomNone, AtomFalse, AtomTrue, Atom $ first : nexts] $ \atom -> do
+          let str = ':' : first : nexts
+          unparse <$> parse parser "tests" str `shouldBe` Right str
+
+
+unparseSpec :: Spec
+unparseSpec = do
+  describe "unparse" $ do
+    it "returns expected name" $ do
+      unparse AtomNone `shouldBe` ":none"
+      unparse AtomFalse `shouldBe` ":false"
+      unparse AtomTrue `shouldBe` ":true"
+      unparse (Atom "err") `shouldBe` ":err"
+      unparse (Atom "ok") `shouldBe` ":ok"
+
+    it "returns expected name (prop)" $ do
+      property $ \(AtomNameArb first nexts) -> do
+        let name = first:nexts
+        unparse (Atom name) `shouldBe` ':':name
+
 
 parserSpec :: Spec
 parserSpec = do

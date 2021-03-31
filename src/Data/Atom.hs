@@ -1,4 +1,4 @@
-module Data.Atom (Atom(..), parser, nameParser, fromName, toName, atomNameFirsts, atomNameNexts) where
+module Data.Atom (Atom(..), unparse, parser, nameParser, fromName, toName, atomNameFirsts, atomNameNexts) where
 
 import Control.Monad ( liftM2 )
 import Text.Parsec ( many, oneOf, char )
@@ -13,6 +13,9 @@ data Atom
     | AtomTrue
     | Atom AtomName
     deriving (Eq, Ord, Show, Read)
+
+unparse :: Atom -> String
+unparse atom = ':' : toName atom
 
 parser :: Parser Atom
 parser = char ':' >> (fromName <$> nameParser)
