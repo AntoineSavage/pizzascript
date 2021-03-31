@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4bc6e832ff01fe0d88de93320e97406e4b36c91fb9348899e842e2e7c91fb514
+-- hash: 631292a10084ec01bf13168139847d4b436f5be66b0c4c549e8bfd46f98f1cbe
 
 name:           pizzascript
 version:        0.1.0.0
@@ -58,7 +58,7 @@ test-suite pizzascript-test
   main-is: Spec.hs
   other-modules:
       Data.AtomSpec
-      Data.Num
+      Data.NumberSpec
       Paths_pizzascript
   hs-source-dirs:
       test
