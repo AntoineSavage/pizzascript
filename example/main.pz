@@ -1,0 +1,135 @@
+# main.pz
+
+# seven types:
+#   atoms
+#   ints
+#   strings
+#   lists
+#   identifiers
+#   functions
+#   macros
+
+# atoms
+:void
+:false
+:true
+:err # custom atoms are cached
+:ok # custom also
+
+# ints
+0 1 2 3 10 123
+-1 -2 -3
+
+# strings
+""
+"abc"
+
+# lists
+'()
+'(1 2 3 '("abc" :true))
+
+# identifiers
+'fac
+'foo.bar.baz
+
+# functions
+(func () (print "Hello World!"))
+(func (n) (add n 1))
+(func (n m) (add n m))
+
+# macros
+# functions that receive the call-site environment and args (as unevaluated code)
+(macro env args
+    # each macro can choose to return code or an evaluated value
+)
+
+# applications
+
+# list is a macro
+(list 1 2 3 (list "abc" :true))
+
+# defining new macros (only usable at module top-level)
+(def my_list (macro env args
+    # return a list containing args evaluated left-to-right
+))
+
+# def is a macro, adds to public environment
+# only module top-level distinguishes between public and private environments
+# i.e. in function scopes, def and let do the same thing
+# func is a macro that creates a function
+(def fac (func (n)                  # fac n =
+    (if (lte n 1)                   #   if n <= 1
+        1                           #   then 1
+        (mult n (fac (sub n 1)))    #   else n * fac (n-1)
+    )
+))
+
+# let is a macro, adds to private environment
+# case is a macro to choose between alternatives
+(let fib (func (n)          # fib n =
+    (case
+        ((lte n 0) 0)       #   if n <= 0 then 0
+        ((eq n 1) 1)        #   else if n == 1 then 1
+        (:true (add         #   else fib (n-1) + fib (n-2)
+            (fib (sub n 1)) 
+            (fib (sub n 2)))
+        ))
+    )
+))
+
+# the following are equivalent 
+(fac 5)
+((func (n) (fac n)) 5)
+(apply fac 5)       # apply applies the function to the args
+(flip apply 5 fac)  # flip inverts the functio's first and second args
+
+# code and eval are macros to convert between code and lists
+(code (fac 5))         # '(env '('fac 5))
+(eval env '('fac 5))   # (fac 5)
+
+# atom synonyms
+(def void :void)
+(def false :false)
+(def true :true)
+
+# private alias in current scope (module, function, etc)
+(let other other_parent.other_module)
+
+# unqualified use function
+(let func other.func)
+
+# public alias, re-exports function of other module under different name                 
+(def other_func other.func)
+
+# type checks
+(is_atom :void)
+(is_int 0)
+(is_str "")
+(is_list '())
+(is_ident 'is_ident)
+(is_func is_func)
+(is_macro is_macro)
+
+# parse X (use same functions as interpreter, inverse of unparse)
+(parse_atom ":foo")        # -> :foo, watch out, they are cached!
+(parse_int "123")          # -> 123
+(parse_str "\"abc\"")      # -> "abc"
+(parse_list "'(:void)")    # -> '(:void)
+(parse_ident "'fac")       # -> 'fac
+(parse_func "(func () (print \"Hello World!\"))")  # -> (func () (print "Hello World!"))
+(parse_macro "(macro env args '(env args))")       # -> (macro env args '(env args))
+
+# unparse X (use same functions as interprter, inverse of parse)
+(unparse_atom :foo)      # -> ":foo"
+(unparse_int 123)        # -> "123"
+(unparse_str "abc")      # -> "\"abc\""
+(unparse_list [:void])   # -> "[:void]"
+(unparse_ident 'fac)     # -> "'fac"
+(unparse_func (func () (print "Hello World!")))  # -> "(func () (print \"Hello World!\"))"
+(unparse_func (macro env args '(env args)))      # -> "(macro env args '(env args))"
+
+# functions 'parse' and 'unparse' that do type checks
+
+# identifier <-> atoms
+(ident_to_atoms 'foo.bar.baz)       # -> '(:foo :bar :baz)
+(atoms_to_ident '(:foo :bar :baz))  # -> 'foo.bar.baz
