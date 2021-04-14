@@ -1,11 +1,12 @@
 # main.pz
 
-# seven types:
+# eight types:
 #   atoms
 #   ints
 #   strings
-#   lists
 #   identifiers
+#   lists
+#   dicts
 #   functions
 #   macros
 
@@ -24,39 +25,42 @@
 ""
 "abc"
 
-# lists
-'()
-'(1 2 3 '("abc" :true))
-
 # identifiers
 'fac
 'foo.bar.baz
 
+# lists
+'()                     # also: (list)
+'(1 2 3 '("abc" :true)) # also: (list 1 2 3 (list "abc" :true))
+
+# dicts (all types can be keys)
+(dict)
+(dict
+    (:void 0)
+    (0 "")
+    ("" 'dict)
+    ('dict '())
+    ('() (dict))
+    ((dict) (func () '()))
+    ((func () '()), (macro ctx args '()))
+    ((macro ctx args '()), :void)
+)
+
 # functions
-(func () (print "Hello World!"))
+(func () :void)
 (func (n) (add n 1))
 (func (n m) (add n m))
 
 # macros
-# functions that receive the call-site environment and args (as unevaluated code)
-(macro env args
+# functions that receive the call-site context and args (as unevaluated code)
+(a context
     # each macro can choose to return code or an evaluated value
 )
 
 # applications
 
-# list is a macro
-(list 1 2 3 (list "abc" :true))
-
-# defining new macros (only usable at module top-level)
-(def my_list (macro env args
-    # return a list containing args evaluated left-to-right
-))
-
-# def is a macro, adds to public environment
-# only module top-level distinguishes between public and private environments
-# i.e. in function scopes, def and let do the same thing
-# func is a macro that creates a function
+# defining new functions
+# 'if is a macro to choose between alternatives
 (def fac (func (n)                  # fac n =
     (if (lte n 1)                   #   if n <= 1
         1                           #   then 1
@@ -64,9 +68,8 @@
     )
 ))
 
-# let is a macro, adds to private environment
-# case is a macro to choose between alternatives
-(let fib (func (n)          # fib n =
+# 'case is a macro to choose between alternatives
+(def fib (func (n)          # fib n =
     (case
         ((lte n 0) 0)       #   if n <= 0 then 0
         ((eq n 1) 1)        #   else if n == 1 then 1
@@ -77,29 +80,50 @@
     )
 ))
 
+# defining new macros
+(def my_list (a context
+    # return a list containing args evaluated left-to-right
+))
+
 # the following are equivalent 
 (fac 5)
 ((func (n) (fac n)) 5)
 (apply fac 5)       # apply applies the function to the args
 (flip apply 5 fac)  # flip inverts the functio's first and second args
+(cmp id fac)        # compose: (id (fac n))
+(cmp fac id)        # compose: (fac (id n))
 
 # code and eval are macros to convert between code and lists
-(code (fac 5))         # '(env '('fac 5))
-(eval env '('fac 5))   # (fac 5)
+(code (fac 5))          # '(env '('fac 5))
+(eval env '('fac 5))    # (fac 5) -> 120
 
 # atom synonyms
 (def void :void)
 (def false :false)
 (def true :true)
 
-# private alias in current scope (module, function, etc)
-(let other other_parent.other_module)
+# alias in current ctx (module, function, etc)
+(def other other_parent.other_module)
 
-# unqualified use function
-(let func other.func)
+# unqualified use of function
+(def func other.func)
 
-# public alias, re-exports function of other module under different name                 
+# re-exports function of other module under different name                 
 (def other_func other.func)
+
+# circular dependencies are allowed but imported symbols may not be defined yet
+# i.e. circular dependencies are okay if only used within functions/macros
+
+# get current context
+(get_curr_ctx)
+
+# set current context
+(set_curr_ctx ctx)
+
+# contexts support all dict operations:
+# get, put, delete, update, etc
+
+# each child ctx is an immutable fork of the parent ctx
 
 # type checks
 (is_atom :void)
@@ -117,7 +141,7 @@
 (parse_list "'(:void)")    # -> '(:void)
 (parse_ident "'fac")       # -> 'fac
 (parse_func "(func () (print \"Hello World!\"))")  # -> (func () (print "Hello World!"))
-(parse_macro "(macro env args '(env args))")       # -> (macro env args '(env args))
+(parse_macro "(macro ctx args '(ctx args))")       # -> (macro ctx args '(ctx args))
 
 # unparse X (use same functions as interprter, inverse of parse)
 (unparse_atom :foo)      # -> ":foo"
@@ -126,7 +150,7 @@
 (unparse_list [:void])   # -> "[:void]"
 (unparse_ident 'fac)     # -> "'fac"
 (unparse_func (func () (print "Hello World!")))  # -> "(func () (print \"Hello World!\"))"
-(unparse_func (macro env args '(env args)))      # -> "(macro env args '(env args))"
+(unparse_func (macro ctx args '(ctx args)))      # -> "(macro ctx args '(ctx args))"
 
 # functions 'parse' and 'unparse' that do type checks
 
