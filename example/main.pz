@@ -148,7 +148,34 @@
 #     ii) moving dependant code to a new module
 #     iii) only using other module symbols in functions/macros
 
-# error handling
+# errors
+(def stack_frame (struct (sym line col)
+    (symbol sym)
+    (line line)
+    (col col)
+))
+
+# most stack frames are known at compile-time
+(stack_frame 'main 101 22)
+
+(struct error ()
+    (kind 'none)    # ex: 'ParseError, 'InputError, 'NetworkError
+    (msg 'none)     # ex: "Expected num or str, got: " (typeof input)
+    (data 'none)    # ex: (dict (my_key 123))
+    (cause 'none)
+    (stack_trace 'none) # list of stack_frame
+)
+
+(error)
+(error (kind 'InputError))
+(error (msg "Invalid input: " 123))
+(error (data (dict (n 0)  (s "") (i 'a))))
+(error
+    (kind 'InputError)
+    (msg "Invalid input: " 123))
+    (data (dict (n 0) (s "") (i 'a))
+)
+
 (try
     # result value is returned if no error
     (raise (error))
@@ -168,9 +195,8 @@
 #
 # it will, in the raised error:
 #   - set the cause
-#   - set the stack trace:
-#       - list of ident/int/int triplets (symbol, line, column), known at compile time
-
+#   - set the stack trace
+#
 # calling 'raise' will interrupt the evaluation and raise the error
 # if not in a 'try', error will percolate up the call stack until a 'try' is reached
 # if a 'try' is reached:

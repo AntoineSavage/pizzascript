@@ -1,6 +1,6 @@
 # types.pz
 
-# eight built-in types:
+# sevent built-in types:
 #   nums
 #   strings
 #   identifiers
@@ -8,7 +8,8 @@
 #   dicts
 #   functions
 #   macros
-#   errors
+
+# custom structs can be defined
 
 # nums
 0 1 2 3 10 123
@@ -62,7 +63,7 @@
 (list 0 "" 'a (list 0 "" 'a) (dict))
 
 # dicts (all types can be keys)
-# int < string < ident < list < dict < func < macro < error
+# num < string < ident < list < dict < func < macro < custom structs
 (dict)
 (dict
     (0 "")
@@ -71,18 +72,26 @@
     ('() (dict))
     ((dict) (func () '()))
     ((func () '()), (macro ctx args '(ctx args)))
-    ((macro ctx args '(ctx args)), 0)
+    ((macro ctx args '(ctx args)), (error))
+    ((error) 0)
 )
 
-# dict syntax when a key is an ident
+# dict syntax to get/set an ident key
 (def my_dict (dict ('my_field "my_value")))
-(my_dict.my_field)
+
+# get value for ident key
+# here, get == id
+(get my_dict.my_field) # -> "my_value"
+
+# set value for ident key
+# macro that resolvs the dict 'my_dict and its field 'my_field
+# returns a new dict with updated fields
+(set my_dict.my_field "new_value")  # -> (dict ('my_field "new_value))
 
 # functions
 (func () '())
 (func (n) (add n 1))
 (func (n m) (add n m))
-
 (func args args) # varargs function, this is how 'list is implemented
 
 # macros
@@ -95,49 +104,71 @@
 (macro ctx () '(ctx '()))
 (macro ctx (x) '(ctx x))
 (macro ctx (x y) '(ctx x y))
-(macro ctx args '((dict) args))
+(macro ctx args '((dict) args)) # varargs macro
 
-# errors
-# fields (all optional)
-#    - kind: ident, ex: 'ParseError, 'InputError, 'NetworkError
-#    - msg: varargs, ex: "Expected num or str, got: " (typeof input)
-#    - data: dict, ex: (dict (my_key 123))
+# custom structs
+# all fields are public
+# mandatory fields are passed at creation
+# optional fields must have default values
+# uses same operations as dict to get/set fields (all keys are idents)
+# error if add/remove fields
 
-(error)
-(error (kind 'InputError))
-(error (msg "Invalid input: " 123))
-(error (data (dict (n 0)  (s "") (i 'a))))
-(error
-    (kind 'InputError)
-    (msg "Invalid input: " 123))
-    (data (dict (n 0) (s "") (i 'a))
+(struct struct0 () # no mandatory fields
+    (field_num 0)
+    (field_str "")
+    (field_ident 'a)
+    (field_list '())
+    (field_dict (dict))
+    (field_func (func () '()))
+    (field_macro (macro ctx () '(ctx '())))
+    (field_struct 'none)
 )
+(struct struct1 (arg) # one mandatory fields
+    (field_mandatory arg)
+    (field_opt 'none)
+)
+(struct struct2 (arg1 arg2) # two mandatory fields
+    (field_mandatory1 arg1)
+    (field_mandatory2 arg2)
+    (field_opt 'none)
+)
+(struct struct_args args # varargs struct
+    (field args)
+    (field_opt 'none)
+)
+(struct0)
+(struct1 0)
+(struct2 "abc" 'a)
+(struct_args 0 "" 'a '() (dict))
 
 # type identifiers
-(typeof 0)         # -> 'int
-(typeof "")        # -> 'str
-(typeof 'fac)      # -> 'ident
-(typeof '())       # -> 'list
-(typeof (dict))    # -> 'dict
-(typeof fac)       # -> 'func
-(typeof func)      # -> 'macro
-(typeof (error))   # -> 'error
+(typeof 0)          # -> 'num
+(typeof "")         # -> 'str
+(typeof 'fac)       # -> 'ident
+(typeof '())        # -> 'list
+(typeof (dict))     # -> 'dict
+(typeof fac)        # -> 'func
+(typeof func)       # -> 'macro
+(typeof (struct0))  # -> 'struct0
 
 # type funcs
 (num a_num)     # -> a_num
 (num a_str)     # -> (parse_num a_str)
 (num x)         # raise (error 'TypeError "Expected num or str, got: " (typeof x))
 
-(str a_str)   # -> a_str
-(str a_list)  # -> list-specific format
-(str a_dict)  # -> dict-specific format
-(str a_error) # -> error-specific format
-(str x)       # -> (unparse x)
-(str x y z)   # -> apply str (one arg) recursively and concat the result
+(str a_str)    # -> a_str
+(str a_list)   # -> list-specific format
+(str a_dict)   # -> dict-specific format
+(str a_struct) # -> struct-specific format
+(str x)        # -> (unparse x)
+(str x y z)    # -> apply str (one arg) recursively and concat the result
 
 (ident a_str)   # -> (parse_ident a_str) !!! CACHED !!!
 (ident a_ident) # -> a_ident
 (ident x)       # raise (error 'TypeError "Expected str or ident, got: " (typeof x))
+
+(is_struct a_struct)    # yeah
+(is_struct x)           # nope
 
 # parse X (use same functions as interpreter, inverse of unparse)
 (parse_num "0")         # -> 0
@@ -147,7 +178,7 @@
 (parse_dict "(dict)")   # -> (dict)
 (parse_func "(func args args)")                 # -> (func args args)
 (parse_macro "(macro ctx args '(ctx args))")    # -> (macro ctx args '(ctx args))
-(parse_error "(error)")                         # -> (error)
+(parse_struct "(struct0)")                      # -> (struct0)
 # on parse error, raise (error (kind 'ParseError) (msg "..."))
 
 # unparse X (use same functions as interprter, inverse of parse)
@@ -158,6 +189,6 @@
 (unparse_dict (dict))   # -> "(dict)"
 (unparse_func (func args args))                 # -> "(func args args)"
 (unparse_func (macro ctx args '(ctx args)'))    # -> "(macro ctx args '(ctx args))"
-(unparse_error (error))                         # -> "(error)"
+(unparse_struct (struct0))                      # -> "(struct0)"
 
 # functions 'parse' and 'unparse' that do type checks
