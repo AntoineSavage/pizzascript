@@ -1,4 +1,4 @@
-# protocols.pz
+# Protocols.pz
 
 # protocols can be defined
 # protocols can be implemented by built-in types and custom structs
@@ -41,4 +41,14 @@
     # Minimal complete implementation: first or second
 )
 
-# Check if a given type implements a given protocol
+# Get implementation of a protocol by a given type
+# Returns 'none if not implemented
+(def get_impl (macro ctx (proto type)
+    (def proto_ctx (get proto ctx))
+    (if (eq 'none proto_ctx)
+        '(ctx 'none)
+        '(ctx (get type proto_ctx)))
+    )
+))
+(def showable_num (get_impl showable num))
+(if (ne 'none showable_num) (print (showable_num.show 123)))

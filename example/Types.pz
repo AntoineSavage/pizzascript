@@ -1,4 +1,4 @@
-# types.pz
+# Types.pz
 
 # seven built-in types:
 #   nums
@@ -54,6 +54,7 @@
 # identifiers
 'fac
 'foo.bar.baz
+# module <=> upper-case identifier
 
 # lists
 '()

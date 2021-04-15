@@ -1,4 +1,4 @@
-# main.pz
+# Main.pz
 
 # atom identifiers
 # return themselves when unquoted
@@ -25,7 +25,7 @@
     (case
         ((lte n 0) 0)       #   if n <= 0 then 0
         ((eq n 1) 1)        #   else if n == 1 then 1
-        ('true (add         #   else fib (n-1) + fib (n-2)  # TODO Remove atoms?
+        ('true (add         #   else fib (n-1) + fib (n-2)
             (fib (sub n 1))
             (fib (sub n 2)))
         ))
@@ -101,26 +101,30 @@
 # pizza src/main.pz # source directory is parent of provided file
 # with the following folder structure:
 #
-# main.pz           depends on data.list.lazy.pz and data.set.pz
-# data.pz
-# data/
-#  set.pz           depends on data.pz
-#  list.pz          depends on data.pz
-#  list/
-#    lazy.pz        depends on data.pz and data.list.pz
+# Main.pz           depends on Data.List.Lazy and Data.Set
+# Data.pz
+# Data/
+#  Set.pz           depends on Data
+#  List.pz          depends on Data
+#  List/
+#    Lazy.pz        depends on Data and Data.List
+
+# module idents start with upper-case
+# non-module idents start with a lower-case
+# this removes ambiguity when accessing stuff fully-qualifiedly
 
 # load order is as follows:
 # 1) compile everything in the source directory (no evaluation yet)
 # 2) during compilation, create a tree of:
-#   atom -> (NO_INIT | ctx) [: sub-tree], in this case:
-#     'main -> NO_INIT
-#     'data -> NO_INIT:
-#       'set -> NO_INIT
-#       'list -> NO_INIT:
-#         'lazy -> NO_INIT
+#   ident -> (NO_INIT | ctx) [: sub-tree], in this case:
+#     'Main -> NO_INIT
+#     'Data -> NO_INIT:
+#       'Set -> NO_INIT
+#       'List -> NO_INIT:
+#         'Lazy -> NO_INIT
 #
-# 3) call evaluate on the module marked as main, i.e. 'main
-# 4) module 'main has finished evaluating, halt
+# 3) call evaluate on the module marked as main, i.e. 'Main
+# 4) module 'Main has finished evaluating, halt
 
 # evaluate(module):
 # 1) if the module is already marked as initialized in the tree, return
@@ -159,7 +163,7 @@
 (stack_frame 'main 101 22)
 
 (struct error ()
-    (kind 'none)    # ex: 'ParseError, 'InputError, 'NetworkError
+    (kind 'none)    # ex: 'parseError, 'inputError, 'networkError
     (msg 'none)     # ex: "Expected num or str, got: " (typeof input)
     (data 'none)    # ex: (dict (my_key 123))
     (cause 'none)
@@ -167,11 +171,11 @@
 )
 
 (error)
-(error (kind 'InputError))
+(error (kind 'inputError))
 (error (msg "Invalid input: " 123))
 (error (data (dict (n 0)  (s "") (i 'a))))
 (error
-    (kind 'InputError)
+    (kind 'inputError)
     (msg "Invalid input: " 123))
     (data (dict (n 0) (s "") (i 'a))
 )
