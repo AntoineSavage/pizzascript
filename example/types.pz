@@ -1,6 +1,6 @@
 # types.pz
 
-# sevent built-in types:
+# seven built-in types:
 #   nums
 #   strings
 #   identifiers
@@ -112,6 +112,8 @@
 # optional fields must have default values
 # uses same operations as dict to get/set fields (all keys are idents)
 # error if add/remove fields
+# inner dict contains field '__STRUCT_TYPE__ mapped to the struct type
+# adds a ctor function to the current context (like def)
 
 (struct struct0 () # no mandatory fields
     (field_num 0)
@@ -149,26 +151,19 @@
 (typeof (dict))     # -> 'dict
 (typeof fac)        # -> 'func
 (typeof func)       # -> 'macro
-(typeof (struct0))  # -> 'struct0
+(typeof (struct0))  # -> 'struct
 
 # type funcs
 (num a_num)     # -> a_num
 (num a_str)     # -> (parse_num a_str)
 (num x)         # raise (error 'TypeError "Expected num or str, got: " (typeof x))
 
-(str a_str)    # -> a_str
-(str a_list)   # -> list-specific format
-(str a_dict)   # -> dict-specific format
-(str a_struct) # -> struct-specific format
-(str x)        # -> (unparse x)
-(str x y z)    # -> apply str (one arg) recursively and concat the result
+(str x)     # -> (showable.show x) # showable protocol
+(str x y z) # -> apply showable.show recursively on each element and concat the result
 
-(ident a_str)   # -> (parse_ident a_str) !!! CACHED !!!
+(ident a_str)   # -> (parse_ident a_str)
 (ident a_ident) # -> a_ident
 (ident x)       # raise (error 'TypeError "Expected str or ident, got: " (typeof x))
-
-(is_struct a_struct)    # yeah
-(is_struct x)           # nope
 
 # parse X (use same functions as interpreter, inverse of unparse)
 (parse_num "0")         # -> 0
@@ -190,5 +185,3 @@
 (unparse_func (func args args))                 # -> "(func args args)"
 (unparse_func (macro ctx args '(ctx args)'))    # -> "(macro ctx args '(ctx args))"
 (unparse_struct (struct0))                      # -> "(struct0)"
-
-# functions 'parse' and 'unparse' that do type checks
