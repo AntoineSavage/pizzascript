@@ -25,8 +25,8 @@
 '()
 (list)
 
-'(:void 0 "" '(:void 0 ""))         # TODO Remove atoms?
-(list :void 0 "" (list :void 0 "")) # TODO Remove atoms?
+'(0 "" 'a '(0 "" 'a))
+(list 0 "" 'a (list 0 "" 'a))
 
 # dicts (all types can be keys)
 # int < string < ident < list < dict < func < macro
@@ -37,8 +37,8 @@
     ('dict '())
     ('() (dict))
     ((dict) (func () '()))
-    ((func () '()), (macro ctx args '()))
-    ((macro ctx args '()), :void)   # TODO Remove atoms?
+    ((func () '()), (macro ctx args '(ctx args)))
+    ((macro ctx args '(ctx args)), 0)
 )
 
 # dict syntax when a key is an ident
@@ -50,10 +50,19 @@
 (func (n) (add n 1))
 (func (n m) (add n m))
 
+(func args args) # varargs function, this is how 'list is implemented
+
 # macros
-# functions that receive the call-site context (dict) and args (as unevaluated code)
-(macro ctx args '())
-(macro ctx args '(ctx args))
+# receive the call-site context and call-site quoted args
+# also has an implicit context from when the macro was defined (like all functions)
+#   i.e. the implicit and call-site contexts are independant and keep all macro hygienic by default
+# returns two things: a call-site context (same or updated), and the macro result, if any
+# the macro invocation will update the call-site context with the returned one
+
+(macro ctx () '(ctx '()))
+(macro ctx (x) '(ctx x))
+(macro ctx (x y) '(ctx x y))
+(macro ctx args '((dict) args))
 
 # type checks
 (is_int 0)
@@ -90,8 +99,8 @@
 (parse_ident "'fac")    # -> 'fac
 (parse_list "'()")      # -> '()
 (parse_dict "(dict)")   # -> (dict)
-(parse_func "(func () '())")            # -> (func () '())
-(parse_macro "(macro ctx args '())")    # -> (macro ctx args '())
+(parse_func "(func args args)")                 # -> (func args args)
+(parse_macro "(macro ctx args '(ctx args))")    # -> (macro ctx args '(ctx args))
 
 # unparse X (use same functions as interprter, inverse of parse)
 (unparse_int 0)         # -> "0"
@@ -99,7 +108,7 @@
 (unparse_ident 'fac)    # -> "'fac"
 (unparse_list '())      # -> "'()"
 (unparse_dict (dict))   # -> "(dict)"
-(unparse_func (func () '()))        # -> "(func () '())"
-(unparse_func (macro ctx args '())) # -> "(macro ctx args '())"
+(unparse_func (func args args))                 # -> "(func args args)"
+(unparse_func (macro ctx args '(ctx args)'))    # -> "(macro ctx args '(ctx args))"
 
 # functions 'parse' and 'unparse' that do type checks
