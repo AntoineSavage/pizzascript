@@ -26,18 +26,18 @@
         ((lte n 0) 0)       #   if n <= 0 then 0
         ((eq n 1) 1)        #   else if n == 1 then 1
         ('true (add         #   else fib (n-1) + fib (n-2)  # TODO Remove atoms?
-            (fib (sub n 1)) 
+            (fib (sub n 1))
             (fib (sub n 2)))
         ))
     )
 ))
 
 # defining new macros
-(def my_macro (macro ctx args 
+(def my_macro (macro ctx args
     '(ctx args) # call-site ctx unchanged, returns list of quoted args
 ))
 
-# the following are equivalent 
+# the following are equivalent
 (fac 5)
 ((func (n) (fac n)) 5)
 (apply fac 5)       # apply applies the function to the args
@@ -86,6 +86,7 @@
 
 # temporary child context
 # does not change the current context
+# same evaluation function as interpreter
 (do
     (def temp '())
     (print temp)
@@ -112,11 +113,11 @@
 # 1) compile everything in the source directory (no evaluation yet)
 # 2) during compilation, create a tree of:
 #   atom -> (NO_INIT | ctx) [: sub-tree], in this case:
-#     'main -> NO_INIT          
-#     'data -> NO_INIT:         
-#       'set -> NO_INIT         
-#       'list -> NO_INIT:       
-#         'lazy -> NO_INIT      
+#     'main -> NO_INIT
+#     'data -> NO_INIT:
+#       'set -> NO_INIT
+#       'list -> NO_INIT:
+#         'lazy -> NO_INIT
 #
 # 3) call evaluate on the module marked as main, i.e. 'main
 # 4) module 'main has finished evaluating, halt
@@ -146,3 +147,39 @@
 #     i) moving dependant code above any other cross-module statements
 #     ii) moving dependant code to a new module
 #     iii) only using other module symbols in functions/macros
+
+# error handling
+(try
+    # result value is returned if no error
+    (raise (error))
+
+    # can be absent if finally clause is present
+    # result value is returned if error
+    (recover e (print "Error: " e))
+
+    # can be absent if recover clause is present
+    # result value is ignored
+    (finally (print "Finally"))
+)
+
+# raise takes 1 or 2 args:
+#   - the error to raise (mandatory)
+#   - the cause of the error to raise (optional)
+#
+# it will, in the raised error:
+#   - set the cause
+#   - set the stack trace:
+#       - list of ident/int/int triplets (symbol, line, column), known at compile time
+
+# calling 'raise' will interrupt the evaluation and raise the error
+# if not in a 'try', error will percolate up the call stack until a 'try' is reached
+# if a 'try' is reached:
+#   if the 'recover' clause is not present:
+#     invoke the 'finally' clause (MUST be present)
+#     keep percolating the error up the call stack
+#
+#   if the 'recover' clause is present:
+#     stop percolating the error up the call stack
+#     invoke the 'recover' clause with the error, bind to result
+#     invoke the 'finally' clause if present
+#     return result

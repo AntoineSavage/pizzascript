@@ -1,21 +1,54 @@
-# main.pz
+# types.pz
 
-# seven types:
-#   ints
+# eight built-in types:
+#   nums
 #   strings
 #   identifiers
 #   lists
 #   dicts
 #   functions
 #   macros
+#   errors
 
-# ints
+# nums
 0 1 2 3 10 123
 -1 -2 -3
+0.1 1.1 2.2 10.01 123.123
+-1.1 -2.2 -3.3
+1.23e123 -123E-123
+
+0b01                # binary
+0d0123456789        # decimal
+0o01234567          # octal
+0x0123456789aBcDeF  # hex (case-insensitive)
 
 # strings
+# byte-aligned
+# either binary or text (all utf8-encoded)
 ""
-"abc"
+"abc123ABC"
+"\\\a\b\d\e\f\n\r\s\t\v\0\x20\u0020\U00020
+
+"\xFF" # binary
+"\x20" # text
+
+# escapes:
+# \" -> double quote
+# \\ -> backslash
+# \a -> bell/alert
+# \b -> backspace
+# \d -> delete
+# \e -> escape
+# \f -> form feed
+# \n -> newline
+# \r -> carriage return
+# \s -> space
+# \t -> tab
+# \v -> vertical tab
+# \0 -> null byte
+# \xDD - one hex byte, ex: \x20
+# \uDDDD - one unicode hex codepoint, ex: \u0020
+# \UDDDDD - one extended unicode hex codepoint, ex: \U1F600
 
 # identifiers
 'fac
@@ -25,11 +58,11 @@
 '()
 (list)
 
-'(0 "" 'a '(0 "" 'a))
-(list 0 "" 'a (list 0 "" 'a))
+'(0 "" 'a '(0 "" 'a) (dict))
+(list 0 "" 'a (list 0 "" 'a) (dict))
 
 # dicts (all types can be keys)
-# int < string < ident < list < dict < func < macro
+# int < string < ident < list < dict < func < macro < error
 (dict)
 (dict
     (0 "")
@@ -64,51 +97,67 @@
 (macro ctx (x y) '(ctx x y))
 (macro ctx args '((dict) args))
 
-# type checks
-(is_int 0)
-(is_str "")
-(is_ident 'is_ident)
-(is_list '())
-(is_dict (dict))
-(is_func is_func)
-(is_macro is_macro)
+# errors
+# fields (all optional)
+#    - kind: ident, ex: 'ParseError, 'InputError, 'NetworkError
+#    - msg: varargs, ex: "Expected num or str, got: " (typeof input)
+#    - data: dict, ex: (dict (my_key 123))
 
-# type funcs
-(int 'b "01")               # binary
-(int 'd "0123456789")       # decimal
-(int 'o "01234567")         # octal
-(int 'x "0123456789abcdef)  # hex
-
-(str "hello")               # -> "hello", no escapes (human readable)
-(str non_str)               # -> (unparse x)
-
-(ident 'fac)                # -> 'fac, quote util, ident == id
+(error)
+(error (kind 'InputError))
+(error (msg "Invalid input: " 123))
+(error (data (dict (n 0)  (s "") (i 'a))))
+(error
+    (kind 'InputError)
+    (msg "Invalid input: " 123))
+    (data (dict (n 0) (s "") (i 'a))
+)
 
 # type identifiers
-(type_of 0)         # -> 'int
-(type_of "")        # -> 'str
-(type_of 'fac)      # -> 'ident
-(type_of '())       # -> 'list
-(type_of (dict))    # -> 'dict
-(type_of fac)       # -> 'func
-(type_of func)      # -> 'macro
+(typeof 0)         # -> 'int
+(typeof "")        # -> 'str
+(typeof 'fac)      # -> 'ident
+(typeof '())       # -> 'list
+(typeof (dict))    # -> 'dict
+(typeof fac)       # -> 'func
+(typeof func)      # -> 'macro
+(typeof (error))   # -> 'error
+
+# type funcs
+(num a_num)     # -> a_num
+(num a_str)     # -> (parse_num a_str)
+(num x)         # raise (error 'TypeError "Expected num or str, got: " (typeof x))
+
+(str a_str)   # -> a_str
+(str a_list)  # -> list-specific format
+(str a_dict)  # -> dict-specific format
+(str a_error) # -> error-specific format
+(str x)       # -> (unparse x)
+(str x y z)   # -> apply str (one arg) recursively and concat the result
+
+(ident a_str)   # -> (parse_ident a_str) !!! CACHED !!!
+(ident a_ident) # -> a_ident
+(ident x)       # raise (error 'TypeError "Expected str or ident, got: " (typeof x))
 
 # parse X (use same functions as interpreter, inverse of unparse)
-(parse_int "0")         # -> 0
+(parse_num "0")         # -> 0
 (parse_str "\"\"")      # -> ""
-(parse_ident "'fac")    # -> 'fac
+(parse_ident "'fac")    # -> 'fac !!! CACHED !!!
 (parse_list "'()")      # -> '()
 (parse_dict "(dict)")   # -> (dict)
 (parse_func "(func args args)")                 # -> (func args args)
 (parse_macro "(macro ctx args '(ctx args))")    # -> (macro ctx args '(ctx args))
+(parse_error "(error)")                         # -> (error)
+# on parse error, raise (error (kind 'ParseError) (msg "..."))
 
 # unparse X (use same functions as interprter, inverse of parse)
-(unparse_int 0)         # -> "0"
+(unparse_num 0)         # -> "0"
 (unparse_str "")        # -> "\"\""
 (unparse_ident 'fac)    # -> "'fac"
 (unparse_list '())      # -> "'()"
 (unparse_dict (dict))   # -> "(dict)"
 (unparse_func (func args args))                 # -> "(func args args)"
 (unparse_func (macro ctx args '(ctx args)'))    # -> "(macro ctx args '(ctx args))"
+(unparse_error (error))                         # -> "(error)"
 
 # functions 'parse' and 'unparse' that do type checks

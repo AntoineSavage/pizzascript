@@ -1,3 +1,0 @@
-floats
-string interpolation
-currying?
