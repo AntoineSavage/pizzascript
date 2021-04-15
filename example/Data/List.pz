@@ -1,0 +1,17 @@
+# Data.List
+
+#LEXER_TEST_START
+
+'()
+'(0 1 2 3 4 5)
+'("hello" "world" "!")
+'('a 'b 'c 'd 'e)
+'('() '(1 2 3))
+
+# LEXER_TEST_END
+
+(list)
+(list 0 1 2 3 4 5)
+(list "hello" "world" "!")
+(list 'a 'b 'c 'd 'e)
+(list (list) (list 1 2 3 "hello" 'world "!"))

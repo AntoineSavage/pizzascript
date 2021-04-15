@@ -1,0 +1,59 @@
+# Exec.pz
+
+# pizza src/Main.pz # source directory is parent of provided file
+# with the following folder structure:
+#
+# Main.pz           depends on Data.List.Lazy and Data.Set
+# Data.pz
+# Data/
+#  Set.pz           depends on Data
+#  List.pz          depends on Data
+#  List/
+#    Lazy.pz        depends on Data and Data.List
+
+# module idents start with upper-case
+# non-module idents start with a lower-case
+# this removes ambiguity when accessing stuff fully-qualifiedly
+
+# internal module tree:
+#   ident -> (NO_INIT | ctx) [: sub-tree]
+# 
+# ex:
+#   'Main -> NO_INIT
+#   'Data -> NO_INIT:
+#     'Set -> NO_INIT
+#     'List -> NO_INIT:
+#       'Lazy -> NO_INIT
+
+# load order is as follows:
+# 1) call evaluate on the module marked as main, i.e. 'Main
+# 2) module 'Main has finished evaluating, halt
+
+# evaluate(module):
+# 1) if the module is already marked as initialized in the tree, return
+# 2) mark the module as initialized in the tree with an empty context
+# 3) compile the module (don't evaluate anything)
+# 4) add to module tree
+
+# 5) evaluate the module using the aforementioned context, by evaluating each of its statement
+#   a) keep track of modifications to the current context
+#     i) no need to update the tree on each modification
+#   b) if a statement accesses the context of another module:
+#     i) update the tree with the current module context
+#     ii) call evaluate on the other module
+#     iii) finish evaluating the current statement normally
+#
+# 6) when the module is finished evaluating, update the tree with the current context
+
+# This algorithm ensures that:
+# 1) only required modules are ever evaluated
+# 2) each required module is evaluated once and only once
+# 3) circular dependencies will not cause an infinite recursion
+#   a) it MAY cause undefined errors, ex:
+#     i) modules A and B have a circular dependency
+#     ii) module A uses a symbol of B that was not defined yet
+#
+#   b) fix this by:
+#     i) moving dependant code above any other cross-module statements
+#     ii) moving dependant code to a new module
+#     iii) only using other module symbols in functions/macros

@@ -1,0 +1,28 @@
+# Data.Error
+
+(struct stack_frame (symbol line col)
+    (symbol sym)
+    (line line)
+    (col col)
+)
+
+# most stack frames are known at compile-time
+(stack_frame 'main 101 22)
+
+(struct error ()
+    (kind 'none)    # ex: 'parseError, 'inputError, 'networkError
+    (msg 'none)     # ex: "Expected num or str, got: " (typeof input)
+    (data 'none)    # ex: (dict (my_key 123))
+    (cause 'none)
+    (stack_trace 'none) # list of stack_frame
+)
+
+(error)
+(error (kind 'inputError))
+(error (msg "Invalid input: " 123))
+(error (data (dict (n 0)  (s "") (i 'a))))
+(error
+    (kind 'inputError)
+    (msg "Invalid input: " 123))
+    (data (dict (n 0) (s "") (i 'a))
+)

@@ -1,0 +1,14 @@
+# Data.Macro
+
+# macros
+# receive the call-site context and call-site quoted args
+# also has an implicit context from when the macro was defined (like all functions)
+#   i.e. the implicit and call-site contexts are independant and keep all macro hygienic by default
+# returns two things: a call-site context (same or updated), and the macro result, if any
+# the macro invocation will update the call-site context with the returned one
+
+(macro ctx () '(ctx '()))       # constant macro
+(macro ctx (x) '(ctx x))        # unary macro
+(macro ctx (x y) '(ctx x y))    # binary macro
+# etc
+(macro ctx args '(ctx args))    # varargs macro, this is similar to how 'quote is implemented

@@ -1,0 +1,23 @@
+# Data.ident
+
+# module <=> upper-case identifier
+# anything can be accessed fully-qualifiedly
+
+# LEXER_TEST_START
+
+'foo 'bar 'baz
+'Foo 'Bar 'Baz
+
+'foo.bar.baz
+'Foo.Bar.Baz
+
+'ABCDEFGHIJKLMNOPQRSTUVWXYZ
+'abcdefghijklmnopqrstuvwxyz0123456789_
+'A.B.C.D.E.F.G.H.I.J.K.L.M.N.O.P.Q.R.S.T.U.V.W.X.Y.Z
+'a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z0123456789_
+
+# LEXER_TEST_END
+
+(ident a_str)   # -> (parse_ident a_str)
+(ident a_ident) # -> a_ident
+(ident x)       # raise (error 'TypeError "Expected str or ident, got: " (typeof x))

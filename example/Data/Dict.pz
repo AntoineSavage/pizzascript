@@ -1,0 +1,33 @@
+# Data.Dict
+
+# all types can be keys
+# num < string < ident < list < dict < func < macro < struct
+
+(dict)
+(dict
+    (0 "")
+    ("" 'dict)
+    ('dict '())
+    ('() (dict))
+    ((dict) (func () '()))
+    ((func () '()), (macro ctx args '(ctx args)))
+    ((macro ctx args '(ctx args)), (error))
+    ((error) 0)
+)
+
+# dict syntax to get/set an ident key
+(def my_dict (dict ('my_field "my_value")))
+
+# get value for ident key
+my_dict.my_field # -> "my_value", get == id
+
+# set value for ident key
+# macro that resolves 'my_dict and 'my_field
+# returns a new dict with updated fields
+(set my_dict.my_field "new_value")  # -> (dict ('my_field "new_value))
+
+# general dict operations
+(get dict key)
+(put dict key value)
+(del dict key value)
+(merge d1 d2)

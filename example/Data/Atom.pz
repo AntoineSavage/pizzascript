@@ -1,0 +1,5 @@
+# Data.Atom
+
+(def none 'none)
+(def false 'false)
+(def true 'true)

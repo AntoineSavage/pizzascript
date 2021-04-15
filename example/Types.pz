@@ -1,148 +1,10 @@
 # Types.pz
 
-# seven built-in types:
-#   nums
-#   strings
-#   identifiers
-#   lists
-#   dicts
-#   functions
-#   macros
-
-# custom structs can be defined
-
-# nums
-0 1 2 3 10 123
--1 -2 -3
-0.1 1.1 2.2 10.01 123.123
--1.1 -2.2 -3.3
-1.23e123 -123E-123
-
-0b01                # binary
-0d0123456789        # decimal
-0o01234567          # octal
-0x0123456789aBcDeF  # hex (case-insensitive)
-
-# strings
-# byte-aligned
-# either binary or text (all utf8-encoded)
-""
-"abc123ABC"
-"\\\a\b\d\e\f\n\r\s\t\v\0\x20\u0020\U00020
-
-"\xFF" # binary
-"\x20" # text
-
-# escapes:
-# \" -> double quote
-# \\ -> backslash
-# \a -> bell/alert
-# \b -> backspace
-# \d -> delete
-# \e -> escape
-# \f -> form feed
-# \n -> newline
-# \r -> carriage return
-# \s -> space
-# \t -> tab
-# \v -> vertical tab
-# \0 -> null byte
-# \xDD - one hex byte, ex: \x20
-# \uDDDD - one unicode hex codepoint, ex: \u0020
-# \UDDDDD - one extended unicode hex codepoint, ex: \U1F600
-
-# identifiers
-'fac
-'foo.bar.baz
-# module <=> upper-case identifier
-
-# lists
-'()
-(list)
-
-'(0 "" 'a '(0 "" 'a) (dict))
-(list 0 "" 'a (list 0 "" 'a) (dict))
-
-# dicts (all types can be keys)
-# num < string < ident < list < dict < func < macro < custom structs
-(dict)
-(dict
-    (0 "")
-    ("" 'dict)
-    ('dict '())
-    ('() (dict))
-    ((dict) (func () '()))
-    ((func () '()), (macro ctx args '(ctx args)))
-    ((macro ctx args '(ctx args)), (error))
-    ((error) 0)
-)
-
-# dict syntax to get/set an ident key
-(def my_dict (dict ('my_field "my_value")))
-
-# get value for ident key
-# here, get == id
-(get my_dict.my_field) # -> "my_value"
-
-# set value for ident key
-# macro that resolvs the dict 'my_dict and its field 'my_field
-# returns a new dict with updated fields
-(set my_dict.my_field "new_value")  # -> (dict ('my_field "new_value))
-
-# functions
-(func () '())
-(func (n) (add n 1))
-(func (n m) (add n m))
-(func args args) # varargs function, this is how 'list is implemented
-
-# macros
-# receive the call-site context and call-site quoted args
-# also has an implicit context from when the macro was defined (like all functions)
-#   i.e. the implicit and call-site contexts are independant and keep all macro hygienic by default
-# returns two things: a call-site context (same or updated), and the macro result, if any
-# the macro invocation will update the call-site context with the returned one
-
-(macro ctx () '(ctx '()))
-(macro ctx (x) '(ctx x))
-(macro ctx (x y) '(ctx x y))
-(macro ctx args '((dict) args)) # varargs macro
-
-# custom structs
-# all fields are public
-# mandatory fields are passed at creation
-# optional fields must have default values
-# uses same operations as dict to get/set fields (all keys are idents)
-# error if add/remove fields
-# inner dict contains field '__STRUCT_TYPE__ mapped to the struct type
-# adds a ctor function to the current context (like def)
-
-(struct struct0 () # no mandatory fields
-    (field_num 0)
-    (field_str "")
-    (field_ident 'a)
-    (field_list '())
-    (field_dict (dict))
-    (field_func (func () '()))
-    (field_macro (macro ctx () '(ctx '())))
-    (field_struct 'none)
-)
-(struct struct1 (arg) # one mandatory fields
-    (field_mandatory arg)
-    (field_opt 'none)
-)
-(struct struct2 (arg1 arg2) # two mandatory fields
-    (field_mandatory1 arg1)
-    (field_mandatory2 arg2)
-    (field_opt 'none)
-)
-(struct struct_args args # varargs struct
-    (field args)
-    (field_opt 'none)
-)
-(struct0)
-(struct1 0)
-(struct2 "abc" 'a)
-(struct_args 0 "" 'a '() (dict))
+# protocols can be defined
+# protocols can be implemented by built-in types and custom structs
+# adds fully-qualified functions in the current ctx (one per protocol x func, one per protocol x impl x func)
+# the protocol function extracts the input type and calls the appropriate impl function
+# the impl function can be called directly if needed (perf reasons)
 
 # type identifiers
 (typeof 0)          # -> 'num
@@ -153,18 +15,6 @@
 (typeof fac)        # -> 'func
 (typeof func)       # -> 'macro
 (typeof (struct0))  # -> 'struct
-
-# type funcs
-(num a_num)     # -> a_num
-(num a_str)     # -> (parse_num a_str)
-(num x)         # raise (error 'TypeError "Expected num or str, got: " (typeof x))
-
-(str x)     # -> (showable.show x) # showable protocol
-(str x y z) # -> apply showable.show recursively on each element and concat the result
-
-(ident a_str)   # -> (parse_ident a_str)
-(ident a_ident) # -> a_ident
-(ident x)       # raise (error 'TypeError "Expected str or ident, got: " (typeof x))
 
 # parse X (use same functions as interpreter, inverse of unparse)
 (parse_num "0")         # -> 0

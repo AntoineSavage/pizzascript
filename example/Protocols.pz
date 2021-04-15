@@ -1,11 +1,5 @@
 # Protocols.pz
 
-# protocols can be defined
-# protocols can be implemented by built-in types and custom structs
-# adds fully-qualified functions in the current ctx (one per protocol x func, one per protocol x impl x func)
-# the protocol function extracts the input type and calls the appropriate impl function
-# the impl function can be called directly if needed (perf reasons)
-
 # All built-in types and all custom structs can be parsed/unparsed
 (protocol parsing (parse (s)) (unparse (x)))
 (impl parsing.num (parse (s) (types.parse_num s)) (unparse (x) (types.unparse_num x)))

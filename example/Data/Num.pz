@@ -1,0 +1,24 @@
+# Data.Num
+
+# LEXER_TEST_START
+
+# simple ints
+0 1 2 3 10 123
+-1 -2 -3
+
+# positive ints in specified bases
+0b01                # binary
+0d0123456789        # decimal
+0o01234567          # octal
+0x0123456789aBcDeF  # hex (case-insensitive)
+
+# simple floats
+0.1 1.1 2.2 10.01 123.123
+-1.1 -2.2 -3.3
+1.23e123 -123E-123
+
+# LEXER_TEST_END
+
+(num a_num)     # -> a_num
+(num a_str)     # -> (parse_num a_str)
+(num x)         # raise (error 'TypeError "Expected num or str, got: " (typeof x))
