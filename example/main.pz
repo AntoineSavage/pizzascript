@@ -1,72 +1,17 @@
 # main.pz
 
-# eight types:
-#   atoms # TODO Remove atoms?
-#   ints
-#   strings
-#   identifiers
-#   lists
-#   dicts
-#   functions
-#   macros
+# atom identifiers
+# return themselves when unquoted
+(def none 'none)
+(def false 'false)
+(def true 'true)
 
-# atoms # TODO Remove atoms?
-:void
-:false
-:true
-:err # custom atoms are cached
-:ok # custom also
+# useful functions
+(def id (func (x) x))
+(def apply (func (f x) (f x)))
+(def flip (func (f x y) (f y x)))
+(def cmp (func (f g) (func (x) (f (g x)))))
 
-# ints
-0 1 2 3 10 123
--1 -2 -3
-
-# strings
-""
-"abc"
-
-# identifiers
-'fac
-'foo.bar.baz
-
-# lists
-'()
-(list)
-
-'(:void 0 "" '(:void 0 ""))         # TODO Remove atoms?
-(list :void 0 "" (list :void 0 "")) # TODO Remove atoms?
-
-# dicts (all types can be keys)
-(dict)
-(dict
-    (:void 0)   # TODO Remove atoms?
-    (0 "")
-    ("" 'dict)
-    ('dict '())
-    ('() (dict))
-    ((dict) (func () '()))
-    ((func () '()), (macro ctx args '()))
-    ((macro ctx args '()), :void)   # TODO Remove atoms?
-)
-
-# dict syntax when a key is an atom
-(def my_dict (dict (:my_field) "my_value")) # TODO Remove atoms?
-(my_dict.void)
-
-# functions
-(func () :void) # TODO Remove atoms?
-(func (n) (add n 1))
-(func (n m) (add n m))
-
-# macros
-# functions that receive the call-site context (dict) and args (as unevaluated code)
-(macro env args
-    # each macro can choose to return code or an evaluated value
-)
-
-# applications
-
-# defining new functions
 # 'if is a macro to choose between alternatives
 (def fac (func (n)                  # fac n =
     (if (lte n 1)                   #   if n <= 1
@@ -88,25 +33,24 @@
 ))
 
 # defining new macros
-(def my_list (macro env args
-    # return a list containing args evaluated left-to-right
+(def my_list (macro ctx args
+    # return new list containing args unquoted left to right using ctx
 ))
 
 # the following are equivalent 
 (fac 5)
 ((func (n) (fac n)) 5)
 (apply fac 5)       # apply applies the function to the args
-(flip apply 5 fac)  # flip inverts the functio's first and second args
-(cmp id fac)        # compose: (id (fac n))
-(cmp fac id)        # compose: (fac (id n))
+(flip apply 5 fac)  # flip inverts the function's two args
+((cmp id fac) 5)    # compose: (id (fac n))
+((cmp fac id) 5)    # compose: (fac (id n))
 
 # use quote to convert to (evaluated) list
 (quote              # '(ctx
     '(              #   '('list
-        :void       #       :void   # TODO Remove atoms?
         0           #       0
         ""          #       ""
-        'fac        #       '('atoms_to_ident :fac)
+        'fac        #       '('ident 'fac)
         '()         #       '('list)
         (dict)      #       '('dict)
         fac         #       'fac
@@ -117,32 +61,22 @@
 
 # use unquote to convert back to (evaluated) code
 (unquote ctx
-    '('list                         # '(
-        :void                       #   :void   # TODO Remove atoms?
-        0                           #   0
-        ""                          #   ""
-        '('atoms_to_ident :fac)     #   'fac
-        '('list)                    #   '()
-        '('dict)                    #   (dict)
-        'fac                        #   fac
-        'quote                      #   quote
-        '('fac 5)                   #   (fac 5) # -> 120
-    )                               # )
+    '('list             # '(
+        0               #   0
+        ""              #   ""
+        '('ident 'fac)  #   'fac
+        '('list)        #   '()
+        '('dict)        #   (dict)
+        'fac            #   fac
+        'quote          #   quote
+        '('fac 5)       #   (fac 5) # -> 120
+    )                   # )
 )
 
-# atom synonyms # TODO Remove atoms?
-(def void :void)
-(def false :false)
-(def true :true)
-
-# add alias in current ctx (module, function, etc)
+# aliasing (modules, definitions)
 (def other other_parent.other_module)
-
-# allow unqualified use of function
 (def func other.func)
-
-# re-export function under different name                 
-(def other_func other.func)
+(def other_func func)
 
 # get current context
 (def new_ctx (get_ctx))
@@ -150,54 +84,17 @@
 # set current context
 (set_ctx new_ctx)
 
+# temporary child context
+(do
+    (def temp '())
+    (print temp)
+)
+
 # contexts support all dict operations:
 # get, put, delete, update, etc
-# adding non-atom keys does not impact identifier resolution # TODO Remove atoms?
+# adding non-ident keys does not impact resolution
 # make symbols private by removing them from ctx
-
 # each child ctx is an immutable fork of the parent ctx
-
-# type checks
-(is_atom :void) # TODO Remove atoms?
-(is_int 0)
-(is_str "")
-(is_list '())
-(is_ident 'is_ident)
-(is_func is_func)
-(is_macro is_macro)
-
-# type identification
-(type_of :void)     # -> :atom  # TODO Remove atoms?
-(type_of 0)         # -> :int
-(type_of "")        # -> :str
-(type_of '())       # -> :list
-(type_of 'is_ident) # -> :ident
-(type_of is_func)   # -> :func
-(type_of is_macro)  # -> :macro
-
-# parse X (use same functions as interpreter, inverse of unparse)
-(parse_atom ":foo")        # -> :foo, watch out, they are cached!       # TODO Remove atoms?
-(parse_int "123")          # -> 123
-(parse_str "\"abc\"")      # -> "abc"
-(parse_list "'(:void)")    # -> '(:void)            # TODO Remove atoms?
-(parse_ident "'fac")       # -> 'fac
-(parse_func "(func () (print \"Hello World!\"))")  # -> (func () (print "Hello World!"))
-(parse_macro "(macro ctx args '(ctx args))")       # -> (macro ctx args '(ctx args))
-
-# unparse X (use same functions as interprter, inverse of parse)
-(unparse_atom :foo)      # -> ":foo"            # TODO Remove atoms?
-(unparse_int 123)        # -> "123"
-(unparse_str "abc")      # -> "\"abc\""
-(unparse_list [:void])   # -> "[:void]"         # TODO Remove atoms?
-(unparse_ident 'fac)     # -> "'fac"
-(unparse_func (func () (print "Hello World!")))  # -> "(func () (print \"Hello World!\"))"
-(unparse_func (macro ctx args '(ctx args)))      # -> "(macro ctx args '(ctx args))"
-
-# functions 'parse' and 'unparse' that do type checks
-
-# identifier <-> atoms          # TODO Remove atoms?
-(ident_to_atoms 'foo.bar.baz)    # -> '(:foo :bar :baz)
-(atoms_to_ident :foo :bar :baz)  # -> 'foo.bar.baz
 
 # pizza src/main.pz # source directory is parent of provided file
 # with the following folder structure:
@@ -214,14 +111,14 @@
 # 1) compile everything in the source directory (no evaluation yet)
 # 2) during compilation, create a tree of:
 #   atom -> (NO_INIT | ctx) [: sub-tree], in this case:
-#     :main -> NO_INIT          # TODO Remove atoms?
-#     :data -> NO_INIT:         # TODO Remove atoms?
-#       :set -> NO_INIT         # TODO Remove atoms?
-#       :list -> NO_INIT:       # TODO Remove atoms?
-#         :lazy -> NO_INIT      # TODO Remove atoms?
+#     'main -> NO_INIT          
+#     'data -> NO_INIT:         
+#       'set -> NO_INIT         
+#       'list -> NO_INIT:       
+#         'lazy -> NO_INIT      
 #
-# 3) call evaluate on the module marked as main, i.e. :main
-# 4) module :main has finished evaluating, halt
+# 3) call evaluate on the module marked as main, i.e. 'main
+# 4) module 'main has finished evaluating, halt
 
 # evaluate(module):
 # 1) if the module is already marked as initialized in the tree, return

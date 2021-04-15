@@ -1,0 +1,105 @@
+# main.pz
+
+# seven types:
+#   ints
+#   strings
+#   identifiers
+#   lists
+#   dicts
+#   functions
+#   macros
+
+# ints
+0 1 2 3 10 123
+-1 -2 -3
+
+# strings
+""
+"abc"
+
+# identifiers
+'fac
+'foo.bar.baz
+
+# lists
+'()
+(list)
+
+'(:void 0 "" '(:void 0 ""))         # TODO Remove atoms?
+(list :void 0 "" (list :void 0 "")) # TODO Remove atoms?
+
+# dicts (all types can be keys)
+# int < string < ident < list < dict < func < macro
+(dict)
+(dict
+    (0 "")
+    ("" 'dict)
+    ('dict '())
+    ('() (dict))
+    ((dict) (func () '()))
+    ((func () '()), (macro ctx args '()))
+    ((macro ctx args '()), :void)   # TODO Remove atoms?
+)
+
+# dict syntax when a key is an ident
+(def my_dict (dict ('my_field "my_value")))
+(my_dict.my_field)
+
+# functions
+(func () '())
+(func (n) (add n 1))
+(func (n m) (add n m))
+
+# macros
+# functions that receive the call-site context (dict) and args (as unevaluated code)
+(macro ctx args '())
+(macro ctx args '(ctx args))
+
+# type checks
+(is_int 0)
+(is_str "")
+(is_ident 'is_ident)
+(is_list '())
+(is_dict (dict))
+(is_func is_func)
+(is_macro is_macro)
+
+# type funcs
+(int 'b "01")               # binary
+(int 'd "0123456789")       # decimal
+(int 'o "01234567")         # octal
+(int 'x "0123456789abcdef)  # hex
+
+(str "hello")               # -> "hello", no escapes (human readable)
+(str non_str)               # -> (unparse x)
+
+(ident 'fac)                # -> 'fac, quote util, ident == id
+
+# type identifiers
+(type_of 0)         # -> 'int
+(type_of "")        # -> 'str
+(type_of 'fac)      # -> 'ident
+(type_of '())       # -> 'list
+(type_of (dict))    # -> 'dict
+(type_of fac)       # -> 'func
+(type_of func)      # -> 'macro
+
+# parse X (use same functions as interpreter, inverse of unparse)
+(parse_int "0")         # -> 0
+(parse_str "\"\"")      # -> ""
+(parse_ident "'fac")    # -> 'fac
+(parse_list "'()")      # -> '()
+(parse_dict "(dict)")   # -> (dict)
+(parse_func "(func () '())")            # -> (func () '())
+(parse_macro "(macro ctx args '())")    # -> (macro ctx args '())
+
+# unparse X (use same functions as interprter, inverse of parse)
+(unparse_int 0)         # -> "0"
+(unparse_str "")        # -> "\"\""
+(unparse_ident 'fac)    # -> "'fac"
+(unparse_list '())      # -> "'()"
+(unparse_dict (dict))   # -> "(dict)"
+(unparse_func (func () '()))        # -> "(func () '())"
+(unparse_func (macro ctx args '())) # -> "(macro ctx args '())"
+
+# functions 'parse' and 'unparse' that do type checks
