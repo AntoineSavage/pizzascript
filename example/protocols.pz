@@ -4,6 +4,7 @@
 # protocols can be implemented by built-in types and custom structs
 # adds fully-qualified functions in the current ctx (one per protocol x func, one per protocol x impl x func)
 # the protocol function extracts the input type and calls the appropriate impl function
+# the impl function can be called directly if needed (perf reasons)
 
 # All built-in types and all custom structs can be parsed/unparsed
 (protocol parsing (parse (s)) (unparse (x)))
@@ -32,3 +33,12 @@
 # Error structs have a specific show impl
 (impl showable.struct.stack_frame (show (x) (...))) # show stack_frame for traceback in console
 (impl showable.struct.error (show (x) (...))) # show error for traceback in console
+
+# Default implementations of protocols
+(protocol example
+    (first (x) (second x))
+    (second (x) (first x))
+    # Minimal complete implementation: first or second
+)
+
+# Check if a given type implements a given protocol
