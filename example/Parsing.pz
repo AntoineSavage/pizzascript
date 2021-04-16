@@ -1,10 +1,12 @@
 # Parsing
 
 # uses the same function as the interpreter
+# reads/updates current context if needed
 (parse s)
 (unparse x)
 
 # parse X (use same functions as interpreter, inverse of unparse)
+# reads/updates current context if needed
 (parse_num "0")         # -> 0
 (parse_str "\"\"")      # -> ""
 (parse_ident "'fac")    # -> 'fac !!! CACHED !!!
@@ -16,6 +18,7 @@
 # on parse error, raise (error (kind 'ParseError) (msg "..."))
 
 # unparse X (use same functions as interprter, inverse of parse)
+# reads/updates current context if needed
 (unparse_num 0)         # -> "0"
 (unparse_str "")        # -> "\"\""
 (unparse_ident 'fac)    # -> "'fac"

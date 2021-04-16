@@ -54,8 +54,9 @@
     (list ctx other_ctx result)
 )
 
+# uses pattern matching to destructure result
 (def ctx1 (...))
-(def ctx2_and_result (do_with_ctx ctx1
+(def (ctx2 result) (do_with_ctx ctx1
     (def temp (list))
     (print temp)
     (def f (parse_func s))
