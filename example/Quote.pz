@@ -1,6 +1,6 @@
 # Quote
 
-# use quote to convert to list
+# use quote to convert to code
 # reads/updates call-site context if needed
 (quote
     (list           # (list 'list
@@ -15,9 +15,24 @@
     )               # )
 )
 
-# use unquote to convert back
+# use decompile to convert an evaluated symbol to code
 # reads/updates call-site context if needed
-(unquote
+(def my_list (list 0 "" 'fac (list) (dict) fac quote (fac 5) (func (n) (add n 1))))
+(decompile my_list)
+# (list 'list
+#   0
+#   ""
+#   (list 'ident 'fac)
+#   (list 'list)
+#   (list 'dict)
+#   'fac
+#   'quote
+#   (list 'fac 5)
+# )
+
+# use eval to evaluate code from quote, decompile, or built by hand
+# reads/updates call-site context if needed
+(eval
     (list 'list             # (list
         0                   #   0
         ""                  #   ""
@@ -26,6 +41,22 @@
         (list 'dict)        #   (dict)
         'fac                #   fac
         'quote              #   quote
-        (list 'fac 5)       #   (fac 5)
+        (list 'fac 5)       #   (fac 5) # -> 120
     )                       # )
 )
+
+# use decontextualize to ensure a symbol can be safely taken out-of-context
+# decompile the result from this and send it over the wire!
+(decontextualize my_list)
+# (do
+#     # include definition and "decompiled" value of the symbol to decontextualize
+#     # need to replace all dependencies in here with decontextualized copies
+#     # this thing will grow fast for large functions with many dependencies
+#     (def my_list (list 0 "" 'fac (list) (dict) fac quote (fac 5) (func (n) (add n 1))))
+# 
+#     # any other dependencies here
+#     # we need to compute the lambda closure of the symbol. Funtimes!
+# 
+#     # evaluating the block returns the decontextualized symbol
+#     my_list
+# )
