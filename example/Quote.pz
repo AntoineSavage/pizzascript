@@ -1,29 +1,31 @@
 # Quote
 
 # use quote to convert to list
-(quote ctx          # (list ctx         # quoted identifiers are local to ctx
-    (list           #   (list 'list
-        0           #       0
-        ""          #       ""
-        'fac        #       (list 'ident 'fac)
-        (list)      #       (list 'list)
-        (dict)      #       (list 'dict)
-        fac         #       'fac
-        quote       #       'quote
-        (fac 5)     #       (list 'fac 5)
-    )               #   )
-)                   # )
+# reads/updates call-site context if needed
+(quote
+    (list           # (list 'list
+        0           #     0
+        ""          #     ""
+        'fac        #     (list 'ident 'fac)
+        (list)      #     (list 'list)
+        (dict)      #     (list 'dict)
+        fac         #     'fac
+        quote       #     'quote
+        (fac 5)     #     (list 'fac 5)
+    )               # )
+)
 
 # use unquote to convert back
-(unquote ctx                # (list ctx # quoted identifiers are local to ctx
-    (list 'list             #   (list
-        0                   #     0
-        ""                  #     ""
-        (list 'ident 'fac)  #     'fac
-        (list 'list)        #     (list)
-        (list 'dict)        #     (dict)
-        'fac                #     fac
-        'quote              #     quote
-        (list 'fac 5)       #     (fac 5)
-    )                       #   )
-)                           # )
+# reads/updates call-site context if needed
+(unquote
+    (list 'list             # (list
+        0                   #   0
+        ""                  #   ""
+        (list 'ident 'fac)  #   'fac
+        (list 'list)        #   (list)
+        (list 'dict)        #   (dict)
+        'fac                #   fac
+        'quote              #   quote
+        (list 'fac 5)       #   (fac 5)
+    )                       # )
+)

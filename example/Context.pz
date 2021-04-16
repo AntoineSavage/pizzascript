@@ -34,6 +34,11 @@
     (list init_ctx result)
 )
 
+(do
+    (def temp (list))
+    (print temp)
+)
+
 # switch context temporarily
 # does not change the current context
 # returns the updated input context and result
@@ -49,13 +54,10 @@
     (list ctx other_ctx result)
 )
 
-(do
+(def ctx1 (...))
+(def ctx2_and_result (do_with_ctx ctx1
     (def temp (list))
     (print temp)
-)
-
-(def ctx1 (...))
-(def ctx2 (do_with_ctx ctx1
-    (def temp (list))
-    (print temp)   
+    (def f (parse_func s))
+    (def s_ (unparse_func f))
 )

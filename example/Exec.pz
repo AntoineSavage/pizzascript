@@ -17,7 +17,7 @@
 #
 # internal module tree:
 #   ident -> (NO_INIT | ctx) [: sub-tree]
-# 
+#
 # ex:
 #   'Main -> NO_INIT
 #   'Data -> NO_INIT:
