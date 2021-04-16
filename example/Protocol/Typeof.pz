@@ -1,0 +1,12 @@
+# Protocol.Typeof
+
+# All types have type identfiers
+(protocol typeof (typeof (x)))
+(impl typeof.num (typeof (x) 'num))
+(impl typeof.str (typeof (x) 'str))
+(impl typeof.ident (typeof (x) 'ident))
+(impl typeof.list (typeof (x) 'list))
+(impl typeof.dict (typeof (x) 'dict))
+(impl typeof.func (typeof (x) 'func))
+(impl typeof.macro (typeof (x) 'macro))
+(impl typeof.struct (typeof (x) 'struct))

@@ -20,11 +20,6 @@
     )
 ))
 
-# defining new macros
-(def my_macro (macro ctx args
-    '(ctx args) # call-site ctx unchanged, returns list of quoted args
-))
-
 # the following are equivalent
 (fac 5)
 ((func (n) (fac n)) 5)
@@ -32,56 +27,3 @@
 (flip apply 5 fac)  # flip inverts the function's two args
 ((cmp id fac) 5)    # compose: (id (fac n))
 ((cmp fac id) 5)    # compose: (fac (id n))
-
-# use quote to convert to (evaluated) list
-(quote              # '(ctx
-    '(              #   '('list
-        0           #       0
-        ""          #       ""
-        'fac        #       '('ident 'fac)
-        '()         #       '('list)
-        (dict)      #       '('dict)
-        fac         #       'fac
-        quote       #       'quote
-        (fac 5)     #       '('fac 5)
-    )               #   )
-)                   # )
-
-# use unquote to convert back to (evaluated) code
-(unquote ctx
-    '('list             # '(
-        0               #   0
-        ""              #   ""
-        '('ident 'fac)  #   'fac
-        '('list)        #   '()
-        '('dict)        #   (dict)
-        'fac            #   fac
-        'quote          #   quote
-        '('fac 5)       #   (fac 5) # -> 120
-    )                   # )
-)
-
-# aliasing (modules, definitions)
-(def other other_parent.other_module)
-(def func other.func)
-(def other_func func)
-
-# get current context
-(def new_ctx (get_ctx))
-
-# set current context
-(set_ctx new_ctx)
-
-# temporary child context
-# does not change the current context
-# same evaluation function as interpreter
-(do
-    (def temp '())
-    (print temp)
-)
-
-# contexts support all dict operations:
-# get, put, delete, update, etc
-# adding non-ident keys does not impact resolution
-# make symbols private by removing them from ctx
-# each child ctx is an immutable fork of the parent ctx

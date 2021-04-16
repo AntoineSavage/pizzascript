@@ -1,0 +1,39 @@
+# Protocol.pz
+
+# protocols can be defined, with optional default implems
+# protocols can be implemented by built-in types and custom structs
+# adds fully-qualified functions in the current ctx
+#   - one per protocol * func
+#   - one per protocol * impl * func
+#
+# the protocol function extracts the input type and calls the appropriate impl function
+# the impl function can be called directly if needed (ex: perf reasons)
+
+# Simple protocol and impl
+(protocol example (op (x)))     # unary function (minimum)
+(impl example.num (op (x) x))   # the num impl returns the num
+
+# Default implementations of protocols
+(protocol example_with_default
+    (first (x) (second x))
+    (second (x) (first x))
+    # Minimal complete implementation: first or second
+)
+(impl example_with_default.num (first (x) x))   # num impls the first function
+(impl example_with_default.str (second (x) x))  # str impls the second function
+
+# Get implementation of a protocol by a given type
+# Returns 'none if protocol not defined or nor implemented by type
+(def get_impl (macro ctx (proto type)
+    (def proto_ctx (get proto ctx))
+    (if (eq 'none proto_ctx)
+        (list ctx 'none)
+        (list ctx (get type proto_ctx)))
+    )
+))
+
+(def example_num (get_impl example num))
+(if (neq 'none example_num)
+    (print (example_num.op 123))
+    (print "Not implemented)
+)

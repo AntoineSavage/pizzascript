@@ -1,0 +1,18 @@
+# Protocol.Pretty
+
+# All built-in types can be prettied
+(protocol pretty (show (x)))
+(impl pretty.num (show (x) (parsing.num.unparse x)))
+(impl pretty.str (show (x) (x)))
+(impl pretty.ident (show (x) (parsing.ident.unparse x)))
+(impl pretty.list (show (x) (...))) # show list recursively
+(impl pretty.dict (show (x) (...))) # show dict recursively
+(impl pretty.func (show (x) (...))) # show func recursively
+(impl pretty.macro (show (x) (...))) # show macro recursively
+
+# All custom structs have a default show impl
+(impl pretty.struct (show (x) (...))) # show struct recursively (type, fields, etc)
+
+# Error structs have a specific show impl
+(impl pretty.struct.stack_frame (show (x) (...))) # show stack_frame for traceback in console
+(impl pretty.struct.error (show (x) (...))) # show error for traceback in console

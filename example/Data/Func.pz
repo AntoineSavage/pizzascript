@@ -1,6 +1,6 @@
 # Data.Func
 
-(func () '())           # constant function
+(func () (list))        # constant function
 (func (n) (add n 1))    # unary function
 (func (n m) (add n m))  # binary function
 # etc

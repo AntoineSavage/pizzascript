@@ -1,12 +1,12 @@
 # Data.Error
 
 (struct stack_frame (symbol line col)
-    (symbol sym)
+    (symbol symbol)
     (line line)
     (col col)
 )
 
-# most stack frames are known at compile-time
+# stack frames are known at compile-time
 (stack_frame 'main 101 22)
 
 (struct error ()

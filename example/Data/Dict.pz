@@ -7,11 +7,11 @@
 (dict
     (0 "")
     ("" 'dict)
-    ('dict '())
-    ('() (dict))
-    ((dict) (func () '()))
-    ((func () '()), (macro ctx args '(ctx args)))
-    ((macro ctx args '(ctx args)), (error))
+    ('dict (list))
+    ((list) (dict))
+    ((dict) (func () (list)))
+    ((func () (list)), (macro ctx args (list ctx args)))
+    ((macro ctx args (list ctx args)), (error))
     ((error) 0)
 )
 

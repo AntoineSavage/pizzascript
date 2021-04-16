@@ -5,32 +5,35 @@
     # result value is returned if no error
     (raise (error))
 
-    # can be absent if finally clause is present
+    # can be absent if 'finally clause is present
     # result value is returned if error
     (recover e (print "Error: " e))
 
-    # can be absent if recover clause is present
+    # can be absent if 'recover clause is present
     # result value is ignored
     (finally (print "Finally"))
 )
 
 # raise takes 1 or 2 args:
-#   - the error to raise (mandatory)
-#   - the cause of the error to raise (optional)
-#
+#   - the raised error (mandatory)
+#   - the cause of the raised error (optional)
 # it will, in the raised error:
-#   - set the cause
-#   - set the stack trace
+#   - set the cause (internal mechanism)
+#   - set the stack trace (internal mechanism)
+(raise (error))
+(raise (error) (error (kind 'cause)))
+
+# calling 'raise will interrupt the current evaluation and percolate the error up the call stack
+# if no 'try is ever reached by the percolating error:
+#   crash the program and display the traceback in the console
 #
-# calling 'raise' will interrupt the evaluation and raise the error
-# if not in a 'try', error will percolate up the call stack until a 'try' is reached
-# if a 'try' is reached:
-#   if the 'recover' clause is not present:
-#     invoke the 'finally' clause (MUST be present)
+# if a 'try is reached by the percolating error:
+#   if the 'recover clause is not present:
+#     invoke the 'finally clause (MUST be present)
 #     keep percolating the error up the call stack
 #
-#   if the 'recover' clause is present:
+#   if the 'recover clause is present:
 #     stop percolating the error up the call stack
-#     invoke the 'recover' clause with the error, bind to result
-#     invoke the 'finally' clause if present
-#     return result
+#     invoke the 'recover clause with the error, record result
+#     invoke the 'finally clause if present
+#     return the previously recorded result

@@ -1,6 +1,5 @@
 # Data.Structs
 
-# custom structs
 # all fields are public
 # mandatory fields are passed at creation
 # optional fields must have default values
@@ -13,10 +12,10 @@
     (field_num 0)
     (field_str "")
     (field_ident 'a)
-    (field_list '())
+    (field_list (list))
     (field_dict (dict))
-    (field_func (func () '()))
-    (field_macro (macro ctx () '(ctx '())))
+    (field_func (func () (list)))
+    (field_macro (macro ctx () (list ctx (list))))
     (field_struct 'none)
 )
 
@@ -45,8 +44,8 @@
 (struct0)
 (struct1 0)
 (struct2 "abc" 'a)
-(struct_args 0 "" 'a '() (dict))
+(struct_args 0 "" 'a (list) (dict))
 
 # convert struct to/from dict
-(struct_to_dict struct0)
-(dict_to_struct struct0 (dict))
+(struct_to_dict struct0)        # many fields
+(dict_to_struct struct0 (dict)) # use defaults

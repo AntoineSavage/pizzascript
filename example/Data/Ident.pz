@@ -18,6 +18,6 @@
 
 # LEXER_TEST_END
 
-(ident a_str)   # -> (parse_ident a_str)
+(ident a_str)   # -> (parse_ident a_str) !!! CACHED !!!
 (ident a_ident) # -> a_ident
 (ident x)       # raise (error 'TypeError "Expected str or ident, got: " (typeof x))
