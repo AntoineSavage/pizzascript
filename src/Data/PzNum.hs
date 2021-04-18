@@ -36,12 +36,11 @@ truncateIfInt d =
 
 {- TODOs
 
-1) Specific-base positive integer literals:
+Specific-base positive integer literals:
 
 0b01                # binary
 0d0123456789        # decimal
 0o01234567          # octal
-0x0123456789ABCDEF  # hex (case-insensitive)
-0x0123456789abcdef
+0x0123456789ABCDEF  # hex
 
 -}

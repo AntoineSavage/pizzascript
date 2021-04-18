@@ -69,16 +69,16 @@ All numbers have type `'num`, which corresponds to the following function `num`:
 ```
 # Strings
 
-Strings are represented by an array of bytes. These bytes can either represent unicode codepoints encoded as utf8 (text strings), or not (binary strings)
+Strings are represented by an array of unicode codepoints, encoded as utf-8
 
-Some simple text string literals:
+Some simple string literals:
 ```
 ""                  # empty string
 "abc123ACB_ !@#$%?" # ASCII printable characters
 "àéèïîôöù"          # Unicode printable characters
 ```
 
-Certain bytes/codepoints must be escaped:
+Certain codepoints must be escaped:
 - `\"` : double quote
 - `\\` : backslash
 - `\a` : alert
@@ -91,15 +91,8 @@ Certain bytes/codepoints must be escaped:
 - `\s` : space
 - `\t` : tab
 - `\v` : vertical tab
-- `\0` : null byte
-- `\xDD` : one hex byte, ex: `\x20`
-- `\uDDDD` : one unicode hex codepoint, ex: `\u0020`
-- `\UDDDDD` : one extended unicode hex codepoint, ex: `\U1F600`
-
-Here is a simple binary string literal:
-```
-"\x00\xAA\xFF" # not a valid utf8 encoding
-```
+- `\D` to `\DDDDD` : one unicode decimal codepoint between 0 and 1114111 incl. (i.e. between 0x0 and 0x10FFFF incl.)
+- `\xD` to `\xDDDDD` : one unicode hex codepoint between 0x0 and 0x10FFFF incl.
 
 All strings have type `'str`, which corresponds to the following variadic function `str`:
 ```
