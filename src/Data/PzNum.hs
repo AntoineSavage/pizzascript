@@ -1,4 +1,4 @@
-module Data.Number (Number(..), parser, unparse) where
+module Data.PzNum (PzNum(..), parser, unparse) where
 
 import Control.Monad ( liftM2 )
 import Data.Ratio ( denominator, numerator )
@@ -6,11 +6,11 @@ import Text.Parsec ( oneOf, string, option, many )
 import Text.Parsec.String (Parser)
 import Utils ( digits )
 
-data Number =
-    Number Integer Integer -- Numerator and Denominator
+data PzNum =
+    PzNum Integer Integer -- Numerator and Denominator
     deriving (Show, Eq)
 
-parser :: Parser Number
+parser :: Parser PzNum
 parser = do
     let uint = many $ oneOf digits
         sint = liftM2 (++) (option "" $ string "-") uint
@@ -18,10 +18,10 @@ parser = do
         exp = option "" $ liftM2 (:) (oneOf "eE") sint
         s = concat <$> sequence [sint, dec, exp]
     ratio <- realToFrac . (read :: String -> Double) <$> s
-    return $ Number (numerator ratio) (denominator ratio)
+    return $ PzNum (numerator ratio) (denominator ratio)
 
-unparse :: Number -> String
-unparse (Number n d) =
+unparse :: PzNum -> String
+unparse (PzNum n d) =
     truncateIfInt $ if d <= 0
         then 0
         else fromIntegral n / fromIntegral d
