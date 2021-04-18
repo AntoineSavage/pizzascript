@@ -1,6 +1,0 @@
-# Data.Atom
-
-# unquote == id for the following
-(def none 'none)
-(def false 'false)
-(def true 'true)
