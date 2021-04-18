@@ -876,11 +876,11 @@ Here are some example of imports and symbol manipulations:
 
 ## Exports and private identifiers
 
-By default, every definition in a module will be available to all modules importing it. This includes identifiers defined in the module itself, as well as import from other modules
+By default, every definition in a module `M` will be exported (i.e. made available to all other modules importing `M`). This includes identifiers defined in the module itself, as well as those imported from other modules (transitive imports, or re-exports)
 
 In other words, if module `A` defines identifier `a`, and if module `B` defines identifier `b` and imports module `A`, and if module `C` imports module `B` only and defines nothing itself, then module `C` will have access to identifiers `a` and `b`
 
-It is possible to prevent exporting identifiers by deleting their symbols from the current context at the end of the module. This can be done using `get_curr_ctx` and `set_curr_ctx`, which are implemented using the *function explicit context*, like this:
+It is possible to prevent re-exporting identifiers by deleting their symbols from the current context at the end of the module. This can be done using `get_curr_ctx` and `set_curr_ctx`, which are implemented using the *function explicit context*, like this:
 ```
 # main.pz
 
@@ -972,4 +972,3 @@ This algorithm ensures that:
     - this can be fixed by doing one of the following:
       - creating a `friend zone` in A and B, where code required for both to evaluate correctly comes before the import statement of the other
       - moving dependencies to a new module
-
