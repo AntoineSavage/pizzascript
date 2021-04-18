@@ -15,7 +15,7 @@ spec = do
 parseSpec :: Spec
 parseSpec = describe "parse" $ do
     it "doesn't do anything yet" $ do
-        1+1 `shouldBe` 2
+        "\x10FFFF" `shouldBe` ""
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do

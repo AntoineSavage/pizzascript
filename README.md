@@ -91,8 +91,8 @@ Certain codepoints must be escaped:
 - `\s` : space
 - `\t` : tab
 - `\v` : vertical tab
-- `\D` to `\DDDDD` : one unicode decimal codepoint between 0 and 1114111 incl. (i.e. between 0x0 and 0x10FFFF incl.)
-- `\xD` to `\xDDDDD` : one unicode hex codepoint between 0x0 and 0x10FFFF incl.
+- `\D`, `\xDD`, ...,  `\DDDDDDD` : one unicode decimal codepoint between 0 and 1114111 incl.
+- `\xD`, `\xDD`, ...,  `\xDDDDDD` : one unicode hex codepoint between 0x0 and 0x10FFFF incl.
 
 All strings have type `'str`, which corresponds to the following variadic function `str`:
 ```

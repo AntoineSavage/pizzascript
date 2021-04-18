@@ -18,6 +18,6 @@ unparse (PzStr s) = ""
 {- TODOs
 
 Escapes:
-- `\xD` to `\xDDDDD` : one unicode hex codepoint between 0x0 and 0x10FFFF incl.
+- `\xD`, `\xDD`, ...,  `\xDDDDDD` : one unicode hex codepoint between 0x0 and 0x10FFFF incl.
 
 -}
