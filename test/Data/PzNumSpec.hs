@@ -10,8 +10,16 @@ import Text.Parsec
 
 spec :: Spec
 spec = do
+    parseVsUnparse
     parseSpec
     unparseSpec
+
+parseVsUnparse :: Spec
+parseVsUnparse = describe "parse vs unparse" $ do
+    it "composes with unparse into id" $ do
+        property $ \n -> do
+            parse parser "tests" (unparse n) `shouldBe` Right n
+            unparse <$> parse parser "tests" (unparse n) `shouldBe` Right (unparse n)
 
 parseSpec :: Spec
 parseSpec = describe "parse" $ do
@@ -51,11 +59,6 @@ parseSpec = describe "parse" $ do
     it "parses any float" $ do
         property $ \f -> do
             isRight (parse parser "tests" $ show (f :: Double)) `shouldBe` True
-
-    it "composes with unparse into id" $ do
-        property $ \n -> do
-            parse parser "tests" (unparse n) `shouldBe` Right n
-            unparse <$> parse parser "tests" (unparse n) `shouldBe` Right (unparse n)
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do

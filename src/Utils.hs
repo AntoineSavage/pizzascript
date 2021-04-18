@@ -1,13 +1,22 @@
 module Utils where
 
-letterUpper :: [Char]
-letterUpper = ['A'..'Z']
-
-letterLower :: [Char]
-letterLower = ['a'..'z']
-
 digits :: [Char]
 digits = ['0'..'9']
 
+lettersUpper :: [Char]
+lettersUpper = ['A'..'Z']
+
+lettersLower :: [Char]
+lettersLower = ['a'..'z']
+
+doubleQuote :: Char
+doubleQuote = '"'
+
+backslash :: Char
+backslash = '\\'
+
 underscore :: Char
 underscore = '_'
+
+symbols :: [Char]
+symbols = " !#$%&'()*+,-./:;<=>?@[]^`{|}~"

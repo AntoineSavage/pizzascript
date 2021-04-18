@@ -3,9 +3,11 @@ module Data.PzStrSpec where
 import Test.Hspec
 import Test.QuickCheck
 
+import Control.Monad
 import Data.Either
 import Data.PzStr
 import Text.Parsec
+import Utils
 
 spec :: Spec
 spec = do
@@ -14,10 +16,12 @@ spec = do
 
 parseSpec :: Spec
 parseSpec = describe "parse" $ do
-    it "doesn't do anything yet" $ do
-        "\x10FFFF" `shouldBe` ""
+    it "parses unescaped strings" $ do
+        forM_ ["", digits, lettersUpper, lettersLower, symbols, [underscore]] $ \s -> do
+                parse parser "tests" ("\"" ++ s ++ "\"") `shouldBe` Right (PzStr s)
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do
-    it "doesn't do anything yet" $ do
-        1+1 `shouldBe` 2
+    it "unparses unescaped strings" $ do
+        forM_ ["", digits, lettersUpper, lettersLower, symbols, [underscore]] $ \s -> do
+            unparse (PzStr s) `shouldBe` "\"" ++ s ++ "\""

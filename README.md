@@ -71,6 +71,8 @@ All numbers have type `'num`, which corresponds to the following function `num`:
 
 Strings are represented by an array of unicode codepoints, encoded as utf-8
 
+Strings cannot span multiple lines
+
 Some simple string literals:
 ```
 ""                  # empty string

@@ -10,10 +10,10 @@ newtype PzStr =
     deriving (Show, Eq)
 
 parser :: Parser PzStr
-parser = return $ PzStr ""
+parser = fmap PzStr $ char '"' >> manyTill anyChar (char '"')
 
 unparse :: PzStr -> String
-unparse (PzStr s) = ""
+unparse (PzStr s) = "\"" ++ s ++ "\""
 
 {- TODOs
 
