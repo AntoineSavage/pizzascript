@@ -120,7 +120,9 @@ validNexts :: [Char]
 validNexts = underscore : digits ++ lettersUpper ++ lettersLower ++ accentChars
 
 instance Arbitrary PzIdent where
-    arbitrary = liftM2 PzIdent arbitrary (listOf arbitrary)
+    arbitrary = liftM2 PzIdent arbitrary
+        $ chooseInt (0, 10) >>= vector
 
 instance Arbitrary PzIdentPart where
-    arbitrary = liftM2 PzIdentPart (elements validFirsts) (listOf $ elements validNexts)
+    arbitrary = liftM2 PzIdentPart (elements validFirsts)
+        $ chooseInt (0, 10) >>= flip vectorOf (elements validNexts)
