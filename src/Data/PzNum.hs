@@ -13,7 +13,7 @@ data PzNum
 
 parser :: Parser PzNum
 parser = do
-    let uint = many digit
+    let uint = many1 digit
         sint = liftM2 (++) (option "" $ string "-") uint
         consOrNothing h t = optionMaybe $ liftM2 (:) h t
         emptyOr mx = fromMaybe "" mx

@@ -24,6 +24,9 @@ parseVsUnparseSpec = describe "parse vs unparse" $ do
 
 parseSpec :: Spec
 parseSpec = describe "parse" $ do
+    it "rejects empty string" $ do
+        isLeft(parse parser "tests" "") `shouldBe` True
+
     it "parses integers" $ do
         property $ \n -> do
             parse parser "tests" (show n) `shouldBe` Right (PzInteger n)

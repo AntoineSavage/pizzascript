@@ -28,6 +28,9 @@ parserVsUnparseSpec = describe "parse vs unparse" $ do
 
 parserSpec :: Spec
 parserSpec = describe "parserSpec" $ do
+    it "rejects empty string" $ do
+        isLeft(parse parser "tests" "") `shouldBe` True
+
     it "rejects non-printable, non-backslash char in string" $ do
         forM_ [noEscapeChars ++ [c] | c <- "\b\f\n\t\b\0\31\127"] $ \s -> do
             isLeft(parse parser "tests" ("\"" ++ s ++ "\"")) `shouldBe` True
@@ -292,7 +295,7 @@ backslashChar = '\\'
 solidusChar :: Char
 solidusChar = '/'
 
-noEscapeChars :: String
+noEscapeChars :: [Char]
 noEscapeChars = digits ++ lettersUpper ++ lettersLower ++ symbols
 
 accentChars :: String

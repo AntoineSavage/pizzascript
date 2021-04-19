@@ -1,26 +1,31 @@
-module Data.PzIdent (PzIdent(..), parser, parseIdentPart, unparse, unparseIdentPart) where
+module Data.PzIdent (PzIdent(..), PzIdentPart(..), parser, parsePart, unparse, unparsePart) where
 
+import Control.Monad ( liftM2 )
+import Data.List ( intercalate )
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
-newtype PzIdent =
-    PzIdent [PzIdentPart]
+data PzIdent
+    = PzIdent PzIdentPart [PzIdentPart]
     deriving (Show, Eq)
 
-newtype PzIdentPart
-    = PzIdentPart String
+data PzIdentPart
+    = PzIdentPart Char String
     deriving (Show, Eq)
 
 -- Parse / unparse ident
 parser :: Parser PzIdent
-parser = return $ PzIdent []
+parser = liftM2 PzIdent parsePart (many $ char '.' >> parsePart)
 
 unparse :: PzIdent -> String
-unparse (PzIdent ps) = ""
+unparse (PzIdent p ps) = intercalate "." $ map unparsePart $ p : ps
 
 -- Parse / unparse ident part
-parseIdentPart :: Parser PzIdentPart
-parseIdentPart = return $ PzIdentPart ""
+parsePart :: Parser PzIdentPart
+parsePart = liftM2 PzIdentPart (letter <|> underscore) (many $ alphaNum  <|> underscore)
 
-unparseIdentPart :: PzIdentPart -> String
-unparseIdentPart (PzIdentPart s) = ""
+unparsePart :: PzIdentPart -> String
+unparsePart (PzIdentPart f ns) = f : ns
+
+underscore :: Parser Char
+underscore = char '_'
