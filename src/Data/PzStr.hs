@@ -36,13 +36,13 @@ parseChar = do
                 'n' -> return '\n'
                 'r' -> return '\r'
                 't' -> return '\t'
-                'u' ->  read . ("'\\x"++) . (++"'") <$> replicateM 4 hexDigit
+                'u' -> read . ("'\\x"++) . (++"'") <$> between (char '{') (char '}' ) (many1 hexDigit)
                 _ -> parserFail $ "Unsupported escape sequence: " ++ ['\\', escaped]
 
 unparseChar :: Char -> String
 unparseChar c =
     case c of
-        '"' -> "\""
+        '\"' -> "\\\""
         '\\' -> "\\\\"
         '/' -> "\\/"
         '\b' -> "\\b"
@@ -53,5 +53,4 @@ unparseChar c =
         _ -> if Char.isPrint c
             then [c]
             else let digits = showHex (ord c) ""
-                     prefix = replicate (4 - length digits) '0'
-                 in "\\u" ++ prefix ++ digits
+                 in "\\u{" ++ digits ++ "}"
