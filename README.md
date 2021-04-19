@@ -45,15 +45,6 @@ Integer literals (positive or negative):
 -1 -2 -3 -4 -5 -10 -123
 ```
 
-Specific-base positive integer literals:
-```
-0b01                # binary
-0d0123456789        # decimal
-0o01234567          # octal
-0x0123456789ABCDEF  # hex (case-insensitive)
-0x0123456789abcdef
-```
-
 Floating-point number literals:
 ```
 0.1 1.1 2.2 10.01 123.123
@@ -83,18 +74,13 @@ Some simple string literals:
 Certain codepoints must be escaped:
 - `\"` : double quote
 - `\\` : backslash
-- `\a` : alert
+- `\/` : forward slash
 - `\b` : backspace
-- `\d` : delete
-- `\e` : escape
 - `\f` : form feed
 - `\n` : newline
 - `\r` : carriage return
-- `\s` : space
 - `\t` : tab
-- `\v` : vertical tab
-- `\D`, `\xDD`, ...,  `\DDDDDDD` : one unicode decimal codepoint between 0 and 1114111 incl.
-- `\xD`, `\xDD`, ...,  `\xDDDDDD` : one unicode hex codepoint between 0x0 and 0x10FFFF incl.
+- `\uDDDD` : four hex digits representing a unicode codepoint
 
 All strings have type `'str`, which corresponds to the following variadic function `str`:
 ```

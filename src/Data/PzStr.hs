@@ -1,6 +1,8 @@
-module Data.PzStr (PzStr(..), parser, unparse) where
+module Data.PzStr (PzStr(..), parser, parseChar, unparse, unparseChar) where
 
-import Control.Monad
+import Data.Char as Char ( isPrint, ord )
+import Control.Monad ( replicateM )
+import Numeric (showHex)
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
@@ -8,15 +10,48 @@ newtype PzStr =
     PzStr String
     deriving (Show, Eq)
 
+-- Parse / unparse string
 parser :: Parser PzStr
-parser = fmap PzStr $ char '"' >> manyTill anyChar (char '"')
+parser = PzStr <$> (char '"' >> manyTill parseChar (char '"'))
 
 unparse :: PzStr -> String
-unparse (PzStr s) = "\"" ++ s ++ "\""
+unparse (PzStr s) = concat $ ["\""] ++ map unparseChar s ++ ["\""]
 
-{- TODOs
+-- Parse / unparse char
+parseChar :: Parser Char
+parseChar = do
+    c <- anyChar
+    if c /= '\\'
+        then if Char.isPrint c
+            then return c
+            else parserFail $ "Unprintable characters must be escaped: " ++ unparseChar c
+        else do
+            escaped <- anyChar
+            case escaped of
+                '"' -> return '"'
+                '\\' -> return '\\'
+                '/' -> return '/'
+                'b' -> return '\b'
+                'f' -> return '\f'
+                'n' -> return '\n'
+                'r' -> return '\r'
+                't' -> return '\t'
+                'u' ->  read . ("'\\x"++) . (++"'") <$> replicateM 4 hexDigit
+                _ -> parserFail $ "Unsupported escape sequence: " ++ ['\\', escaped]
 
-Escapes:
-- `\xD`, `\xDD`, ...,  `\xDDDDDD` : one unicode hex codepoint between 0x0 and 0x10FFFF incl.
-
--}
+unparseChar :: Char -> String
+unparseChar c =
+    case c of
+        '"' -> "\""
+        '\\' -> "\\\\"
+        '/' -> "\\/"
+        '\b' -> "\\b"
+        '\f' -> "\\f"
+        '\n' -> "\\n"
+        '\r' -> "\\r"
+        '\t' -> "\\t"
+        _ -> if Char.isPrint c
+            then [c]
+            else let digits = showHex (ord c) ""
+                     prefix = replicate (4 - length digits) '0'
+                 in "\\u" ++ prefix ++ digits

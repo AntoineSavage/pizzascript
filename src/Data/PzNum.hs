@@ -12,10 +12,7 @@ data PzNum
     deriving (Show, Eq)
 
 parser :: Parser PzNum
-parser = intOrFloat
-
-intOrFloat :: Parser PzNum
-intOrFloat = do
+parser = do
     let uint = many digit
         sint = liftM2 (++) (option "" $ string "-") uint
         consOrNothing h t = optionMaybe $ liftM2 (:) h t
@@ -37,14 +34,3 @@ fromIntOrDouble fromInt fromDouble d =
     in if d == fromIntegral truncated
         then fromInt truncated
         else fromDouble d
-
-{- TODOs
-
-Specific-base positive integer literals:
-
-0b01                # binary
-0d0123456789        # decimal
-0o01234567          # octal
-0x0123456789ABCDEF  # hex
-
--}
