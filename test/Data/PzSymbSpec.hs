@@ -19,10 +19,10 @@ spec = do
 parseVsUnparseSpec :: Spec
 parseVsUnparseSpec = describe "parse vs unparse" $ do
     it "composes parse and unparse" $ do
-        property $ \(Positive n) ident -> do
-            let s = unparse (PzSymb n ident)
-            parse parser "tests" s `shouldBe` Right (PzSymb n ident)
-            unparse <$> parse parser "tests" s `shouldBe` Right (unparse $ PzSymb n ident)
+        property $ \symb -> do
+            let s = unparse symb
+            parse parser "tests" s `shouldBe` Right symb
+            unparse <$> parse parser "tests" s `shouldBe` Right (unparse symb)
 
 parseSpec :: Spec
 parseSpec = describe "parse" $ do
@@ -49,3 +49,8 @@ unparseSpec = describe "unparse" $ do
     it "unparses n quotes followed by ident" $ do
         property $ \(Positive n) ident -> do
             unparse (PzSymb n ident) `shouldBe` replicate n '\'' ++ I.unparse ident
+
+instance Arbitrary PzSymb where
+    arbitrary = do
+        Positive n <- arbitrary
+        PzSymb n <$> arbitrary
