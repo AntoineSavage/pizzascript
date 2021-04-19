@@ -7,7 +7,6 @@ import Control.Monad
 import Data.Either
 import Data.PzStr
 import Text.Parsec
-import Utils
 
 spec :: Spec
 spec = do
@@ -25,3 +24,25 @@ unparseSpec = describe "unparse" $ do
     it "unparses unescaped strings" $ do
         forM_ ["", digits, lettersUpper, lettersLower, symbols, [underscore]] $ \s -> do
             unparse (PzStr s) `shouldBe` "\"" ++ s ++ "\""
+
+digits :: [Char]
+digits = ['0'..'9']
+
+
+lettersUpper :: [Char]
+lettersUpper = ['A'..'Z']
+
+lettersLower :: [Char]
+lettersLower = ['a'..'z']
+
+doubleQuote :: Char
+doubleQuote = '"'
+
+backslash :: Char
+backslash = '\\'
+
+underscore :: Char
+underscore = '_'
+
+symbols :: [Char]
+symbols = " !#$%&'()*+,-./:;<=>?@[]^`{|}~"

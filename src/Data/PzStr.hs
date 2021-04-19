@@ -3,7 +3,6 @@ module Data.PzStr (PzStr(..), parser, unparse) where
 import Control.Monad
 import Text.Parsec
 import Text.Parsec.String (Parser)
-import Utils
 
 newtype PzStr =
     PzStr String

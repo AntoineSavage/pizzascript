@@ -2,9 +2,8 @@ module Data.PzNum (PzNum(..), parser, unparse) where
 
 import Control.Monad ( liftM2 )
 import Data.Ratio ( denominator, numerator )
-import Text.Parsec ( oneOf, string, option, many )
+import Text.Parsec
 import Text.Parsec.String (Parser)
-import Utils ( digits )
 
 data PzNum =
     PzNum Integer Integer -- Numerator and Denominator
@@ -12,7 +11,7 @@ data PzNum =
 
 parser :: Parser PzNum
 parser = do
-    let uint = many $ oneOf digits
+    let uint = many digit
         sint = liftM2 (++) (option "" $ string "-") uint
         dec = option "" $ liftM2 (++) (string ".") uint
         exp = option "" $ liftM2 (:) (oneOf "eE") sint
