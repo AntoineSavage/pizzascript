@@ -3,9 +3,9 @@ module Ast.AstIdentSpec where
 import Test.Hspec
 import Test.QuickCheck
 
+import Ast.AstIdent
 import Control.Monad
 import Data.Either
-import Ast.AstIdent
 import Text.Parsec
 
 spec :: Spec

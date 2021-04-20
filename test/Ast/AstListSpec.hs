@@ -3,9 +3,9 @@ module Ast.AstListSpec where
 import Test.Hspec
 import Test.QuickCheck
 
+import Ast.AstList
 import Control.Monad
 import Data.Either
-import Ast.AstList
 import Text.Parsec
 
 spec :: Spec

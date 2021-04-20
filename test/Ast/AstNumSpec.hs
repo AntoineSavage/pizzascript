@@ -3,9 +3,8 @@ module Ast.AstNumSpec where
 import Test.Hspec
 import Test.QuickCheck
 
-import Data.Either
 import Ast.AstNum
-import Data.Ratio
+import Data.Either
 import Text.Parsec
 
 spec :: Spec
