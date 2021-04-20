@@ -103,5 +103,5 @@ replace old new (x:xs) =
 
 astKinds = [ AstKindList, AstKindDict, AstKindStruct, AstKindEval ]
 
-instance Arbitrary AstKind where arbitrary = elements astKinds
-instance Arbitrary a => Arbitrary (AstList a) where arbitrary = liftM2 AstList arbitrary $ listOf arbitrary
+instance Arbitrary a => Arbitrary (AstList a) where
+    arbitrary = liftM2 AstList (elements astKinds) $ chooseInt (0, 5) >>= vector

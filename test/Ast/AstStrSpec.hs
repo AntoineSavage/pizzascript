@@ -300,3 +300,6 @@ noEscapeChars = digits ++ lettersUpper ++ lettersLower ++ symbols
 
 accentChars :: String
 accentChars = "àâäĉèéêëĝĥîïĵôöŝùûüŵŷÿ"
+
+instance Arbitrary AstStr where
+    arbitrary = AstStr <$> (chooseInt (0, 20) >>= vector)

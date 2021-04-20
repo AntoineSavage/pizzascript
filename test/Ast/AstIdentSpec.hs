@@ -120,9 +120,8 @@ validNexts :: [Char]
 validNexts = underscore : digits ++ lettersUpper ++ lettersLower ++ accentChars
 
 instance Arbitrary AstIdent where
-    arbitrary = liftM2 AstIdent arbitrary
-        $ chooseInt (0, 10) >>= vector
+    arbitrary = liftM2 AstIdent arbitrary $ chooseInt (0, 5) >>= vector
 
 instance Arbitrary AstIdentPart where
     arbitrary = liftM2 AstIdentPart (elements validFirsts)
-        $ chooseInt (0, 10) >>= flip vectorOf (elements validNexts)
+        $ chooseInt (0, 5) >>= flip vectorOf (elements validNexts)
