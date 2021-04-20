@@ -21,7 +21,7 @@ parserVsUnparseSpec :: Spec
 parserVsUnparseSpec = describe "parse vs unparse" $ do
     it "composes parse with unparse into id" $ do
         property $ \s -> do
-            let pzStr = PzStr s
+            let pzStr = AstStr s
                 unparsed = unparse pzStr
             parse parser "tests" unparsed `shouldBe` Right pzStr
             unparse <$> parse parser "tests" unparsed `shouldBe` Right unparsed
@@ -41,111 +41,111 @@ parserSpec = describe "parserSpec" $ do
 
     it "parses string without escaping (ascii)" $ do
         let s = noEscapeChars
-        parse parser "tests" ("\"" ++ s ++ "\"") `shouldBe` Right (PzStr s)
+        parse parser "tests" ("\"" ++ s ++ "\"") `shouldBe` Right (AstStr s)
 
     it "parses string without excaping (accents)" $ do
         let s = accentChars
-        parse parser "tests" ("\"" ++ s ++ "\"") `shouldBe` Right (PzStr s)
+        parse parser "tests" ("\"" ++ s ++ "\"") `shouldBe` Right (AstStr s)
 
     it "parses string with escaping (non-unicode)" $ do
-        parse parser "tests" "\"\\\"\"" `shouldBe` Right (PzStr "\"")
-        parse parser "tests" "\"\\\\\"" `shouldBe` Right (PzStr "\\")
-        parse parser "tests" "\"\\/\"" `shouldBe` Right (PzStr "/")
-        parse parser "tests" "\"\\b\"" `shouldBe` Right (PzStr "\b")
-        parse parser "tests" "\"\\f\"" `shouldBe` Right (PzStr "\f")
-        parse parser "tests" "\"\\n\"" `shouldBe` Right (PzStr "\n")
-        parse parser "tests" "\"\\r\"" `shouldBe` Right (PzStr "\r")
-        parse parser "tests" "\"\\t\"" `shouldBe` Right (PzStr "\t")
+        parse parser "tests" "\"\\\"\"" `shouldBe` Right (AstStr "\"")
+        parse parser "tests" "\"\\\\\"" `shouldBe` Right (AstStr "\\")
+        parse parser "tests" "\"\\/\"" `shouldBe` Right (AstStr "/")
+        parse parser "tests" "\"\\b\"" `shouldBe` Right (AstStr "\b")
+        parse parser "tests" "\"\\f\"" `shouldBe` Right (AstStr "\f")
+        parse parser "tests" "\"\\n\"" `shouldBe` Right (AstStr "\n")
+        parse parser "tests" "\"\\r\"" `shouldBe` Right (AstStr "\r")
+        parse parser "tests" "\"\\t\"" `shouldBe` Right (AstStr "\t")
 
     it "parses string with escaping (unicode)" $ do
-        parse parser "tests" "\"\\u{0}\"" `shouldBe` Right (PzStr "\0")
-        parse parser "tests" "\"\\u{1}\"" `shouldBe` Right (PzStr "\1")
-        parse parser "tests" "\"\\u{2}\"" `shouldBe` Right (PzStr "\2")
-        parse parser "tests" "\"\\u{3}\"" `shouldBe` Right (PzStr "\3")
-        parse parser "tests" "\"\\u{4}\"" `shouldBe` Right (PzStr "\4")
-        parse parser "tests" "\"\\u{5}\"" `shouldBe` Right (PzStr "\5")
-        parse parser "tests" "\"\\u{6}\"" `shouldBe` Right (PzStr "\6")
-        parse parser "tests" "\"\\u{7}\"" `shouldBe` Right (PzStr "\7")
+        parse parser "tests" "\"\\u{0}\"" `shouldBe` Right (AstStr "\0")
+        parse parser "tests" "\"\\u{1}\"" `shouldBe` Right (AstStr "\1")
+        parse parser "tests" "\"\\u{2}\"" `shouldBe` Right (AstStr "\2")
+        parse parser "tests" "\"\\u{3}\"" `shouldBe` Right (AstStr "\3")
+        parse parser "tests" "\"\\u{4}\"" `shouldBe` Right (AstStr "\4")
+        parse parser "tests" "\"\\u{5}\"" `shouldBe` Right (AstStr "\5")
+        parse parser "tests" "\"\\u{6}\"" `shouldBe` Right (AstStr "\6")
+        parse parser "tests" "\"\\u{7}\"" `shouldBe` Right (AstStr "\7")
         -- \b
         -- \t
         -- \n
-        parse parser "tests" "\"\\u{b}\"" `shouldBe` Right (PzStr "\11")
+        parse parser "tests" "\"\\u{b}\"" `shouldBe` Right (AstStr "\11")
         -- \f
         -- \r
-        parse parser "tests" "\"\\u{e}\"" `shouldBe` Right (PzStr "\14")
-        parse parser "tests" "\"\\u{f}\"" `shouldBe` Right (PzStr "\15")
-        parse parser "tests" "\"\\u{10}\"" `shouldBe` Right (PzStr "\16")
-        parse parser "tests" "\"\\u{11}\"" `shouldBe` Right (PzStr "\17")
-        parse parser "tests" "\"\\u{12}\"" `shouldBe` Right (PzStr "\18")
-        parse parser "tests" "\"\\u{13}\"" `shouldBe` Right (PzStr "\19")
-        parse parser "tests" "\"\\u{14}\"" `shouldBe` Right (PzStr "\20")
-        parse parser "tests" "\"\\u{15}\"" `shouldBe` Right (PzStr "\21")
-        parse parser "tests" "\"\\u{16}\"" `shouldBe` Right (PzStr "\22")
-        parse parser "tests" "\"\\u{17}\"" `shouldBe` Right (PzStr "\23")
-        parse parser "tests" "\"\\u{18}\"" `shouldBe` Right (PzStr "\24")
-        parse parser "tests" "\"\\u{19}\"" `shouldBe` Right (PzStr "\25")
-        parse parser "tests" "\"\\u{1a}\"" `shouldBe` Right (PzStr "\26")
-        parse parser "tests" "\"\\u{1b}\"" `shouldBe` Right (PzStr "\27")
-        parse parser "tests" "\"\\u{1c}\"" `shouldBe` Right (PzStr "\28")
-        parse parser "tests" "\"\\u{1d}\"" `shouldBe` Right (PzStr "\29")
-        parse parser "tests" "\"\\u{1e}\"" `shouldBe` Right (PzStr "\30")
-        parse parser "tests" "\"\\u{1f}\"" `shouldBe` Right (PzStr "\31")
-        parse parser "tests" "\"\\u{7f}\"" `shouldBe` Right (PzStr "\127")
+        parse parser "tests" "\"\\u{e}\"" `shouldBe` Right (AstStr "\14")
+        parse parser "tests" "\"\\u{f}\"" `shouldBe` Right (AstStr "\15")
+        parse parser "tests" "\"\\u{10}\"" `shouldBe` Right (AstStr "\16")
+        parse parser "tests" "\"\\u{11}\"" `shouldBe` Right (AstStr "\17")
+        parse parser "tests" "\"\\u{12}\"" `shouldBe` Right (AstStr "\18")
+        parse parser "tests" "\"\\u{13}\"" `shouldBe` Right (AstStr "\19")
+        parse parser "tests" "\"\\u{14}\"" `shouldBe` Right (AstStr "\20")
+        parse parser "tests" "\"\\u{15}\"" `shouldBe` Right (AstStr "\21")
+        parse parser "tests" "\"\\u{16}\"" `shouldBe` Right (AstStr "\22")
+        parse parser "tests" "\"\\u{17}\"" `shouldBe` Right (AstStr "\23")
+        parse parser "tests" "\"\\u{18}\"" `shouldBe` Right (AstStr "\24")
+        parse parser "tests" "\"\\u{19}\"" `shouldBe` Right (AstStr "\25")
+        parse parser "tests" "\"\\u{1a}\"" `shouldBe` Right (AstStr "\26")
+        parse parser "tests" "\"\\u{1b}\"" `shouldBe` Right (AstStr "\27")
+        parse parser "tests" "\"\\u{1c}\"" `shouldBe` Right (AstStr "\28")
+        parse parser "tests" "\"\\u{1d}\"" `shouldBe` Right (AstStr "\29")
+        parse parser "tests" "\"\\u{1e}\"" `shouldBe` Right (AstStr "\30")
+        parse parser "tests" "\"\\u{1f}\"" `shouldBe` Right (AstStr "\31")
+        parse parser "tests" "\"\\u{7f}\"" `shouldBe` Right (AstStr "\127")
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do
     it "unparses string without excaping (ascii)" $ do
         let s = noEscapeChars
-        unparse (PzStr s) `shouldBe` ("\"" ++ s ++ "\"")
+        unparse (AstStr s) `shouldBe` ("\"" ++ s ++ "\"")
 
     it "unparses string without excaping (accents)" $ do
         let s = accentChars
-        unparse (PzStr s) `shouldBe` ("\"" ++ s ++ "\"")
+        unparse (AstStr s) `shouldBe` ("\"" ++ s ++ "\"")
 
     it "unparses string with escaping (non-unicode)" $ do
-        unparse (PzStr "\"") `shouldBe` "\"\\\"\""
-        unparse (PzStr "\\") `shouldBe` "\"\\\\\""
-        unparse (PzStr "/") `shouldBe` "\"\\/\""
-        unparse (PzStr "\b") `shouldBe` "\"\\b\""
-        unparse (PzStr "\f") `shouldBe` "\"\\f\""
-        unparse (PzStr "\n") `shouldBe` "\"\\n\""
-        unparse (PzStr "\r") `shouldBe` "\"\\r\""
-        unparse (PzStr "\t") `shouldBe` "\"\\t\""
+        unparse (AstStr "\"") `shouldBe` "\"\\\"\""
+        unparse (AstStr "\\") `shouldBe` "\"\\\\\""
+        unparse (AstStr "/") `shouldBe` "\"\\/\""
+        unparse (AstStr "\b") `shouldBe` "\"\\b\""
+        unparse (AstStr "\f") `shouldBe` "\"\\f\""
+        unparse (AstStr "\n") `shouldBe` "\"\\n\""
+        unparse (AstStr "\r") `shouldBe` "\"\\r\""
+        unparse (AstStr "\t") `shouldBe` "\"\\t\""
 
     it "unparses string with escaping (unicode)" $ do
-        unparse (PzStr "\0") `shouldBe` "\"\\u{0}\""
-        unparse (PzStr "\1") `shouldBe` "\"\\u{1}\""
-        unparse (PzStr "\2") `shouldBe` "\"\\u{2}\""
-        unparse (PzStr "\3") `shouldBe` "\"\\u{3}\""
-        unparse (PzStr "\4") `shouldBe` "\"\\u{4}\""
-        unparse (PzStr "\5") `shouldBe` "\"\\u{5}\""
-        unparse (PzStr "\6") `shouldBe` "\"\\u{6}\""
-        unparse (PzStr "\7") `shouldBe` "\"\\u{7}\""
+        unparse (AstStr "\0") `shouldBe` "\"\\u{0}\""
+        unparse (AstStr "\1") `shouldBe` "\"\\u{1}\""
+        unparse (AstStr "\2") `shouldBe` "\"\\u{2}\""
+        unparse (AstStr "\3") `shouldBe` "\"\\u{3}\""
+        unparse (AstStr "\4") `shouldBe` "\"\\u{4}\""
+        unparse (AstStr "\5") `shouldBe` "\"\\u{5}\""
+        unparse (AstStr "\6") `shouldBe` "\"\\u{6}\""
+        unparse (AstStr "\7") `shouldBe` "\"\\u{7}\""
         -- \b
         -- \t
         -- \n
-        unparse (PzStr "\11") `shouldBe` "\"\\u{b}\""
+        unparse (AstStr "\11") `shouldBe` "\"\\u{b}\""
         -- \f
         -- \r
-        unparse (PzStr "\14") `shouldBe` "\"\\u{e}\""
-        unparse (PzStr "\15") `shouldBe` "\"\\u{f}\""
-        unparse (PzStr "\16") `shouldBe` "\"\\u{10}\""
-        unparse (PzStr "\17") `shouldBe` "\"\\u{11}\""
-        unparse (PzStr "\18") `shouldBe` "\"\\u{12}\""
-        unparse (PzStr "\19") `shouldBe` "\"\\u{13}\""
-        unparse (PzStr "\20") `shouldBe` "\"\\u{14}\""
-        unparse (PzStr "\21") `shouldBe` "\"\\u{15}\""
-        unparse (PzStr "\22") `shouldBe` "\"\\u{16}\""
-        unparse (PzStr "\23") `shouldBe` "\"\\u{17}\""
-        unparse (PzStr "\24") `shouldBe` "\"\\u{18}\""
-        unparse (PzStr "\25") `shouldBe` "\"\\u{19}\""
-        unparse (PzStr "\26") `shouldBe` "\"\\u{1a}\""
-        unparse (PzStr "\27") `shouldBe` "\"\\u{1b}\""
-        unparse (PzStr "\28") `shouldBe` "\"\\u{1c}\""
-        unparse (PzStr "\29") `shouldBe` "\"\\u{1d}\""
-        unparse (PzStr "\30") `shouldBe` "\"\\u{1e}\""
-        unparse (PzStr "\31") `shouldBe` "\"\\u{1f}\""
-        unparse (PzStr "\127") `shouldBe` "\"\\u{7f}\""
+        unparse (AstStr "\14") `shouldBe` "\"\\u{e}\""
+        unparse (AstStr "\15") `shouldBe` "\"\\u{f}\""
+        unparse (AstStr "\16") `shouldBe` "\"\\u{10}\""
+        unparse (AstStr "\17") `shouldBe` "\"\\u{11}\""
+        unparse (AstStr "\18") `shouldBe` "\"\\u{12}\""
+        unparse (AstStr "\19") `shouldBe` "\"\\u{13}\""
+        unparse (AstStr "\20") `shouldBe` "\"\\u{14}\""
+        unparse (AstStr "\21") `shouldBe` "\"\\u{15}\""
+        unparse (AstStr "\22") `shouldBe` "\"\\u{16}\""
+        unparse (AstStr "\23") `shouldBe` "\"\\u{17}\""
+        unparse (AstStr "\24") `shouldBe` "\"\\u{18}\""
+        unparse (AstStr "\25") `shouldBe` "\"\\u{19}\""
+        unparse (AstStr "\26") `shouldBe` "\"\\u{1a}\""
+        unparse (AstStr "\27") `shouldBe` "\"\\u{1b}\""
+        unparse (AstStr "\28") `shouldBe` "\"\\u{1c}\""
+        unparse (AstStr "\29") `shouldBe` "\"\\u{1d}\""
+        unparse (AstStr "\30") `shouldBe` "\"\\u{1e}\""
+        unparse (AstStr "\31") `shouldBe` "\"\\u{1f}\""
+        unparse (AstStr "\127") `shouldBe` "\"\\u{7f}\""
 
 parseCharVsUnparseCharSpec :: Spec
 parseCharVsUnparseCharSpec = describe "parseChar vs unparseChar" $ do

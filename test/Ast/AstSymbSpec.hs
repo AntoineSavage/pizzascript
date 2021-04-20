@@ -32,25 +32,25 @@ parseSpec = describe "parse" $ do
     it "parses single quote followed by ident" $ do
         property $ \ident -> do
             let s = '\'' : I.unparse ident
-            parse parser "tests" s `shouldBe` Right (PzSymb 1 ident)
+            parse parser "tests" s `shouldBe` Right (AstSymb 1 ident)
 
     it "parses n quotes followed by ident" $ do
         property $ \(Positive n) ident -> do
             let s = replicate n '\'' ++ I.unparse ident
-            parse parser "tests" s `shouldBe` Right (PzSymb n ident)
+            parse parser "tests" s `shouldBe` Right (AstSymb n ident)
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do
     it "unparses single quote followed by ident" $ do
         property $ \(Negative n) ident -> do
-            unparse (PzSymb n ident) `shouldBe` '\'' : I.unparse ident
-            unparse (PzSymb 0 ident) `shouldBe` '\'' : I.unparse ident
+            unparse (AstSymb n ident) `shouldBe` '\'' : I.unparse ident
+            unparse (AstSymb 0 ident) `shouldBe` '\'' : I.unparse ident
     
     it "unparses n quotes followed by ident" $ do
         property $ \(Positive n) ident -> do
-            unparse (PzSymb n ident) `shouldBe` replicate n '\'' ++ I.unparse ident
+            unparse (AstSymb n ident) `shouldBe` replicate n '\'' ++ I.unparse ident
 
-instance Arbitrary PzSymb where
+instance Arbitrary AstSymb where
     arbitrary = do
         Positive n <- arbitrary
-        PzSymb n <$> arbitrary
+        AstSymb n <$> arbitrary

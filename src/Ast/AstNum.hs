@@ -1,4 +1,4 @@
-module Ast.AstNum (PzNum(..), parser, unparse, fromIntOrDouble) where
+module Ast.AstNum (AstNum(..), parser, unparse, fromIntOrDouble) where
 
 import Control.Monad ( liftM2 )
 import Data.Maybe ( fromMaybe )
@@ -6,12 +6,12 @@ import Data.Ratio ( denominator, numerator )
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
-data PzNum
-    = PzInteger Integer
-    | PzDouble Double
+data AstNum
+    = AstInteger Integer
+    | AstDouble Double
     deriving (Show, Eq)
 
-parser :: Parser PzNum
+parser :: Parser AstNum
 parser = do
     let uint = many1 digit
         sint = liftM2 (++) (option "" $ string "-") uint
@@ -21,12 +21,12 @@ parser = do
     md <- consOrNothing (char '.') uint
     me <- consOrNothing (oneOf "eE") sint
     case (md, me) of
-        (Nothing, Nothing) -> return $ PzInteger $ read i
-        (_, _) -> return $ fromIntOrDouble PzInteger PzDouble $ read $ i ++ emptyOr md ++ emptyOr me
+        (Nothing, Nothing) -> return $ AstInteger $ read i
+        (_, _) -> return $ fromIntOrDouble AstInteger AstDouble $ read $ i ++ emptyOr md ++ emptyOr me
 
-unparse :: PzNum -> String
-unparse (PzInteger i) = show i
-unparse (PzDouble d) = fromIntOrDouble show show d
+unparse :: AstNum -> String
+unparse (AstInteger i) = show i
+unparse (AstDouble d) = fromIntOrDouble show show d
 
 fromIntOrDouble :: (Integer -> a) -> (Double -> a) -> Double -> a
 fromIntOrDouble fromInt fromDouble d =

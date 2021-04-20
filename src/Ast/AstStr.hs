@@ -1,4 +1,4 @@
-module Ast.AstStr (PzStr(..), parser, parseChar, unparse, unparseChar) where
+module Ast.AstStr (AstStr(..), parser, parseChar, unparse, unparseChar) where
 
 import Data.Char as Char ( isPrint, ord )
 import Control.Monad ( replicateM )
@@ -6,16 +6,16 @@ import Numeric (showHex)
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
-newtype PzStr =
-    PzStr String
+newtype AstStr =
+    AstStr String
     deriving (Show, Eq)
 
 -- Parse / unparse string
-parser :: Parser PzStr
-parser = PzStr <$> (char '"' >> manyTill parseChar (char '"'))
+parser :: Parser AstStr
+parser = AstStr <$> (char '"' >> manyTill parseChar (char '"'))
 
-unparse :: PzStr -> String
-unparse (PzStr s) = concat $ ["\""] ++ map unparseChar s ++ ["\""]
+unparse :: AstStr -> String
+unparse (AstStr s) = concat $ ["\""] ++ map unparseChar s ++ ["\""]
 
 -- Parse / unparse char
 parseChar :: Parser Char
