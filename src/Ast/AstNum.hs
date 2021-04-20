@@ -1,4 +1,4 @@
-module Data.PzNum (PzNum(..), parser, unparse, fromIntOrDouble) where
+module Ast.AstNum (PzNum(..), parser, unparse, fromIntOrDouble) where
 
 import Control.Monad ( liftM2 )
 import Data.Maybe ( fromMaybe )

@@ -1,11 +1,11 @@
-module Data.PzStrSpec where
+module Ast.AstStrSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
 import Control.Monad
 import Data.Either
-import Data.PzStr
+import Ast.AstStr
 import Text.Parsec
 
 spec :: Spec

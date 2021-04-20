@@ -1,4 +1,4 @@
-module Data.PzStr (PzStr(..), parser, parseChar, unparse, unparseChar) where
+module Ast.AstStr (PzStr(..), parser, parseChar, unparse, unparseChar) where
 
 import Data.Char as Char ( isPrint, ord )
 import Control.Monad ( replicateM )

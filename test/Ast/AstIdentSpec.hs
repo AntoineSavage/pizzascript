@@ -1,11 +1,11 @@
-module Data.PzIdentSpec where
+module Ast.AstIdentSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
 import Control.Monad
 import Data.Either
-import Data.PzIdent
+import Ast.AstIdent
 import Text.Parsec
 
 spec :: Spec

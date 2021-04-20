@@ -1,4 +1,4 @@
-module Data.PzEval (PzEval(..), parser, unparse) where
+module Ast.AstEval (PzEval(..), parser, unparse) where
 
 import Data.List ( intercalate )
 import Text.Parsec ( char, manyTill, try )

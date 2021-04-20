@@ -1,4 +1,4 @@
-module Data.PzList (PzList(..), parser, unparse) where
+module Ast.AstList (PzList(..), parser, unparse) where
 
 import Data.List ( intercalate )
 import Text.Parsec ( char, manyTill, try )

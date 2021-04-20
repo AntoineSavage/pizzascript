@@ -825,7 +825,7 @@ Source code can be split in multiple files. Each file corresponds to a module, a
 ```
 src/
   main.pz       # module 'main
-  data.pz       # module 'data
+  Ast.Ast       # module 'data
   data/
     set.pz      # module 'data.set
     list.pz     # module 'data.list

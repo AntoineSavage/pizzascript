@@ -1,7 +1,7 @@
-module Data.PzSymb (PzSymb(..), parser, unparse) where
+module Ast.AstSymb (PzSymb(..), parser, unparse) where
 
 import Control.Monad ( liftM2 )
-import qualified Data.PzIdent as I
+import qualified Ast.AstIdent as I
 import Text.Parsec ( char, many1 )
 import Text.Parsec.String (Parser)
 

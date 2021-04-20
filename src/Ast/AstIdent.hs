@@ -1,4 +1,4 @@
-module Data.PzIdent (PzIdent(..), PzIdentPart(..), parser, parsePart, unparse, unparsePart) where
+module Ast.AstIdent (PzIdent(..), PzIdentPart(..), parser, parsePart, unparse, unparsePart) where
 
 import Control.Monad ( liftM2 )
 import Data.List ( intercalate )

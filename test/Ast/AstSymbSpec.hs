@@ -1,13 +1,13 @@
-module Data.PzSymbSpec where
+module Ast.AstSymbSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
 import Control.Monad
 import Data.Either
-import qualified Data.PzIdent as I
-import Data.PzIdentSpec ()
-import Data.PzSymb
+import qualified Ast.AstIdent as I
+import Ast.AstIdentSpec ()
+import Ast.AstSymb
 import Text.Parsec
 
 spec :: Spec

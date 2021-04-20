@@ -1,10 +1,10 @@
-module Data.PzNumSpec where
+module Ast.AstNumSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
 import Data.Either
-import Data.PzNum
+import Ast.AstNum
 import Data.Ratio
 import Text.Parsec
 

@@ -1,11 +1,11 @@
-module Data.PzListSpec where
+module Ast.AstListSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
 import Control.Monad
 import Data.Either
-import Data.PzList
+import Ast.AstList
 import Text.Parsec
 
 spec :: Spec
