@@ -104,4 +104,6 @@ replace old new (x:xs) =
 astKinds = [ AstKindList, AstKindDict, AstKindStruct, AstKindEval ]
 
 instance Arbitrary a => Arbitrary (AstList a) where
-    arbitrary = liftM2 AstList (elements astKinds) $ chooseInt (0, 5) >>= vector
+    arbitrary = arbitraryOf arbitrary
+
+arbitraryOf a = liftM2 AstList (elements astKinds) $ chooseInt (0, 5) >>= flip vectorOf a
