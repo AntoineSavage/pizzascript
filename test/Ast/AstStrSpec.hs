@@ -21,9 +21,9 @@ parserVsUnparseSpec :: Spec
 parserVsUnparseSpec = describe "parse vs unparse" $ do
     it "composes parse with unparse into id" $ do
         property $ \s -> do
-            let pzStr = AstStr s
-                unparsed = unparse pzStr
-            parse parser "tests" unparsed `shouldBe` Right pzStr
+            let astStr = AstStr s
+                unparsed = unparse astStr
+            parse parser "tests" unparsed `shouldBe` Right astStr
             unparse <$> parse parser "tests" unparsed `shouldBe` Right unparsed
 
 parserSpec :: Spec

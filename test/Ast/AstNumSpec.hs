@@ -18,9 +18,9 @@ spec = do
 parseVsUnparseSpec :: Spec
 parseVsUnparseSpec = describe "parse vs unparse" $ do
     it "composes parse and unparse into identity" $ do
-        property $ \pzNum -> do
-            parse parser "tests" (unparse pzNum) `shouldBe` Right pzNum
-            unparse <$> parse parser "tests" (unparse pzNum) `shouldBe` Right (unparse pzNum)
+        property $ \astNum -> do
+            parse parser "tests" (unparse astNum) `shouldBe` Right astNum
+            unparse <$> parse parser "tests" (unparse astNum) `shouldBe` Right (unparse astNum)
 
 parseSpec :: Spec
 parseSpec = describe "parse" $ do
