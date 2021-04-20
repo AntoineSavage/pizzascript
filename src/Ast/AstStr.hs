@@ -1,7 +1,7 @@
 module Ast.AstStr (AstStr(..), parser, parseChar, unparse, unparseChar) where
 
-import Data.Char as Char ( isPrint, ord )
 import Control.Monad ( replicateM )
+import Data.Char as Char ( isPrint, ord )
 import Numeric (showHex)
 import Text.Parsec
 import Text.Parsec.String (Parser)
