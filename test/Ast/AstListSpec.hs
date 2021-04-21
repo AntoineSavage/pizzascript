@@ -82,9 +82,9 @@ parseElemsVsUnparseElemsSpec = describe "parseElems vs unparseElems" $ do
         parser' = parseElems doc p' end
     it "composes parseElems and unparseElems into id" $ do
         property $ \xs -> do
-            let es = map (\x -> (d, x)) (xs :: [Int])
+            let ps = map (\x -> (d, x)) (xs :: [Int])
                 f = \(s, x) -> s ++ show x
-            parse parser' "tests" (unparseElems d f es ++ "$") `shouldBe` Right (es, d)
+            parse parser' "tests" (unparseElems d f ps ++ "$") `shouldBe` Right (ps, d)
 
 parseElemsSpec :: Spec
 parseElemsSpec = describe "parseElems" $ do
@@ -107,8 +107,8 @@ parseElemsSpec = describe "parseElems" $ do
 
     it "parses n elems" $ do
         property $ \xs -> do
-            let es = map (\x -> (d, x)) (xs :: [Int])
-            parse parser' "tests" (concatMap (\x -> d ++ show x) xs ++ d ++ "$") `shouldBe` Right (es, d)
+            let ps = map (\x -> (d, x)) (xs :: [Int])
+            parse parser' "tests" (concatMap (\x -> d ++ show x) xs ++ d ++ "$") `shouldBe` Right (ps, d)
 
 unparseElemsSpec :: Spec
 unparseElemsSpec = describe "unparseElems" $ do
@@ -128,8 +128,8 @@ unparseElemsSpec = describe "unparseElems" $ do
             unparseElems d show ([e1, e2, e3] :: [(String, Int)]) `shouldBe` show e1 ++ show e2 ++ show e3 ++ d
 
     it "unparses n elems" $ do
-        property $ \es -> do
-            unparseElems d show (es :: [(String, Int)]) `shouldBe` concatMap show es ++ d
+        property $ \ps -> do
+            unparseElems d show (ps :: [(String, Int)]) `shouldBe` concatMap show ps ++ d
 
 getStartSpec :: Spec
 getStartSpec = describe "getStart" $ do
