@@ -6,13 +6,18 @@ import Test.QuickCheck
 import Ast.AstList
 import Control.Monad
 import Data.Either
+import Data.List
 import Text.Parsec
+import Text.Parsec.String
 
 spec :: Spec
 spec = do
     parseVsUnparseSpec
     parseSpec
     unparseSpec
+    parseElemsVsUnparseElemsSpec
+    parseElemsSpec
+    unparseElemsSpec
     getStartSpec
     getEndSpec
 
@@ -71,6 +76,61 @@ unparseSpec = describe "unparse" $ do
             property $ \xs -> do
                 unparseAstList (AstList k "" (xs :: [Int])) `shouldBe` toAstList k xs
 
+parseElemsVsUnparseElemsSpec :: Spec
+parseElemsVsUnparseElemsSpec = describe "parseElems vs unparseElems" $ do
+    let end = char '$'
+        parser' = parseElems doc p' end
+    it "composes parseElems and unparseElems into id" $ do
+        property $ \xs -> do
+            let es = map (\x -> (d, x)) (xs :: [Int])
+                f = \(s, x) -> s ++ show x
+            parse parser' "tests" (unparseElems d f es ++ "$") `shouldBe` Right (es, d)
+
+parseElemsSpec :: Spec
+parseElemsSpec = describe "parseElems" $ do
+    let end = char '$'
+        parser' = parseElems doc p' end
+    it "rejects empty string" $ do
+        isLeft (parse parser' "tests" "") `shouldBe` True
+
+    it "parses no elems" $ do
+        parse parser' "tests" " $" `shouldBe` Right ([], " ")
+
+    it "parses one elem" $ do
+        parse parser' "tests" (" 123\n$") `shouldBe` Right ([ (" ", 123) ], "\n")
+
+    it "parses two elems" $ do
+        parse parser' "tests" (" 123\n234\t$") `shouldBe` Right ([ (" ", 123), ("\n", 234) ], "\t")
+
+    it "parses three elems" $ do
+        parse parser' "tests" (" 123\n234\t345\r\n$") `shouldBe` Right ([ (" ", 123), ("\n", 234), ("\t", 345) ], "\r\n")
+
+    it "parses n elems" $ do
+        property $ \xs -> do
+            let es = map (\x -> (d, x)) (xs :: [Int])
+            parse parser' "tests" (concatMap (\x -> d ++ show x) xs ++ d ++ "$") `shouldBe` Right (es, d)
+
+unparseElemsSpec :: Spec
+unparseElemsSpec = describe "unparseElems" $ do
+    it "unparses empty list" $ do
+        unparseElems d show ([] :: [(String, Int)]) `shouldBe` d
+
+    it "unparses one elem" $ do
+        property $ \e -> do
+            unparseElems d show ([e] :: [(String, Int)]) `shouldBe` show e ++ d
+
+    it "unparses two elems" $ do
+        property $ \e1 e2 -> do
+            unparseElems d show ([e1, e2] :: [(String, Int)]) `shouldBe` show e1 ++ show e2 ++ d
+
+    it "unparses three elems" $ do
+        property $ \e1 e2 e3 -> do
+            unparseElems d show ([e1, e2, e3] :: [(String, Int)]) `shouldBe` show e1 ++ show e2 ++ show e3 ++ d
+
+    it "unparses n elems" $ do
+        property $ \es -> do
+            unparseElems d show (es :: [(String, Int)]) `shouldBe` concatMap show es ++ d
+
 getStartSpec :: Spec
 getStartSpec = describe "getStart" $ do
     it "returns start for kind" $ do
@@ -92,7 +152,13 @@ parseAstList k = parse (parser k doc p) "tests"
 unparseAstList = unparse " " show
 
 doc = many space
+d = " \n\t\r\n\v"
+
+p :: Parser Int
 p = (read :: String -> Int) <$> liftM2 (++) (option "" $ string "-" ) (many1 digit)
+
+p' :: String -> Parser (String, Int)
+p' s = (\x -> (s,x)) . (read :: String -> Int) <$> liftM2 (++) (option "" $ string "-" ) (many1 digit)
 
 toAstList k = replace '[' (getStart k) . replace ']' (getEnd k) . replace ',' ' ' . show
 
