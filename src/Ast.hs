@@ -2,7 +2,7 @@ module Ast (Ast(..), doc, parser, unparse) where
 
 import qualified Ast.AstExpr as AstExpr
 
-import Control.Monad ( void )
+import Control.Monad ( liftM2, void )
 import Data.List (intercalate)
 import Text.Parsec
 import Text.Parsec.String (Parser)
@@ -25,4 +25,5 @@ doc :: Parser String
 doc = void (many $ void comment <|> void space) >> return ""
 
 comment :: Parser String
-comment = (char '#' >> void (manyTill (noneOf []) $ void endOfLine <|> eof)) >> return ""
+comment = liftM2 (:) (char '#') $
+    manyTill (noneOf []) $ (:[]) <$> endOfLine <|> (eof >> return "")
