@@ -1,4 +1,4 @@
-module Ast (ignore, parser, unparse) where
+module Ast (Ast(..), ignore, parser, unparse) where
 
 import qualified Ast.AstExpr as AstExpr
 
@@ -7,11 +7,19 @@ import Data.List (intercalate)
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
-parser :: Parser () -> Parser [AstExpr.AstExpr]
-parser ignore = many (AstExpr.parser ignore) >>= flip (<$) eof
+newtype Ast
+    = Ast [AstExpr.AstExpr]
+    deriving (Show, Eq)
 
-unparse :: String -> [AstExpr.AstExpr] -> String
-unparse sep = intercalate sep . map (AstExpr.unparse sep)
+parser :: Parser () -> Parser Ast
+parser ignore = do
+    es <- many (AstExpr.parser ignore)
+    ignore
+    eof
+    return $ Ast es
+
+unparse :: String -> Ast -> String
+unparse sep (Ast es) = intercalate sep $ map (AstExpr.unparse sep) es
 
 ignore :: Parser ()
 ignore = void $ many $ comment <|> void space
