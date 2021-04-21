@@ -88,10 +88,10 @@ getEndSpec = describe "getEnd" $ do
         getEnd AstKindEval `shouldBe` ')'
 
 -- Utils
-parseAstList k = parse (parser k w p) "tests"
+parseAstList k = parse (parser k doc p) "tests"
 unparseAstList = unparse " " show
 
-w = spaces
+doc = many space
 p = (read :: String -> Int) <$> liftM2 (++) (option "" $ string "-" ) (many1 digit)
 
 toAstList k = replace '[' (getStart k) . replace ']' (getEnd k) . replace ',' ' ' . show

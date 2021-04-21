@@ -21,16 +21,16 @@ data AstVal
     | AstList (AstList.AstList AstExpr)
     deriving (Show, Eq)
 
-parser :: Parser () -> Parser AstExpr
-parser ignore = fmap (AstExpr "") $ (ignore <?> "expression header doc") >> 
+parser :: Parser String -> Parser AstExpr
+parser doc = fmap (AstExpr "") $ (doc <?> "expression header doc") >> 
         (   AstNum <$> (AstNum.parser <?> "number")
         <|> AstStr <$> (AstStr.parser <?> "string")
         <|> AstIdent <$> (AstIdent.parser <?> "identifier")
         <|> AstSymb <$> (AstSymb.parser <?> "symbol")
-        <|> AstList <$> (AstList.parser AstList.AstKindList ignore (parser ignore) <?> "list")
-        <|> AstList <$> (AstList.parser AstList.AstKindDict ignore (parser ignore) <?> "dictionary")
-        <|> AstList <$> (AstList.parser AstList.AstKindStruct ignore (parser ignore) <?> "struct")
-        <|> AstList <$> (AstList.parser AstList.AstKindEval ignore (parser ignore) <?> "evaluation")
+        <|> AstList <$> (AstList.parser AstList.AstKindList doc (parser doc) <?> "list")
+        <|> AstList <$> (AstList.parser AstList.AstKindDict doc (parser doc) <?> "dictionary")
+        <|> AstList <$> (AstList.parser AstList.AstKindStruct doc (parser doc) <?> "struct")
+        <|> AstList <$> (AstList.parser AstList.AstKindEval doc (parser doc) <?> "evaluation")
         )
 
 unparse :: String -> AstExpr -> String

@@ -13,7 +13,7 @@ data Ast
 
 parser :: Parser Ast
 parser = do
-    es <- many (AstExpr.parser $ void doc)
+    es <- many (AstExpr.parser doc)
     doc <?> "module footer doc"
     eof
     return $ Ast "" es

@@ -73,7 +73,7 @@ docSpec = describe "doc" $ do
 parseVsUnparseSpec :: Spec
 parseVsUnparseSpec = describe "parse vs unparse" $ do
     it "composes parse and unparse into id" $ do
-        property $ \(Exprs es) -> do
+        property $ \(Ast d es) -> do
             parse parser "tests" (unparse sep $ Ast "" es) `shouldBe` Right (Ast "" es)
             unparse sep <$> parse parser "tests" (unparse sep $ Ast "" es) `shouldBe` Right (unparse sep $ Ast "" es)
 
@@ -95,7 +95,7 @@ parseSpec = describe "parse" $ do
             parse parser "tests" (AstExpr.unparse sep e1 ++ sep ++ AstExpr.unparse sep e2 ++ sep ++ AstExpr.unparse sep e3) `shouldBe` Right (Ast "" [e1, e2, e3])
 
     it "parses n expressions" $ do
-        property $ \(Exprs es) -> do
+        property $ \(Ast d es) -> do
             parse parser "tests" (intercalate sep (map (AstExpr.unparse sep) es)) `shouldBe` Right (Ast "" es)
 
 unparseSpec :: Spec
@@ -122,6 +122,5 @@ unparseSpec = describe "unparse" $ do
 -- Utils
 sep = " \n\r\n\t\v # comment\n"
 
-newtype Exprs = Exprs [AstExpr.AstExpr] deriving (Show, Eq)
-instance Arbitrary Exprs where
-    arbitrary = Exprs <$> (chooseInt (0, 5) >>= vector)
+instance Arbitrary Ast where
+    arbitrary = Ast "" <$> (chooseInt (0, 5) >>= vector)

@@ -29,30 +29,30 @@ parseVsUnparseSpec :: Spec
 parseVsUnparseSpec = describe "parse vs unparse" $ do
     it "composes parse and unparse into id" $ do
         property $ \e -> do
-            parse (parser ignore) "tests" (unparse sep e) `shouldBe` Right e
-            unparse sep <$> parse (parser ignore) "tests" (unparse sep e) `shouldBe` Right (unparse sep e)
+            parse (parser doc) "tests" (unparse sep e) `shouldBe` Right e
+            unparse sep <$> parse (parser doc) "tests" (unparse sep e) `shouldBe` Right (unparse sep e)
 
 parseSpec :: Spec
 parseSpec = describe "parse" $ do
     it "parses num" $ do
         property $ \n -> do
-            parse (parser ignore) "tests" (AstNum.unparse n) `shouldBe` Right (AstExpr "" $ AstNum n)
+            parse (parser doc) "tests" (AstNum.unparse n) `shouldBe` Right (AstExpr "" $ AstNum n)
 
     it "parses str" $ do
         property $ \s -> do
-            parse (parser ignore) "tests" (AstStr.unparse s) `shouldBe` Right (AstExpr "" $ AstStr s)
+            parse (parser doc) "tests" (AstStr.unparse s) `shouldBe` Right (AstExpr "" $ AstStr s)
 
     it "parses ident" $ do
         property $ \i -> do
-            parse (parser ignore) "tests" (AstIdent.unparse i) `shouldBe` Right (AstExpr "" $ AstIdent i)
+            parse (parser doc) "tests" (AstIdent.unparse i) `shouldBe` Right (AstExpr "" $ AstIdent i)
 
     it "parses symb" $ do
         property $ \s -> do
-            parse (parser ignore) "tests" (AstSymb.unparse s) `shouldBe` Right (AstExpr "" $ AstSymb s)
+            parse (parser doc) "tests" (AstSymb.unparse s) `shouldBe` Right (AstExpr "" $ AstSymb s)
 
     it "parses list" $ do
         property $ \l -> do
-            parse (parser ignore) "tests" (AstList.unparse sep (unparse sep) l) `shouldBe` Right (AstExpr "" $ AstList l)
+            parse (parser doc) "tests" (AstList.unparse sep (unparse sep) l) `shouldBe` Right (AstExpr "" $ AstList l)
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do
@@ -77,7 +77,7 @@ unparseSpec = describe "unparse" $ do
             unparse sep (AstExpr "" $ AstList l) `shouldBe` AstList.unparse sep (unparse sep) l
 
 -- Utils
-ignore = void $ many (char ' ')
+doc = many (char ' ')
 sep = " "
 
 instance Arbitrary AstExpr where

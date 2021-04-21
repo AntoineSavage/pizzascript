@@ -15,8 +15,8 @@ data AstKind
     | AstKindEval
     deriving (Show, Eq)
 
-parser :: AstKind -> Parser () -> Parser a -> Parser (AstList a)
-parser k w p = AstList k "" <$> (char (getStart k) >> manyTill (w >> p) (try $ w >> char (getEnd k)))
+parser :: AstKind -> Parser String -> Parser a -> Parser (AstList a)
+parser k doc p = AstList k "" <$> (char (getStart k) >> manyTill (doc >> p) (try $ doc >> char (getEnd k)))
 
 unparse :: String -> (a -> String) -> AstList a -> String
 unparse sep f (AstList k _ xs) = [getStart k] ++ intercalate sep (map f xs) ++ [getEnd k]
