@@ -74,29 +74,29 @@ parseVsUnparseSpec :: Spec
 parseVsUnparseSpec = describe "parse vs unparse" $ do
     it "composes parse and unparse into id" $ do
         property $ \(Exprs es) -> do
-            parse (parser doc) "tests" (unparse sep $ Ast "" es) `shouldBe` Right (Ast "" es)
-            unparse sep <$> parse (parser doc) "tests" (unparse sep $ Ast "" es) `shouldBe` Right (unparse sep $ Ast "" es)
+            parse parser "tests" (unparse sep $ Ast "" es) `shouldBe` Right (Ast "" es)
+            unparse sep <$> parse parser "tests" (unparse sep $ Ast "" es) `shouldBe` Right (unparse sep $ Ast "" es)
 
 parseSpec :: Spec
 parseSpec = describe "parse" $ do
     it "parses empty string" $ do
-        parse (parser doc) "tests" "" `shouldBe` Right (Ast "" [])
+        parse parser "tests" "" `shouldBe` Right (Ast "" [])
 
     it "parses single expression" $ do
         property $ \e -> do
-            parse (parser doc) "tests" (AstExpr.unparse sep e) `shouldBe` Right (Ast "" [e])
+            parse parser "tests" (AstExpr.unparse sep e) `shouldBe` Right (Ast "" [e])
 
     it "parses two expressions" $ do
         property $ \e1 e2 -> do
-            parse (parser doc) "tests" (AstExpr.unparse sep e1 ++ sep ++ AstExpr.unparse sep e2) `shouldBe` Right (Ast "" [e1, e2])
+            parse parser "tests" (AstExpr.unparse sep e1 ++ sep ++ AstExpr.unparse sep e2) `shouldBe` Right (Ast "" [e1, e2])
 
     it "parses three expressions" $ do
         property $ \e1 e2 e3 -> do
-            parse (parser doc) "tests" (AstExpr.unparse sep e1 ++ sep ++ AstExpr.unparse sep e2 ++ sep ++ AstExpr.unparse sep e3) `shouldBe` Right (Ast "" [e1, e2, e3])
+            parse parser "tests" (AstExpr.unparse sep e1 ++ sep ++ AstExpr.unparse sep e2 ++ sep ++ AstExpr.unparse sep e3) `shouldBe` Right (Ast "" [e1, e2, e3])
 
     it "parses n expressions" $ do
         property $ \(Exprs es) -> do
-            parse (parser doc) "tests" (intercalate sep (map (AstExpr.unparse sep) es)) `shouldBe` Right (Ast "" es)
+            parse parser "tests" (intercalate sep (map (AstExpr.unparse sep) es)) `shouldBe` Right (Ast "" es)
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do

@@ -11,10 +11,10 @@ data Ast
     = Ast String [AstExpr.AstExpr]
     deriving (Show, Eq)
 
-parser :: Parser () -> Parser Ast
-parser ignore = do
-    es <- many (AstExpr.parser ignore)
-    ignore
+parser :: Parser Ast
+parser = do
+    es <- many (AstExpr.parser doc)
+    doc
     eof
     return $ Ast "" es
 
