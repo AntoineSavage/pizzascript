@@ -13,7 +13,7 @@ data Ast
 
 parser :: Parser Ast
 parser = do
-    es <- many (AstExpr.parser doc)
+    es <- many (AstExpr.parser $ void doc)
     doc
     eof
     return $ Ast "" es
@@ -21,8 +21,8 @@ parser = do
 unparse :: String -> Ast -> String
 unparse sep (Ast _ es) = intercalate sep $ map (AstExpr.unparse sep) es
 
-doc :: Parser ()
-doc = void $ many $ comment <|> void space
+doc :: Parser String 
+doc = void (many $ void comment <|> void space) >> return ""
 
-comment :: Parser ()
-comment = char '#' >> void (manyTill (noneOf []) $ void endOfLine <|> eof)
+comment :: Parser String
+comment = (char '#' >> void (manyTill (noneOf []) $ void endOfLine <|> eof)) >> return ""
