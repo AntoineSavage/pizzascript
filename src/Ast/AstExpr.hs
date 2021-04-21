@@ -6,7 +6,7 @@ import qualified Ast.AstNum as AstNum
 import qualified Ast.AstStr as AstStr
 import qualified Ast.AstSymb as AstSymb
 
-import Text.Parsec ( (<|>) )
+import Text.Parsec ( (<|>), (<?>) )
 import Text.Parsec.String (Parser)
 
 data AstExpr
@@ -22,15 +22,15 @@ data AstVal
     deriving (Show, Eq)
 
 parser :: Parser () -> Parser AstExpr
-parser ignore = fmap (AstExpr "") $ ignore >> 
-        (   AstNum <$> AstNum.parser
-        <|> AstStr <$> AstStr.parser
-        <|> AstIdent <$> AstIdent.parser
-        <|> AstSymb <$> AstSymb.parser
-        <|> AstList <$> AstList.parser AstList.AstKindList ignore (parser ignore)
-        <|> AstList <$> AstList.parser AstList.AstKindDict ignore (parser ignore)
-        <|> AstList <$> AstList.parser AstList.AstKindStruct ignore (parser ignore)
-        <|> AstList <$> AstList.parser AstList.AstKindEval ignore (parser ignore)
+parser ignore = fmap (AstExpr "") $ (ignore <?> "expression header doc") >> 
+        (   AstNum <$> (AstNum.parser <?> "number")
+        <|> AstStr <$> (AstStr.parser <?> "string")
+        <|> AstIdent <$> (AstIdent.parser <?> "identifier")
+        <|> AstSymb <$> (AstSymb.parser <?> "symbol")
+        <|> AstList <$> (AstList.parser AstList.AstKindList ignore (parser ignore) <?> "list")
+        <|> AstList <$> (AstList.parser AstList.AstKindDict ignore (parser ignore) <?> "dictionary")
+        <|> AstList <$> (AstList.parser AstList.AstKindStruct ignore (parser ignore) <?> "struct")
+        <|> AstList <$> (AstList.parser AstList.AstKindEval ignore (parser ignore) <?> "evaluation")
         )
 
 unparse :: String -> AstExpr -> String
