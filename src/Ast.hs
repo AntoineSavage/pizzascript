@@ -22,7 +22,7 @@ unparse :: String -> Ast -> String
 unparse sep (Ast _ es) = intercalate sep $ map (AstExpr.unparse sep) es
 
 doc :: Parser String 
-doc = void (many $ void comment <|> void space) >> return ""
+doc = concat <$> many (comment <|> many1 space)
 
 comment :: Parser String
 comment = liftM2 (:) (char '#') $
