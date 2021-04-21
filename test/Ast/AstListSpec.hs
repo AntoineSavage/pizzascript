@@ -23,11 +23,13 @@ spec = do
 
 parseVsUnparseSpec :: Spec
 parseVsUnparseSpec = describe "parse vs unparse" $ do
-    it "composes parse and unparse into id" $ do
-        property $ \astList@(AstList k "" xs) -> do
-            parseAstList k (unparseAstList astList) `shouldBe` Right astList
-            unparseAstList <$> parseAstList k (unparseAstList astList)
-                `shouldBe` Right (unparseAstList astList)
+    forM_ astKinds $ \k -> do
+        it "composes parse and unparse into id" $ do
+            property $ \(D d) es -> do
+                let astList = AstList k d es
+                    s = unparse' astList
+                parse' k s `shouldBe` Right astList
+                unparse' <$> parse' k s `shouldBe` Right s
             
 parseSpec :: Spec
 parseSpec = describe "parse" $ do
@@ -35,101 +37,105 @@ parseSpec = describe "parse" $ do
         let (start, end) = (getStart k, getEnd k)
 
         it "rejects an empty string" $ do
-            isLeft (parseAstList k "") `shouldBe` True
+            isLeft (parse' k "") `shouldBe` True
 
-        it "parses empty list" $ do
-            parseAstList k [start, end] `shouldBe` Right (AstList k "" [])
-            parseAstList k [start, ' ', end] `shouldBe` Right (AstList k "" [])
+        it "parses no elems" $ do
+            property $ \(D d) -> 
+                parse' k ([start] ++ d ++ [end]) `shouldBe` Right (AstList k d [])
 
-        it "parses one element" $ do
-            parseAstList k [start, '1', end] `shouldBe` Right (AstList k "" [1])
-            parseAstList k [start, ' ', '1', end] `shouldBe` Right (AstList k "" [1])
-            parseAstList k [start, '1', ' ', end] `shouldBe` Right (AstList k "" [1])
-            parseAstList k [start, ' ', '1', ' ', end] `shouldBe` Right (AstList k "" [1])
+        it "parses one elem" $ do
+            property $ \(D d) e -> 
+                parse' k ([start] ++ unparseElem e ++ d ++ [end]) `shouldBe` Right (AstList k d [e])
 
-        it "parses two elements" $ do
-            parseAstList k [start, '1', ' ', '2', end] `shouldBe` Right (AstList k "" [1, 2])
-            parseAstList k [start, ' ', '1', ' ', '2', end] `shouldBe` Right (AstList k "" [1, 2])
-            parseAstList k [start, '1', ' ', '2', ' ', end] `shouldBe` Right (AstList k "" [1, 2])
-            parseAstList k [start, ' ', '1', ' ', '2', ' ', end] `shouldBe` Right (AstList k "" [1, 2])
+        it "parses two elems" $ do
+            property $ \(D d) e1 e2 -> 
+                parse' k ([start] ++ unparseElem e1 ++ unparseElem e2 ++ d ++ [end]) `shouldBe` Right (AstList k d [e1, e2])
 
-        it "parses n elements" $ do
-            property $ \xs -> do
-                let s = toAstList k xs
-                parseAstList k s `shouldBe` Right (AstList k "" xs)
+        it "parses three elems" $ do
+            property $ \(D d) e1 e2 e3 -> 
+                parse' k ([start] ++ unparseElem e1 ++ unparseElem e2 ++ unparseElem e3 ++ d ++ [end]) `shouldBe` Right (AstList k d [e1, e2, e3])
+
+        it "parses n elems" $ do
+            property $ \(D d) es -> 
+                parse' k ([start] ++ concatMap unparseElem es ++ d ++ [end]) `shouldBe` Right (AstList k d es)
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do
     forM_ astKinds $ \k -> do
         let (start, end) = (getStart k, getEnd k)
 
-        it "unparses empty brackets for empty elements" $ do
-            unparseAstList (AstList k "" []) `shouldBe` [start, end]
+        it "unparses zero elems" $ do
+            property $ \(D d) -> do
+                unparse' (AstList k d []) `shouldBe` [start] ++ d ++ [end]
 
-        it "unparses with one element" $ do
-            unparseAstList (AstList k "" [1]) `shouldBe` [start, '1', end]
+        it "unparses one elem" $ do
+            property $ \(D d) e -> do
+                unparse' (AstList k d [e]) `shouldBe` [start] ++ unparseElem e ++ d ++ [end]
 
-        it "unparses with two elements" $ do
-            unparseAstList (AstList k "" [1, 2]) `shouldBe` [start, '1', ' ', '2', end]
+        it "unparses two elems" $ do
+            property $ \(D d) e1 e2 -> do
+                unparse' (AstList k d [e1, e2]) `shouldBe` [start] ++ unparseElem e1 ++ unparseElem e2 ++ d ++ [end]
 
-        it "unparses with n elements" $ do
-            property $ \xs -> do
-                unparseAstList (AstList k "" (xs :: [Int])) `shouldBe` toAstList k xs
+        it "unparses three elems" $ do
+            property $ \(D d) e1 e2 e3  -> do
+                unparse' (AstList k d [e1, e2, e3]) `shouldBe` [start] ++ unparseElem e1 ++ unparseElem e2 ++ unparseElem e3 ++ d ++ [end]
+
+        it "unparses n elems" $ do
+            property $ \(D d) es  -> do
+                unparse' (AstList k d es) `shouldBe` [start] ++ concatMap unparseElem es ++ d ++ [end]
 
 parseElemsVsUnparseElemsSpec :: Spec
 parseElemsVsUnparseElemsSpec = describe "parseElems vs unparseElems" $ do
-    let end = char '$'
-        parser' = parseElems doc p' end
     it "composes parseElems and unparseElems into id" $ do
-        property $ \xs -> do
-            let ps = map (\x -> (d, x)) (xs :: [Int])
-                f = \(s, x) -> s ++ show x
-            parse parser' "tests" (unparseElems d f ps ++ "$") `shouldBe` Right (ps, d)
+        property $ \(D d) es -> do
+            parseElems' (unparseElems' d es ++ "$") `shouldBe` Right (es, d)
 
 parseElemsSpec :: Spec
 parseElemsSpec = describe "parseElems" $ do
-    let end = char '$'
-        parser' = parseElems doc p' end
     it "rejects empty string" $ do
-        isLeft (parse parser' "tests" "") `shouldBe` True
+        isLeft (parseElems' "") `shouldBe` True
 
     it "parses no elems" $ do
-        parse parser' "tests" " $" `shouldBe` Right ([], " ")
+        property $ \(D d) -> do
+            parseElems' (d ++ "$") `shouldBe` Right ([], d)
 
     it "parses one elem" $ do
-        parse parser' "tests" (" 123\n$") `shouldBe` Right ([ (" ", 123) ], "\n")
+        property $ \(D d) e -> do
+            parseElems' (unparseElem e ++ d ++ "$") `shouldBe` Right ([e], d)
 
     it "parses two elems" $ do
-        parse parser' "tests" (" 123\n234\t$") `shouldBe` Right ([ (" ", 123), ("\n", 234) ], "\t")
+        property $ \(D d) e1 e2 -> do
+            parseElems' (unparseElem e1 ++ unparseElem e2 ++ d ++ "$") `shouldBe` Right ([e1, e2], d)
 
     it "parses three elems" $ do
-        parse parser' "tests" (" 123\n234\t345\r\n$") `shouldBe` Right ([ (" ", 123), ("\n", 234), ("\t", 345) ], "\r\n")
+        property $ \(D d) e1 e2 e3 -> do
+            parseElems' (unparseElem e1 ++ unparseElem e2 ++ unparseElem e3 ++ d ++ "$") `shouldBe` Right ([e1, e2, e3], d)
 
     it "parses n elems" $ do
-        property $ \xs -> do
-            let ps = map (\x -> (d, x)) (xs :: [Int])
-            parse parser' "tests" (concatMap (\x -> d ++ show x) xs ++ d ++ "$") `shouldBe` Right (ps, d)
+        property $ \(D d) es -> do
+            parseElems' (concatMap unparseElem es ++ d ++ "$") `shouldBe` Right (es, d)
 
 unparseElemsSpec :: Spec
 unparseElemsSpec = describe "unparseElems" $ do
     it "unparses empty list" $ do
-        unparseElems d show ([] :: [(String, Int)]) `shouldBe` d
+        property $ \(D d) -> do
+            unparseElems' d [] `shouldBe` d
 
     it "unparses one elem" $ do
-        property $ \e -> do
-            unparseElems d show ([e] :: [(String, Int)]) `shouldBe` show e ++ d
+        property $ \(D d) e -> do
+            unparseElems' d [e] `shouldBe` unparseElem e ++ d
 
     it "unparses two elems" $ do
-        property $ \e1 e2 -> do
-            unparseElems d show ([e1, e2] :: [(String, Int)]) `shouldBe` show e1 ++ show e2 ++ d
+        property $ \(D d) e1 e2 -> do
+            unparseElems' d [e1, e2] `shouldBe` unparseElem e1 ++ unparseElem e2 ++ d
 
     it "unparses three elems" $ do
-        property $ \e1 e2 e3 -> do
-            unparseElems d show ([e1, e2, e3] :: [(String, Int)]) `shouldBe` show e1 ++ show e2 ++ show e3 ++ d
+        property $ \(D d) e1 e2 e3 -> do
+            unparseElems' d [e1, e2, e3] `shouldBe` unparseElem e1 ++ unparseElem e2 ++ unparseElem e3 ++ d
 
     it "unparses n elems" $ do
-        property $ \ps -> do
-            unparseElems d show (ps :: [(String, Int)]) `shouldBe` concatMap show ps ++ d
+        property $ \(D d) es -> do
+            unparseElems' d es `shouldBe` concatMap unparseElem es ++ d
 
 getStartSpec :: Spec
 getStartSpec = describe "getStart" $ do
@@ -148,28 +154,37 @@ getEndSpec = describe "getEnd" $ do
         getEnd AstKindEval `shouldBe` ')'
 
 -- Utils
-parseAstList k = parse (parser k doc p) "tests"
-unparseAstList = unparse " " show
+data Elem = Elem String Int deriving (Show, Eq)
 
+parseElem :: String -> Parser Elem
+parseElem s = Elem s . (read :: String -> Int) <$> many1 digit
+
+unparseElem :: Elem -> String
+unparseElem (Elem s x) = s ++ show x
+
+parse' k = parse (parser k doc parseElem) "tests"
+unparse' = unparse unparseElem
+
+parseElems' = parse (parseElems doc parseElem end) "tests"
+unparseElems' d ps = unparseElems d unparseElem ps
+
+end = void $ char '$'
 doc = many space
-d = " \n\t\r\n\v"
-
-p :: Parser Int
-p = (read :: String -> Int) <$> liftM2 (++) (option "" $ string "-" ) (many1 digit)
-
-p' :: String -> Parser (String, Int)
-p' s = (\x -> (s,x)) . (read :: String -> Int) <$> liftM2 (++) (option "" $ string "-" ) (many1 digit)
-
-toAstList k = replace '[' (getStart k) . replace ']' (getEnd k) . replace ',' ' ' . show
-
-replace _   _   []     = []
-replace old new (x:xs) =
-    let x' = if x == old then new else x
-    in x' : replace old new xs
 
 astKinds = [ AstKindList, AstKindDict, AstKindStruct, AstKindEval ]
+ds = [" ", "\n", "\t", "\r\n", "\v"]
+
+newtype D = D String deriving (Show, Eq)
+instance Arbitrary D where arbitrary = D <$> elements ds
+arbD = do D d <- arbitrary; return d
+
+instance Arbitrary Elem where
+    arbitrary = do
+        D d <- arbitrary
+        Positive x <- arbitrary
+        return $ Elem d x
 
 instance Arbitrary a => Arbitrary (AstList a) where
     arbitrary = arbitraryOf arbitrary
 
-arbitraryOf a = liftM3 AstList (elements astKinds) (pure "") $ chooseInt (0, 5) >>= flip vectorOf a
+arbitraryOf a = liftM3 AstList (elements astKinds) arbD $ chooseInt (0, 5) >>= flip vectorOf a

@@ -1,7 +1,8 @@
 module Ast.AstList (AstKind(..), AstList(..), getStart, getEnd, parser, parseElems, unparse, unparseElems) where
 
-import Data.List ( intercalate )
-import Text.Parsec ( char, manyTill, optionMaybe, try )
+import Control.Monad ( void )
+import Data.List ()
+import Text.Parsec ( char, optionMaybe )
 import Text.Parsec.String (Parser)
 
 data AstList a
@@ -16,18 +17,18 @@ data AstKind
     deriving (Show, Eq)
 
 -- Parse/unparse list
-parser :: AstKind -> Parser String -> Parser a -> Parser (AstList a)
-parser k doc p = AstList k "" <$> (char (getStart k) >> manyTill (doc >> p) (try $ doc >> char (getEnd k)))
+parser :: AstKind -> Parser String -> (String -> Parser a) -> Parser (AstList a)
+parser k doc p = char (getStart k) >> uncurry (flip $ AstList k) <$> parseElems doc p (void $ char $ getEnd k)
 
-unparse :: String -> (a -> String) -> AstList a -> String
-unparse sep f (AstList k _ xs) = [getStart k] ++ intercalate sep (map f xs) ++ [getEnd k]
+unparse :: (a -> String) -> AstList a -> String
+unparse f (AstList k d xs) = [getStart k] ++ unparseElems d f xs ++ [getEnd k]
 
 -- Parse/unparse elems
-parseElems :: Parser String -> (String -> Parser a) -> Parser Char -> Parser ([a], String)
+parseElems :: Parser String -> (String -> Parser a) -> Parser () -> Parser ([a], String)
 parseElems doc elem end = do
-    start <- doc
-    (es, end) <- go [] start
-    return (reverse es, end)
+    startDoc <- doc
+    (es, endDoc) <- go [] startDoc
+    return (reverse es, endDoc)
     where
         go acc d = do
             mend <- optionMaybe end

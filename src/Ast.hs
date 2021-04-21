@@ -1,6 +1,7 @@
 module Ast (Ast(..), doc, parser, unparse) where
 
 import qualified Ast.AstExpr as AstExpr
+import qualified Ast.AstList as AstList
 
 import Control.Monad ( liftM2, void )
 import Data.List (intercalate)
@@ -12,14 +13,10 @@ data Ast
     deriving (Show, Eq)
 
 parser :: Parser Ast
-parser = do
-    es <- many (AstExpr.parser doc)
-    doc <?> "module footer doc"
-    eof
-    return $ Ast "" es
+parser = uncurry (flip Ast) <$> AstList.parseElems doc (AstExpr.parser doc) eof
 
-unparse :: String -> Ast -> String
-unparse sep (Ast _ es) = intercalate sep $ map (AstExpr.unparse sep) es
+unparse :: Ast -> String
+unparse (Ast d xs) = AstList.unparseElems d AstExpr.unparse xs
 
 doc :: Parser String 
 doc = concat <$> many (comment <|> many1 space)

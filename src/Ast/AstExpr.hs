@@ -14,30 +14,29 @@ data AstExpr
     deriving (Show, Eq )
 
 data AstVal
-    = AstNum AstNum.AstNum
-    | AstStr AstStr.AstStr
-    | AstIdent AstIdent.AstIdent
-    | AstSymb AstSymb.AstSymb
-    | AstList (AstList.AstList AstExpr)
+    = AstValNum AstNum.AstNum
+    | AstValStr AstStr.AstStr
+    | AstValIdent AstIdent.AstIdent
+    | AstValSymb AstSymb.AstSymb
+    | AstValList (AstList.AstList AstExpr)
     deriving (Show, Eq)
 
-parser :: Parser String -> Parser AstExpr
-parser doc = fmap (AstExpr "") $ (doc <?> "expression header doc") >> 
-        (   AstNum <$> (AstNum.parser <?> "number")
-        <|> AstStr <$> (AstStr.parser <?> "string")
-        <|> AstIdent <$> (AstIdent.parser <?> "identifier")
-        <|> AstSymb <$> (AstSymb.parser <?> "symbol")
-        <|> AstList <$> (AstList.parser AstList.AstKindList doc (parser doc) <?> "list")
-        <|> AstList <$> (AstList.parser AstList.AstKindDict doc (parser doc) <?> "dictionary")
-        <|> AstList <$> (AstList.parser AstList.AstKindStruct doc (parser doc) <?> "struct")
-        <|> AstList <$> (AstList.parser AstList.AstKindEval doc (parser doc) <?> "evaluation")
-        )
+parser :: Parser String -> String -> Parser AstExpr
+parser doc d = fmap (AstExpr d) $
+            AstValNum <$> (AstNum.parser <?> "number")
+        <|> AstValStr <$> (AstStr.parser <?> "string")
+        <|> AstValIdent <$> (AstIdent.parser <?> "identifier")
+        <|> AstValSymb <$> (AstSymb.parser <?> "symbol")
+        <|> AstValList <$> (AstList.parser AstList.AstKindList doc (parser doc) <?> "list")
+        <|> AstValList <$> (AstList.parser AstList.AstKindDict doc (parser doc) <?> "dictionary")
+        <|> AstValList <$> (AstList.parser AstList.AstKindStruct doc (parser doc) <?> "struct")
+        <|> AstValList <$> (AstList.parser AstList.AstKindEval doc (parser doc) <?> "evaluation")
 
-unparse :: String -> AstExpr -> String
-unparse sep (AstExpr _ val) =
-    case val of
-        AstNum n -> AstNum.unparse n
-        AstStr s -> AstStr.unparse s
-        AstIdent i -> AstIdent.unparse i
-        AstSymb s -> AstSymb.unparse s
-        AstList l -> AstList.unparse sep (unparse sep) l
+unparse :: AstExpr -> String
+unparse (AstExpr d val) =
+    d ++ case val of
+        AstValNum n -> AstNum.unparse n
+        AstValStr s -> AstStr.unparse s
+        AstValIdent i -> AstIdent.unparse i
+        AstValSymb s -> AstSymb.unparse s
+        AstValList l -> AstList.unparse unparse l

@@ -32,34 +32,34 @@ parseSpec = describe "parse" $ do
 
     it "parse single part" $ do
         property $ \(AstIdentPart f1 ns1) -> do
-            let s = f1 : ns1
+            let s = [f1] ++ ns1
             parse parser "tests" s `shouldBe` Right (AstIdent (AstIdentPart f1 ns1) [])
 
     it "parse two parts" $ do
         property $ \(AstIdentPart f1 ns1) (AstIdentPart f2 ns2) -> do
-            let s = f1 : ns1 ++ "." ++ [f2] ++ ns2
+            let s = [f1] ++ ns1 ++ "." ++ [f2] ++ ns2
             parse parser "tests" s `shouldBe` Right (AstIdent (AstIdentPart f1 ns1) [AstIdentPart f2 ns2])
 
     it "parse two parts" $ do
         property $ \(AstIdentPart f1 ns1) (AstIdentPart f2 ns2) (AstIdentPart f3 ns3) -> do
-            let s = f1 : ns1 ++ "." ++ [f2] ++ ns2 ++ "." ++ [f3] ++ ns3
+            let s = [f1] ++ ns1 ++ "." ++ [f2] ++ ns2 ++ "." ++ [f3] ++ ns3
             parse parser "tests" s `shouldBe` Right (AstIdent (AstIdentPart f1 ns1) [AstIdentPart f2 ns2, AstIdentPart f3 ns3])
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do
     it "returns single part for singleton list" $ do
         property $ \(AstIdentPart f1 ns1) -> do
-            let s = f1 : ns1
+            let s = [f1] ++ ns1
             unparse (AstIdent (AstIdentPart f1 ns1) []) `shouldBe` s
 
     it "intercalates dots between two parts" $ do
         property $ \(AstIdentPart f1 ns1) (AstIdentPart f2 ns2) -> do
-            let s = f1 : ns1 ++ "." ++ [f2] ++ ns2
+            let s = [f1] ++ ns1 ++ "." ++ [f2] ++ ns2
             unparse (AstIdent (AstIdentPart f1 ns1) [AstIdentPart f2 ns2]) `shouldBe` s
 
     it "intercalates dots between three parts" $ do
         property $ \(AstIdentPart f1 ns1) (AstIdentPart f2 ns2) (AstIdentPart f3 ns3) -> do
-            let s = f1 : ns1 ++ "." ++ [f2] ++ ns2 ++ "." ++ [f3] ++ ns3
+            let s = [f1] ++ ns1 ++ "." ++ [f2] ++ ns2 ++ "." ++ [f3] ++ ns3
             unparse (AstIdent (AstIdentPart f1 ns1) [AstIdentPart f2 ns2, AstIdentPart f3 ns3]) `shouldBe` s
 
 parsePartVsUnparsePartSpec :: Spec
@@ -123,5 +123,4 @@ instance Arbitrary AstIdent where
     arbitrary = liftM2 AstIdent arbitrary $ chooseInt (0, 5) >>= vector
 
 instance Arbitrary AstIdentPart where
-    arbitrary = liftM2 AstIdentPart (elements validFirsts)
-        $ chooseInt (0, 5) >>= flip vectorOf (elements validNexts)
+    arbitrary = liftM2 AstIdentPart (elements validFirsts) $ chooseInt (0, 5) >>= flip vectorOf (elements validNexts)

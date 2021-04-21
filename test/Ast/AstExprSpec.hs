@@ -15,6 +15,7 @@ import qualified Ast.AstStr as AstStr
 import qualified Ast.AstSymbSpec as AstSymbSpec
 import qualified Ast.AstSymb as AstSymb
 
+import Ast.AstListSpec (D(..))
 import Control.Monad
 import Data.Either
 import Text.Parsec
@@ -28,67 +29,67 @@ spec = do
 parseVsUnparseSpec :: Spec
 parseVsUnparseSpec = describe "parse vs unparse" $ do
     it "composes parse and unparse into id" $ do
-        property $ \e -> do
-            parse (parser doc) "tests" (unparse sep e) `shouldBe` Right e
-            unparse sep <$> parse (parser doc) "tests" (unparse sep e) `shouldBe` Right (unparse sep e)
+        property $ \e@(AstExpr d val) -> do
+            parse (spaces >> parser doc d) "tests" (unparse e) `shouldBe` Right e
+            unparse <$> parse (spaces >> parser doc d) "tests" (unparse e) `shouldBe` Right (unparse e)
 
 parseSpec :: Spec
 parseSpec = describe "parse" $ do
     it "parses num" $ do
-        property $ \n -> do
-            parse (parser doc) "tests" (AstNum.unparse n) `shouldBe` Right (AstExpr "" $ AstNum n)
+        property $ \(D d) n -> do
+            parse (parser doc d) "tests" (AstNum.unparse n) `shouldBe` Right (AstExpr d $ AstValNum n)
 
     it "parses str" $ do
-        property $ \s -> do
-            parse (parser doc) "tests" (AstStr.unparse s) `shouldBe` Right (AstExpr "" $ AstStr s)
+        property $ \(D d) s -> do
+            parse (parser doc d) "tests" (AstStr.unparse s) `shouldBe` Right (AstExpr d $ AstValStr s)
 
     it "parses ident" $ do
-        property $ \i -> do
-            parse (parser doc) "tests" (AstIdent.unparse i) `shouldBe` Right (AstExpr "" $ AstIdent i)
+        property $ \(D d) i -> do
+            parse (parser doc d) "tests" (AstIdent.unparse i) `shouldBe` Right (AstExpr d $ AstValIdent i)
 
     it "parses symb" $ do
-        property $ \s -> do
-            parse (parser doc) "tests" (AstSymb.unparse s) `shouldBe` Right (AstExpr "" $ AstSymb s)
+        property $ \(D d) s -> do
+            parse (parser doc d) "tests" (AstSymb.unparse s) `shouldBe` Right (AstExpr d $ AstValSymb s)
 
     it "parses list" $ do
-        property $ \l -> do
-            parse (parser doc) "tests" (AstList.unparse sep (unparse sep) l) `shouldBe` Right (AstExpr "" $ AstList l)
+        property $ \(D d) l -> do
+            parse (parser doc d) "tests" (AstList.unparse unparse l) `shouldBe` Right (AstExpr d $ AstValList l)
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do
     it "unparses num" $ do
-        property $ \n -> do
-            unparse sep (AstExpr "" $ AstNum n) `shouldBe` AstNum.unparse n
+        property $ \(D d) n -> do
+            unparse (AstExpr d $ AstValNum n) `shouldBe` d ++ AstNum.unparse n
 
     it "unparses str" $ do
-        property $ \s -> do
-            unparse sep (AstExpr "" $ AstStr s) `shouldBe` AstStr.unparse s
+        property $ \(D d) s -> do
+            unparse (AstExpr d $ AstValStr s) `shouldBe` d ++ AstStr.unparse s
 
     it "unparses ident" $ do
-        property $ \i -> do
-            unparse sep (AstExpr "" $ AstIdent i) `shouldBe` AstIdent.unparse i
+        property $ \(D d) i -> do
+            unparse (AstExpr d $ AstValIdent i) `shouldBe` d ++ AstIdent.unparse i
 
     it "unparses symb" $ do
-        property $ \s -> do
-            unparse sep (AstExpr "" $ AstSymb s) `shouldBe` AstSymb.unparse s
+        property $ \(D d) s -> do
+            unparse (AstExpr d $ AstValSymb s) `shouldBe` d ++ AstSymb.unparse s
 
     it "unparses list" $ do
-        property $ \l -> do
-            unparse sep (AstExpr "" $ AstList l) `shouldBe` AstList.unparse sep (unparse sep) l
+        property $ \(D d) l -> do
+            unparse (AstExpr d $ AstValList l) `shouldBe` d ++ AstList.unparse unparse l
 
 -- Utils
-doc = many (char ' ')
-sep = " "
+doc = many space
 
 instance Arbitrary AstExpr where
     arbitrary = chooseInt (0, 3) >>= arbitraryOf
 
-arbitraryOf d = do
+arbitraryOf depth = do
     -- Num: 0, Str: 1, Ident: 2, Symb: 3, List: 4
-    choice <- chooseInt (0, if d <= 0 then 3 else 4)
-    AstExpr "" <$> case choice of
-        0 -> AstNum <$> arbitrary
-        1 -> AstStr <$> arbitrary
-        2 -> AstIdent <$> arbitrary
-        3 -> AstSymb <$> arbitrary
-        4 -> AstList <$> AstListSpec.arbitraryOf (arbitraryOf $ d-1)
+    D d <- arbitrary
+    choice <- chooseInt (0, if depth <= 0 then 3 else 4)
+    AstExpr d <$> case choice of
+        0 -> AstValNum <$> arbitrary
+        1 -> AstValStr <$> arbitrary
+        2 -> AstValIdent <$> arbitrary
+        3 -> AstValSymb <$> arbitrary
+        4 -> AstValList <$> AstListSpec.arbitraryOf (arbitraryOf $ depth-1)
