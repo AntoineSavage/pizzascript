@@ -1,4 +1,4 @@
-module Ast (Ast(..), ignore, parser, unparse) where
+module Ast (Ast(..), doc, parser, unparse) where
 
 import qualified Ast.AstExpr as AstExpr
 
@@ -21,8 +21,8 @@ parser ignore = do
 unparse :: String -> Ast -> String
 unparse sep (Ast _ es) = intercalate sep $ map (AstExpr.unparse sep) es
 
-ignore :: Parser ()
-ignore = void $ many $ comment <|> void space
+doc :: Parser ()
+doc = void $ many $ comment <|> void space
 
 comment :: Parser ()
 comment = char '#' >> void (manyTill (noneOf []) $ void endOfLine <|> eof)
