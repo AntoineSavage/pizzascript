@@ -9,7 +9,9 @@ import qualified Ast.AstSymb as AstSymb
 import Text.Parsec ( (<|>) )
 import Text.Parsec.String (Parser)
 
-newtype AstExpr = AstExpr AstVal deriving (Show, Eq )
+data AstExpr
+    = AstExpr String AstVal
+    deriving (Show, Eq )
 
 data AstVal
     = AstNum AstNum.AstNum
@@ -20,7 +22,7 @@ data AstVal
     deriving (Show, Eq)
 
 parser :: Parser () -> Parser AstExpr
-parser ignore = fmap AstExpr $ ignore >> 
+parser ignore = fmap (AstExpr "") $ ignore >> 
         (   AstNum <$> AstNum.parser
         <|> AstStr <$> AstStr.parser
         <|> AstIdent <$> AstIdent.parser
@@ -32,7 +34,7 @@ parser ignore = fmap AstExpr $ ignore >>
         )
 
 unparse :: String -> AstExpr -> String
-unparse sep (AstExpr val) =
+unparse sep (AstExpr _ val) =
     case val of
         AstNum n -> AstNum.unparse n
         AstStr s -> AstStr.unparse s

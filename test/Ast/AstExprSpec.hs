@@ -36,45 +36,45 @@ parseSpec :: Spec
 parseSpec = describe "parse" $ do
     it "parses num" $ do
         property $ \n -> do
-            parse (parser ignore) "tests" (AstNum.unparse n) `shouldBe` Right (AstExpr $ AstNum n)
+            parse (parser ignore) "tests" (AstNum.unparse n) `shouldBe` Right (AstExpr "" $ AstNum n)
 
     it "parses str" $ do
         property $ \s -> do
-            parse (parser ignore) "tests" (AstStr.unparse s) `shouldBe` Right (AstExpr $ AstStr s)
+            parse (parser ignore) "tests" (AstStr.unparse s) `shouldBe` Right (AstExpr "" $ AstStr s)
 
     it "parses ident" $ do
         property $ \i -> do
-            parse (parser ignore) "tests" (AstIdent.unparse i) `shouldBe` Right (AstExpr $ AstIdent i)
+            parse (parser ignore) "tests" (AstIdent.unparse i) `shouldBe` Right (AstExpr "" $ AstIdent i)
 
     it "parses symb" $ do
         property $ \s -> do
-            parse (parser ignore) "tests" (AstSymb.unparse s) `shouldBe` Right (AstExpr $ AstSymb s)
+            parse (parser ignore) "tests" (AstSymb.unparse s) `shouldBe` Right (AstExpr "" $ AstSymb s)
 
     it "parses list" $ do
         property $ \l -> do
-            parse (parser ignore) "tests" (AstList.unparse sep (unparse sep) l) `shouldBe` Right (AstExpr $ AstList l)
+            parse (parser ignore) "tests" (AstList.unparse sep (unparse sep) l) `shouldBe` Right (AstExpr "" $ AstList l)
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do
     it "unparses num" $ do
         property $ \n -> do
-            unparse sep (AstExpr $ AstNum n) `shouldBe` AstNum.unparse n
+            unparse sep (AstExpr "" $ AstNum n) `shouldBe` AstNum.unparse n
 
     it "unparses str" $ do
         property $ \s -> do
-            unparse sep (AstExpr $ AstStr s) `shouldBe` AstStr.unparse s
+            unparse sep (AstExpr "" $ AstStr s) `shouldBe` AstStr.unparse s
 
     it "unparses ident" $ do
         property $ \i -> do
-            unparse sep (AstExpr $ AstIdent i) `shouldBe` AstIdent.unparse i
+            unparse sep (AstExpr "" $ AstIdent i) `shouldBe` AstIdent.unparse i
 
     it "unparses symb" $ do
         property $ \s -> do
-            unparse sep (AstExpr $ AstSymb s) `shouldBe` AstSymb.unparse s
+            unparse sep (AstExpr "" $ AstSymb s) `shouldBe` AstSymb.unparse s
 
     it "unparses list" $ do
         property $ \l -> do
-            unparse sep (AstExpr $ AstList l) `shouldBe` AstList.unparse sep (unparse sep) l
+            unparse sep (AstExpr "" $ AstList l) `shouldBe` AstList.unparse sep (unparse sep) l
 
 -- Utils
 ignore = void $ many (char ' ')
@@ -86,10 +86,9 @@ instance Arbitrary AstExpr where
 arbitraryOf d = do
     -- Num: 0, Str: 1, Ident: 2, Symb: 3, List: 4
     choice <- chooseInt (0, if d <= 0 then 3 else 4)
-    AstExpr <$> case choice of
+    AstExpr "" <$> case choice of
         0 -> AstNum <$> arbitrary
         1 -> AstStr <$> arbitrary
         2 -> AstIdent <$> arbitrary
         3 -> AstSymb <$> arbitrary
         4 -> AstList <$> AstListSpec.arbitraryOf (arbitraryOf $ d-1)
-

@@ -5,7 +5,7 @@ import Text.Parsec ( char, manyTill, try )
 import Text.Parsec.String (Parser)
 
 data AstList a
-    = AstList AstKind [a]
+    = AstList AstKind String [a]
     deriving (Show, Eq)
 
 data AstKind
@@ -16,10 +16,10 @@ data AstKind
     deriving (Show, Eq)
 
 parser :: AstKind -> Parser () -> Parser a -> Parser (AstList a)
-parser k w p = AstList k <$> (char (getStart k) >> manyTill (w >> p) (try $ w >> char (getEnd k)))
+parser k w p = AstList k "" <$> (char (getStart k) >> manyTill (w >> p) (try $ w >> char (getEnd k)))
 
 unparse :: String -> (a -> String) -> AstList a -> String
-unparse sep f (AstList k xs) = [getStart k] ++ intercalate sep (map f xs) ++ [getEnd k]
+unparse sep f (AstList k _ xs) = [getStart k] ++ intercalate sep (map f xs) ++ [getEnd k]
 
 getStart :: AstKind -> Char
 getStart AstKindList = '['

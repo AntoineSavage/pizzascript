@@ -19,7 +19,7 @@ spec = do
 parseVsUnparseSpec :: Spec
 parseVsUnparseSpec = describe "parse vs unparse" $ do
     it "composes parse and unparse into id" $ do
-        property $ \astList@(AstList k xs) -> do
+        property $ \astList@(AstList k "" xs) -> do
             parseAstList k (unparseAstList astList) `shouldBe` Right astList
             unparseAstList <$> parseAstList k (unparseAstList astList)
                 `shouldBe` Right (unparseAstList astList)
@@ -33,25 +33,25 @@ parseSpec = describe "parse" $ do
             isLeft (parseAstList k "") `shouldBe` True
 
         it "parses empty list" $ do
-            parseAstList k [start, end] `shouldBe` Right (AstList k [])
-            parseAstList k [start, ' ', end] `shouldBe` Right (AstList k [])
+            parseAstList k [start, end] `shouldBe` Right (AstList k "" [])
+            parseAstList k [start, ' ', end] `shouldBe` Right (AstList k "" [])
 
         it "parses one element" $ do
-            parseAstList k [start, '1', end] `shouldBe` Right (AstList k [1])
-            parseAstList k [start, ' ', '1', end] `shouldBe` Right (AstList k [1])
-            parseAstList k [start, '1', ' ', end] `shouldBe` Right (AstList k [1])
-            parseAstList k [start, ' ', '1', ' ', end] `shouldBe` Right (AstList k [1])
+            parseAstList k [start, '1', end] `shouldBe` Right (AstList k "" [1])
+            parseAstList k [start, ' ', '1', end] `shouldBe` Right (AstList k "" [1])
+            parseAstList k [start, '1', ' ', end] `shouldBe` Right (AstList k "" [1])
+            parseAstList k [start, ' ', '1', ' ', end] `shouldBe` Right (AstList k "" [1])
 
         it "parses two elements" $ do
-            parseAstList k [start, '1', ' ', '2', end] `shouldBe` Right (AstList k [1, 2])
-            parseAstList k [start, ' ', '1', ' ', '2', end] `shouldBe` Right (AstList k [1, 2])
-            parseAstList k [start, '1', ' ', '2', ' ', end] `shouldBe` Right (AstList k [1, 2])
-            parseAstList k [start, ' ', '1', ' ', '2', ' ', end] `shouldBe` Right (AstList k [1, 2])
+            parseAstList k [start, '1', ' ', '2', end] `shouldBe` Right (AstList k "" [1, 2])
+            parseAstList k [start, ' ', '1', ' ', '2', end] `shouldBe` Right (AstList k "" [1, 2])
+            parseAstList k [start, '1', ' ', '2', ' ', end] `shouldBe` Right (AstList k "" [1, 2])
+            parseAstList k [start, ' ', '1', ' ', '2', ' ', end] `shouldBe` Right (AstList k "" [1, 2])
 
         it "parses n elements" $ do
             property $ \xs -> do
                 let s = toAstList k xs
-                parseAstList k s `shouldBe` Right (AstList k xs)
+                parseAstList k s `shouldBe` Right (AstList k "" xs)
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do
@@ -59,17 +59,17 @@ unparseSpec = describe "unparse" $ do
         let (start, end) = (getStart k, getEnd k)
 
         it "unparses empty brackets for empty elements" $ do
-            unparseAstList (AstList k []) `shouldBe` [start, end]
+            unparseAstList (AstList k "" []) `shouldBe` [start, end]
 
         it "unparses with one element" $ do
-            unparseAstList (AstList k [1]) `shouldBe` [start, '1', end]
+            unparseAstList (AstList k "" [1]) `shouldBe` [start, '1', end]
 
         it "unparses with two elements" $ do
-            unparseAstList (AstList k [1, 2]) `shouldBe` [start, '1', ' ', '2', end]
+            unparseAstList (AstList k "" [1, 2]) `shouldBe` [start, '1', ' ', '2', end]
 
         it "unparses with n elements" $ do
             property $ \xs -> do
-                unparseAstList (AstList k (xs :: [Int])) `shouldBe` toAstList k xs
+                unparseAstList (AstList k "" (xs :: [Int])) `shouldBe` toAstList k xs
 
 getStartSpec :: Spec
 getStartSpec = describe "getStart" $ do
@@ -106,4 +106,4 @@ astKinds = [ AstKindList, AstKindDict, AstKindStruct, AstKindEval ]
 instance Arbitrary a => Arbitrary (AstList a) where
     arbitrary = arbitraryOf arbitrary
 
-arbitraryOf a = liftM2 AstList (elements astKinds) $ chooseInt (0, 5) >>= flip vectorOf a
+arbitraryOf a = liftM3 AstList (elements astKinds) (pure "") $ chooseInt (0, 5) >>= flip vectorOf a
