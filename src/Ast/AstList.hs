@@ -25,13 +25,18 @@ unparse sep f (AstList k _ xs) = [getStart k] ++ intercalate sep (map f xs) ++ [
 -- Parse/unparse elems
 parseElems :: Parser String -> (String -> Parser a) -> Parser Char -> Parser ([a], String)
 parseElems doc elem end = do
-    doc >>= fmap (mapFirst reverse) . go [] where
-        mapFirst f (x, y) = (f x, y)
+    start <- doc
+    (es, end) <- go [] start
+    return (reverse es, end)
+    where
         go acc d = do
             mend <- optionMaybe end
             case mend of
                 Just _ -> return (acc, d)
-                Nothing -> elem d >>= \e -> doc >>= go (e : acc)
+                Nothing -> do
+                    e <- elem d
+                    d' <- doc
+                    go (e : acc) d'
 
 unparseElems :: String -> (a -> String) -> [a] -> String
 unparseElems d f xs = concatMap f xs ++ d
