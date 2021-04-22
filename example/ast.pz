@@ -15,13 +15,13 @@
 # floats
 0.1 1.1 2.2 10.01 123.123
 -1.1 -2.2 -3.3 -10.01 -123.123
-1.23e123 -123E-123
+-1.23e-10
 
 # strings
 ""                  # empty string
 "abc123ACB_ !@#$%?" # ASCII printable characters
 "àéèïîôöù"          # Unicode printable characters
-"\"\\\/\b\f\n\r\t\u{0}\u{10FFFF}" # Escape chars
+"\"\\\/\b\f\n\r\t\u{0}\u{10ffff}" # Escape chars
 
 # symbols
 'a ''b ''c
@@ -66,7 +66,7 @@ my_dict.my_key1.my_key2
     ('dict [])
     ([] {})
     ({} <point (x 1) (y 2)>)
-    (<point (x 1) (y 2)> (func () [])))
+    (<point (x 1) (y 2)> (func () []))
     ((func () []) ())
 }
 
@@ -78,7 +78,7 @@ my_dict.my_key1.my_key2
     ('dict [])
     ([] {})
     ({} <point (x 1) (y 2)>)
-    (<point (x 1) (y 2)> (func () [])))
+    (<point (x 1) (y 2)> (func () []))
     ((func () []) ())
 )
 

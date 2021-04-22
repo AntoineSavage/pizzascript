@@ -4,6 +4,7 @@ import qualified Ast.AstExpr as AstExpr
 import qualified Ast.AstList as AstList
 
 import Control.Monad ( liftM2, void )
+import Data.Char (isControl)
 import Data.List (intercalate)
 import Text.Parsec
 import Text.Parsec.String (Parser)
@@ -19,8 +20,15 @@ unparse :: Ast -> String
 unparse (Ast d xs) = AstList.unparseElems d AstExpr.unparse xs
 
 doc :: Parser String 
-doc = concat <$> many (comment <|> many1 space)
+doc = concat <$> many (comment <|> many1 space <|> many1 (satisfy isControl))
 
 comment :: Parser String
-comment = liftM2 (:) (char '#') $
-    manyTill (noneOf []) $ (:[]) <$> endOfLine <|> (eof >> return "")
+comment = char '#' >>= fmap reverse . go . (:[]) where
+    go :: String -> Parser String
+    go acc = do
+        meof <- optionMaybe eof
+        mnl <- optionMaybe newline
+        case (meof, mnl) of
+            (Just _, _) -> return acc
+            (_, Just nl) -> return $ nl : acc
+            (_, _) -> anyChar >>= (go . (:acc))

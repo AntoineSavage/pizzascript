@@ -10,66 +10,87 @@ import qualified Ast.AstList as AstList
 import Ast
 import Ast.AstListSpec (D(..))
 import Control.Monad
-import Data.Either
+import Data.Either ( isLeft, isRight, fromRight )
 import Data.List
 import Text.Parsec
 
+import System.IO.Unsafe ( unsafePerformIO )
+
 spec :: Spec
 spec = do
+    integrationTest
     docSpec
     parseVsUnparseSpec
     parseSpec
     unparseSpec
 
+integrationTest :: Spec
+integrationTest = describe "integrationTest" $ do
+    it "parses and unparses 'ast.pz' into itself" $ do
+        let s = unsafePerformIO $ readFile "example/ast.pz"
+        unparse <$> parse parser "integrationTests" s `shouldBe` Right s
+
 docSpec :: Spec
 docSpec = describe "doc" $ do
     it "parses empty string" $ do
-        isRight (parse doc "tests" "") `shouldBe` True
+        parse doc "tests" "" `shouldBe` Right ""
 
     it "parses unprintable string" $ do
-        isRight (parse doc "tests" "\0\1\2\3\4\5\6\7\8\9\10\11\12\13\14\15\16\17\18\19\20\21\22\23\24\25\26\27\28\29\30\31\32\127") `shouldBe` True
+        let s = "\0\1\2\3\4\5\6\7\8\9\10\11\12\13\14\15\16\17\18\19\20\21\22\23\24\25\26\27\28\29\30\31\32\127"
+        parse doc "tests" s `shouldBe` Right s
+
+    it "parses comment hash (lf)" $ do
+        let s = "#\n"
+        parse doc "tests" s `shouldBe` Right s
+
+    it "parses comment hash (crlf)" $ do
+        let s = "#\r\n"
+        parse doc "tests" s `shouldBe` Right s
+
+    it "parses comment hash (eof)" $ do
+        let s = "#"
+        parse doc "tests" s `shouldBe` Right s
 
     it "parses single comment (lf)" $ do
-        isRight (parse doc "tests" "# # 123 \" a ' [ ( ] ) { < } > \n") `shouldBe` True
+        let s = "# # 123 \" a ' [ ( ] ) { < } > \n"
+        parse doc "tests" s `shouldBe` Right s
 
     it "parses single comment (crlf)" $ do
-        isRight (parse doc "tests" "# # 123 \" a ' [ ( ] ) { < } > \r\n") `shouldBe` True
+        let s = "# # 123 \" a ' [ ( ] ) { < } > \r\n"
+        parse doc "tests" s `shouldBe` Right s
 
     it "parses single comment (eof)" $ do
-        isRight (parse doc "tests" "# # 123 \" a ' [ ( ] ) { < } >") `shouldBe` True
+        let s = "# # 123 \" a ' [ ( ] ) { < } >"
+        parse doc "tests" s `shouldBe` Right s
 
     it "parses whitespace and comments" $ do
-        isRight (parse doc "tests" (
-            " \n\t\r\n\v# # 123 \" a ' [ ( ] ) { < } >\n" ++
-            " \n\t\r\n\v# # 123 \" a ' [ ( ] ) { < } >\r\n" ++
-            " \n\t\r\n\v# # 123 \" a ' [ ( ] ) { < } >"
-            )) `shouldBe` True
+        let s =" \n\t\r\n\v# # 123 \" a ' [ ( ] ) { < } >\n" ++ " \n\t\r\n\v# # 123 \" a ' [ ( ] ) { < } >\r\n" ++ " \n\t\r\n\v# # 123 \" a ' [ ( ] ) { < } >"
+        parse doc "tests" s `shouldBe` Right s
 
     it "stops at/rejects non-whitespace, non-comment" $ do
-        isRight (parse doc "tests" "123") `shouldBe` True
+        parse doc "tests" "123" `shouldBe` Right ""
         isLeft (parse (doc >> eof) "tests" "123") `shouldBe` True
 
-        isRight (parse doc "tests" "\"") `shouldBe` True
+        parse doc "tests" "\"" `shouldBe` Right ""
         isLeft (parse (doc >> eof) "tests" "\"") `shouldBe` True
 
-        isRight (parse doc "tests" "a") `shouldBe` True
+        parse doc "tests" "a" `shouldBe` Right ""
         isLeft (parse (doc >> eof) "tests" "a") `shouldBe` True
 
-        isRight (parse doc "tests" "'") `shouldBe` True
+        parse doc "tests" "'" `shouldBe` Right ""
         isLeft (parse (doc >> eof) "tests" "'") `shouldBe` True
 
-        isRight (parse doc "tests" "[") `shouldBe` True
+        parse doc "tests" "[" `shouldBe` Right ""
         isLeft (parse (doc >> eof) "tests" "[") `shouldBe` True
 
-        isRight (parse doc "tests" "{") `shouldBe` True
+        parse doc "tests" "{" `shouldBe` Right ""
         isLeft (parse (doc >> eof) "tests" "{") `shouldBe` True
 
-        isRight (parse doc "tests" "<") `shouldBe` True
+        parse doc "tests" "<" `shouldBe` Right ""
         isLeft (parse (doc >> eof) "tests" "<") `shouldBe` True
 
-        isRight (parse doc "tests" "(") `shouldBe` True
+        parse doc "tests" "(" `shouldBe` Right ""
         isLeft (parse (doc >> eof) "tests" "(") `shouldBe` True
-
 
 parseVsUnparseSpec :: Spec
 parseVsUnparseSpec = describe "parse vs unparse" $ do

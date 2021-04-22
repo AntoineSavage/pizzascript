@@ -223,7 +223,7 @@ Here are some examples of dictionary literals:
     ('dict [])
     ([] {})
     ({} <point (x 1) (y 2)>)
-    (<point (x 1) (y 2)> (func () [])))
+    (<point (x 1) (y 2)> (func () []))
     ((func () []) ())
 }
 ```
@@ -238,7 +238,7 @@ The preceding examples can also be expressed using the `dict `function:
     ('dict [])
     ([] {})
     ({} <point (x 1) (y 2)>)
-    (<point (x 1) (y 2)> (func () [])))
+    (<point (x 1) (y 2)> (func () []))
     ((func () []) ())
 )
 ```

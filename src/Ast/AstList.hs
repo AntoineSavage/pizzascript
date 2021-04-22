@@ -27,13 +27,12 @@ unparse f (AstList k d xs) = [getStart k] ++ unparseElems d f xs ++ [getEnd k]
 parseElems :: Parser String -> (String -> Parser a) -> Parser () -> Parser ([a], String)
 parseElems doc elem end = do
     startDoc <- doc
-    (es, endDoc) <- go [] startDoc
-    return (reverse es, endDoc)
+    go [] startDoc
     where
         go acc d = do
             mend <- optionMaybe end
             case mend of
-                Just _ -> return (acc, d)
+                Just _ -> return (reverse acc, d)
                 Nothing -> do
                     e <- elem d
                     d' <- doc
