@@ -112,14 +112,8 @@ my_dict.my_key1.my_key2
 (def flip (func (f x y) (f y x)))
 (def cmp (func (f g) (func (x) (f (g x)))))
 
-(def func_default   (func (x) x))
-(def func_by_value  (func 'by_value (x) x))
-(def func_by_name   (func 'by_name (x) x))
-(def func_encode    (func 'encode (x) x))
-(def func_decode    (func 'decode (x) x))
-
-(def fun_ctx (func ctx 'by_value (x) x)
-    [ ctx   # return ctx unchanged
-      x     # return input value unchanged
-    ]
-)
+# macros
+(def macro_evaluated    (macro 'evaluated ctx (x) [ctx x]))
+(def macro_quoted       (macro 'quoted (x) [ctx x]))
+(def macro_decompiled   (macro 'decompiled (x) [ctx x]))
+(def macro_compiled     (macro 'compiled (x) [ctx x]))
