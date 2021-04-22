@@ -217,6 +217,13 @@ parseCharSpec = describe "parseCharSpec" $ do
         parse parseChar "tests" "\\u{1f}" `shouldBe` Right '\31'
         parse parseChar "tests" "\\u{7f}" `shouldBe` Right '\127'
 
+        parse parseChar "tests" "\\u{10FFFE}" `shouldBe` Right '\1114110'
+        parse parseChar "tests" "\\u{10FFFF}" `shouldBe` Right '\1114111'
+
+    it "rejects out-of-bounds" $ do
+        isLeft (parse parseChar "tests" "\\u{110000}") `shouldBe` True
+        isLeft (parse parseChar "tests" "\\u{110001}") `shouldBe` True
+
 unparseCharSpec :: Spec
 unparseCharSpec = describe "unparseChar" $ do
     it "unparses char without excaping (ascii)" $ do
@@ -271,7 +278,6 @@ unparseCharSpec = describe "unparseChar" $ do
         unparseChar '\30' `shouldBe` "\\u{1e}"
         unparseChar '\31' `shouldBe` "\\u{1f}"
         unparseChar '\127' `shouldBe` "\\u{7f}"
-
 
 -- Utils
 digits :: [Char]

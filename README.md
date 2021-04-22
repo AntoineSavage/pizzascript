@@ -80,7 +80,7 @@ Certain codepoints must be escaped:
 - `\n` : newline
 - `\r` : carriage return
 - `\t` : tab
-- `\uDDDD` : four hex digits representing a unicode codepoint
+- `\u{D*}` : one or more hex digits representing a unicode codepoint (must be at most `\u{10FFFF}`)
 
 All strings have type `'str`, which corresponds to the following variadic function `str`:
 ```
@@ -108,10 +108,23 @@ All symbols have type `'symb`, which corresponds to the following function `symb
 (symb x)        # -> raise error
 ```
 
-Symbols can be combined into *qualified* symbols (ex: `'Symb1.symb_2`). The following functions are used to merge and split symbols:
+Symbols can be combined into *qualified* symbols (ex: `'Symb1.symb_2`)
+
+Here are a few examples of qualified symbols:
 ```
-(symb_split 'foo.bar.baz)      # -> ['foo 'bar 'baz]
-(symb_merge 'foo ['bar 'baz])  # -> 'foo.bar.baz
+'Module.function
+''Package.Module.function
+'''Package.Module.SubModule
+''''my_dict.my_key1.my_key2
+```
+
+The following functions are used to merge and split qualified symbols:
+```
+(symb_split 'foo)     # -> ['foo]
+(symb_merge 'foo [])  # -> 'foo
+
+(symb_split 'foo.bar.baz)     # -> ['foo 'bar 'baz]
+(symb_merge 'foo ['bar 'baz]) # -> 'foo.bar.baz
 
 # Number of quotes must match
 (symb_merge ''foo [''bar ''baz])  # -> ''foo.bar.baz
@@ -163,9 +176,9 @@ my_dict.my_key1.my_key2
 
 Any identifier can be converted into a symbol by *quoting* it, i.e. adding one or more quote (`'`) characters in front of it
 
-Any symbol can be converted back into an identifier by *unquoting* it, i.e. removing one or more quote (`'`) characters that are in front of it. Keep in mind that unquoting a symbol may lead to an undefined value error
+Any symbol can be converted back into an identifier by *unquoting* it, i.e. removing one or more quote (`'`) characters that are in front of it. Keep in mind that unquoting a symbol may lead to an undefined identifier error
 
-In the function section of this document, we will see how to quote and unquote things automatically
+In the function section of this document, we will see how to quote and unquote programmatically
 
 # Lists
 
@@ -360,8 +373,8 @@ A function can be annotated to add the following extra functionality:
 Functions can be annotated with one of the following symbols:
 - `'by_value` (default): evaluates the function arguments (left-to-right)
 - `'by_name`: quotes the function arguments
-- `'by_code`: decompiles the function arguments
-- `'compile`: compiles (and evaluates) the function arguments (left-to-right)
+- `'encode`: encodes the function arguments
+- `'decode`: decodes (and evaluates) the function arguments (left-to-right)
 
 Here are some examples of functions using such symbols:
 ```
@@ -373,11 +386,11 @@ Here are some examples of functions using such symbols:
 # quotes the function arguments
 (func 'by_name (x) x)
 
-# decompiles the function arguments
-(func 'by_code (x) x)
+# encodes the function arguments
+(func 'encode (x) x)
 
-# compiles (and evaluates) the function arguments
-(func 'compile (x) x)
+# decodes (and evaluates) the function arguments
+(func 'decode (x) x)
 ```
 
 A function's evaluation semantics can be introspected like this:
@@ -385,14 +398,14 @@ A function's evaluation semantics can be introspected like this:
 (def func_default   (func (x) x))
 (def func_by_value  (func 'by_value (x) x))
 (def func_by_name   (func 'by_name (x) x))
-(def func_by_code   (func 'by_code (x) x))
-(def func_compile   (func 'compile (x) x))
+(def func_encode    (func 'encode (x) x))
+(def func_decode    (func 'decode (x) x))
 
 (func_eval_sem func_default)  # -> 'by_value
 (func_eval_sem func_by_value) # -> 'by_value
 (func_eval_sem func_by_name)  # -> 'by_name
-(func_eval_sem func_by_code)  # -> 'by_code
-(func_eval_sem func_compile)  # -> 'compile
+(func_eval_sem func_encode)   # -> 'encode
+(func_eval_sem func_decode)   # -> 'decode
 ```
 
 ### Evaluating function arguments with `'by_value`
@@ -452,13 +465,13 @@ Here is a more involved example:
 # ['list 0 "" ''a ['list] ['dict] ['struct 'void] ['fac 5] 'n]
 # notice how (fac 5) and n were not evaluated, but quoted
 ```
-### Decompiling function arguments with `'by_code`
+### Encoding function arguments with `'by_code`
 
-Decompiling function arguments is somewhat similar to quoting them, except for one main difference
+Encoding function arguments is somewhat similar to quoting them, except for one main difference
 
-Where quoting only works at the source-level (i.e. only works on literals and identifiers), decompiling will first replace an identifier with its associated value, and then quote said value as if it were a literal. Furthermore, decompiling a literal has the same effect as quoting it
+Where quoting only works at the source-level (i.e. only works on literals and identifiers), encoding will first replace an identifier with its associated value, and then quote said value as if it were a literal. Furthermore, encoding a literal has the same effect as quoting it
 
-In other words, a function decompiles its arguments in two different ways:
+In other words, a function encodes its arguments in two different ways:
 - literals (ex: `()`, `0`, `""`, `'a`, `[]`, `{}`, `<void>`, `(func (x) x)`):
   - return the quoted version of the literal (see below)
 
@@ -466,11 +479,11 @@ In other words, a function decompiles its arguments in two different ways:
   - replace the identifier with its associated value
   - return a the quoted version of this value (see below). Ex:
     - given: `(def my_func (func (x) x))`
-    - decompiling `my_func`
+    - encoding `my_func`
       - replace identifier `my_func` with function `(func (x) x)`
       - returns the quoted function `['func ['x] 'x]`
 
-  - note that decompilation only ever replaces **one** identifier with its value at a time. In order to perform recursive decompilation, you need to write a custom function for it
+  - note that encoding only ever replaces at a time **one** identifier with its value. In order to perform recursive encoding, you need to write a custom function for it
 
 Here is a more involved example:
 ```
@@ -479,7 +492,7 @@ Here is a more involved example:
 (def n 123)
 (def my_value [ 0 "" 'a [] {} <void> (fac 5) n])
 
-# when we decompile my_value or its associated list literal:
+# when we encode my_value or its associated list literal:
 (my_func my_value)
 (my_func [ 0 "" 'a [] {} <void> (fac 5) n])
 
@@ -488,11 +501,11 @@ Here is a more involved example:
 # notice how (fac 5) and n were not evaluated, but quoted
 ```
 
-### Compiling function arguments with `'compile`
+### Decoding function arguments with `'decode`
 
-Compiling function arguments is the reverse operation of decompiling them. Compiling will first replace an identifier with its associated value, and then unquote said value as if it were a literal. Furthermore, decompiling a literal results in unquoting it. The resulting unquoted value is then evaluated. Errors may be raised by this process for various reasons (undefined identifier, malformed function call, etc)
+Decoding function arguments is the reverse operation of encoding them. Decoding will first replace an identifier with its associated value, and then unquote said value as if it were a literal. Furthermore, decoding a literal results in unquoting it. The resulting unquoted value is then evaluated. Errors may be raised by this process for various reasons (undefined identifier, malformed function call, etc)
 
-In other words, a function compiles its arguments in two different ways:
+In other words, a function decodes its arguments in two different ways:
 - quoted literals (ex: `()`, `0`, `""`, `''a`, `'a`, `['func ['x] 'x]`):
   - return the unquoted version of the literal (see below)
 
@@ -500,20 +513,20 @@ In other words, a function compiles its arguments in two different ways:
   - replace the identifier with its associated value
   - return a the unquoted version of this value (see below). Ex:
     - given: `(def my_code ['func ['x] 'x]`
-    - compiling `my_code`
+    - decoding `my_code`
       - replace identifier `my_code` with list `['func ['x] 'x]`
       - returns the unquoted and evaluated function `(func (x) x)`
 
-  - note that compilation only ever replaces **one** identifier with its value at a time. In order to perform recursive compilation, you need to write a custom function for it
+  - note that decoding only ever replaces at a time **one** identifier with its value. In order to perform recursive decoding, you need to write a custom function for it
 
 Here is a more involved example:
 ```
 # given:
-(def my_func (func 'compile (x) x))
+(def my_func (func 'decode (x) x))
 (def n 123)
 (def my_code ['list 0 "" ''a ['list] ['dict] ['struct 'void] ['fac 5] 'n])
 
-# when we compile my_code or its associated list literal:
+# when we decode my_code or its associated list literal:
 (my_func my_code)
 (my_func ['list 0 "" ''a ['list] ['dict] ['struct 'void] ['fac 5] 'n])
 
@@ -524,7 +537,7 @@ Here is a more involved example:
 
 ### Quoting literals
 
-This operation is the reverse of unquoting literals
+This operation is the reverse of unquoting literals (see below)
 
 Each literal can be quoted in the following ways:
 - literals for the empty type `()`, numbers and strings:
@@ -554,7 +567,7 @@ Each literal can be quoted in the following ways:
 
 ### Unquoting literals
 
-This operation is the inverse of quoting literals
+This operation is the inverse of quoting literals (see above)
 
 Each literal can be unquoted in the following ways:
 - the empty type `()`, numbers and strings:
@@ -633,7 +646,7 @@ A function's implicit context can be introspected like this:
 (def my_add_with_ctx (func_set_ctx new_ctx my_add2))
 ```
 
-The `def` operation seen up until now will also add the defined name to a function's implicit context, thus allowing recursion to work as expected
+The `def` operation seen up until now will also add the defined name to a function's own implicit context, thus allowing recursion to work as expected
 
 For mutually-recursive functions, one can devise an operation `mutual` that takes a number of functions, and will add all of them in each of the implicit contexts.
 
@@ -643,9 +656,11 @@ A function can be annotated to receive an additional context argument, called th
 
 This *function explicit context* is the context of all definitions available to the *caller* of the function. Since it is an explicit context, all of its keys must be qualified with the context name
 
-Note that if an explicit context is used, then a function evaluation semantics symbol MUST be provided between it and arguments, otherwise, the context identifier will be interpreted as the function's arguments, considered normal arguments, and the function arguments will be interpreted to be part of the function body
+Note that if an explicit context is used, then a function evaluation semantics symbol (ex: `'by_value`, `'by_name`, etc) MUST be provided between it and arguments, otherwise, the context identifier will be interpreted as the function's arguments, considered normal arguments, and the function arguments will be interpreted to be part of the function body
 
 When an explicit context is received, the function return value must be a size-2 list containing the explicit context (updated if needed), followed by the normal function return value
+
+Note that when using an explicit context, the identifier `'ctx` will be added to the function's implicit context, unless such an identifier is already defined in the function's implicit context
 
 Here is an example of receiving an additional context:
 ```
@@ -705,11 +720,20 @@ def my_func (func ctx 'by_value (x y z)
 ## Other uses for the explicit context
 
 Beyond simply manipulating the caller context, the *function explicit context* can also be used to do the following:
+- defining custom structs
 - performing I/O
 - requesting other module definition contexts
 - aborting and resuming evaluation
 
 They are implemented using *volatile variables*, which are variables that can be modified at any time by the interpreter. They should **not** be relied upon for anything other that what is specified in the following sections
+
+### Defining custom structs
+
+The *function explicit context* can be used to define and create custom structs. This allows the implementation of features like:
+- validating mandatory fields
+- setting default values for optional fields
+
+Functions like `'defstruct` and `'struct` (see section about custom structs) will read and update key `"__CUSTOM_STRUCTS_`, which contains the types, fields, etc, of structs that are defined in the current context
 
 ### Performing I/O
 

@@ -2,7 +2,7 @@ module Ast.AstStr (AstStr(..), parser, parseChar, unparse, unparseChar) where
 
 import Control.Monad ( replicateM )
 import Data.Char as Char ( isPrint, ord )
-import Numeric (showHex)
+import Numeric (readHex, showHex)
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
@@ -36,8 +36,15 @@ parseChar = do
                 'n' -> return '\n'
                 'r' -> return '\r'
                 't' -> return '\t'
-                'u' -> read . ("'\\x"++) . (++"'") <$> between (char '{') (char '}' ) (many1 hexDigit)
+                'u' -> read . ("'\\x"++) . (++"'") <$> between (char '{') (char '}' ) (validateRange $ many1 hexDigit)
                 _ -> parserFail $ "Unsupported escape sequence: " ++ ['\\', escaped]
+
+validateRange :: Parser String -> Parser String
+validateRange p = do
+    s <- p
+    let [(i, "")] = readHex s
+    if i <= 0x10FFFF then return s else
+        parserFail $ "Codepoint out of range: " ++ s
 
 unparseChar :: Char -> String
 unparseChar c =

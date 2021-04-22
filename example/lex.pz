@@ -1,2 +1,125 @@
 # lex.pz
 (print "Hello World!")
+
+# simple comment
+    # tab then comment
+        # tab tab then comment
+     # unaligned comment
+
+() # empty type
+
+# ints
+0 1 2 3 4 5 10 123
+-1 -2 -3 -4 -5 -10 -123
+
+# floats
+0.1 1.1 2.2 10.01 123.123
+-1.1 -2.2 -3.3 -10.01 -123.123
+1.23e123 -123E-123
+
+# strings
+""                  # empty string
+"abc123ACB_ !@#$%?" # ASCII printable characters
+"àéèïîôöù"          # Unicode printable characters
+"\"\\\/\b\f\n\r\t\u{0}\u{10FFFF}" # Escape chars
+
+# symbols
+'a ''b ''c
+'abc
+'_foo ''BAR99 '''B4Z
+
+'Module.function
+''Package.Module.function
+'''Package.Module.SubModule
+''''my_dict.my_key1.my_key2
+
+# identifiers
+a b c
+abc
+_foo BAR99 B4Z
+true false
+
+Module.function
+Package.Module.function
+Package.Module.SubModule
+my_dict.my_key1.my_key2
+
+# lists
+[]
+[0 1 2 3 4 5]
+["hello" "world" "!"]
+['a 'b 'c 'd 'e]
+[ [] [1 2 3] ["hello" 'world "!" ] ]
+
+(list)
+(list 0 1 2 3 4 5)
+(list "hello" "world" "!")
+(list 'a 'b 'c 'd 'e)
+(list (list) (list 1 2 3) (list "hello" 'world "!" ) )
+
+# dictionaries
+{}
+{
+    (() 0)
+    (0 "")
+    ("" 'dict)
+    ('dict [])
+    ([] {})
+    ({} <point (x 1) (y 2)>)
+    (<point (x 1) (y 2)> (func () [])))
+    ((func () []) ())
+}
+
+(dict)
+(dict
+    (() 0)
+    (0 "")
+    ("" 'dict)
+    ('dict [])
+    ([] {})
+    ({} <point (x 1) (y 2)>)
+    (<point (x 1) (y 2)> (func () [])))
+    ((func () []) ())
+)
+
+# structs
+
+(defstruct void)
+(defstruct one_of_each mandat (option 0))
+(defstruct two_of_each m1 m2 (o1 0) (o2 ""))
+
+<void>
+<one_of_each (mandat 123)>  # 'option defaults to 0
+<one_of_each (mandat 123) (option 456)>
+<two_of_each (m1 1) (m2 2)> # 'o1 and 'o2 default to 0 and "" resp.
+<two_of_each (m1 1) (m2 2) (o1 0) (o2 "")>
+
+(struct void)
+(struct one_of_each (mandat 123))
+(struct one_of_each (mandat 123) (option 456))
+(struct two_of_each (m1 1) (m2 2))
+(struct two_of_each (m1 1) (m2 2) (o1 0) (o2 ""))
+
+# functions
+(func () ())            # nullary, returns ()
+(func (x) x)            # unary, returns its arg
+(func (n m) (add n m))  # binary, sums its args
+# etc
+(func args args)        # variadic, returns its args
+
+(def id (func (x) x))
+(def apply (func (f x) (f x)))
+(def flip (func (f x y) (f y x)))
+(def cmp (func (f g) (func (x) (f (g x)))))
+
+(def func_default   (func (x) x))
+(def func_by_value  (func 'by_value (x) x))
+(def func_by_name   (func 'by_name (x) x))
+(def func_encode    (func 'encode (x) x))
+(def func_decode    (func 'decode (x) x))
+
+(def fun_ctx (func ctx 'by_value (x) x)
+    [ ctx   # return ctx unchanged
+      x     # return input value unchanged
+    ]
+)
