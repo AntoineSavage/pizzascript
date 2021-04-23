@@ -48,7 +48,6 @@ Additionally, the following functions work on all types:
 (lt x y)  # -> 'true | 'false. Whether x is less than y
 # values of different types are ordered as such:
 # () < any_number < any_string < any_symbol < any_list < any_dictionary < any_function
-
 ```
 
 # The unit type `()`
@@ -218,7 +217,7 @@ Conversely, any symbol can be converted into an identifier by *unquoting* it, i.
 
 Note that a symbol by itself is not required to correspond to a previously defined identifier. Only the unquoting process requires that relationship between symbols and identifiers. For example, symbol `'foo` is a perfectly valid symbol and can be freely passed around, even places where identifier `foo` may not be defined yet
 
-We will see alter on in this document how to programmatically quote and unquote identifiers / symbols, and how to determine if a symbol represents a previously defined identifier or not
+We will see later on in this document how to programmatically quote and unquote identifiers / symbols, and how to determine if a symbol represents a previously defined identifier or not
 
 # Lists
 
@@ -606,8 +605,7 @@ Quoting adheres to the following rules:
     - see below on how to quote function invocations
 
 - quoting a function invocation produces a list of each elements, quoted recursively. Parentheses are replaced with square brackets during this process. Ex:
-  - quoting `(func (x) x)` produces:
-    - `['func ['x] 'x]`
+  - quoting `(func (x) x)` produces `['func ['x] 'x]`
 
   - quoting `(func ('evaled ctx) (x) [ctx x])` produces:
     - `['func [''evaled 'ctx] ['x] ['list 'ctx 'x]]`

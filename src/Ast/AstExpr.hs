@@ -34,8 +34,7 @@ parser doc d = liftM2 (`AstExpr` d) getPosition $
         <|> AstValSymb <$> (AstSymb.parser <?> "symbol")
         <|> AstValList <$> (AstList.parser AstList.AstKindList doc (parser doc) <?> "list")
         <|> AstValList <$> (AstList.parser AstList.AstKindDict doc (parser doc) <?> "dictionary")
-        <|> AstValList <$> (AstList.parser AstList.AstKindStruct doc (parser doc) <?> "struct")
-        <|> AstValList <$> (AstList.parser AstList.AstKindEval doc (parser doc) <?> "evaluation")
+        <|> AstValList <$> (AstList.parser AstList.AstKindInv doc (parser doc) <?> "invocation")
 
 unparse :: AstExpr -> String
 unparse (AstExpr _ d val) =

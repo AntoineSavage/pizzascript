@@ -14,21 +14,12 @@ import Data.Either ( isLeft, isRight, fromRight )
 import Data.List
 import Text.Parsec
 
-import System.IO.Unsafe ( unsafePerformIO )
-
 spec :: Spec
 spec = do
-    integrationTest
     docSpec
     parseVsUnparseSpec
     parseSpec
     unparseSpec
-
-integrationTest :: Spec
-integrationTest = describe "integrationTest" $ do
-    it "parses and unparses 'ast.pz' into itself" $ do
-        let s = unsafePerformIO $ readFile "example/ast.pz"
-        unparse <$> parse parser "integrationTests" s `shouldBe` Right s
 
 docSpec :: Spec
 docSpec = describe "doc" $ do

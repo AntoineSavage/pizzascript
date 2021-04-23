@@ -13,3 +13,8 @@ cradle:
       config:
         cradle:
           none:
+
+    - path: ./test_integr/
+      config:
+        cradle:
+          none:

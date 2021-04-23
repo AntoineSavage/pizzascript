@@ -6,7 +6,7 @@
         # tab tab then comment
      # unaligned comment
 
-() # empty type
+() # unit type
 
 # ints
 0 1 2 3 4 5 10 123
@@ -65,9 +65,8 @@ my_dict.my_key1.my_key2
     ("" 'dict)
     ('dict [])
     ([] {})
-    ({} <point (x 1) (y 2)>)
-    (<point (x 1) (y 2)> (func () []))
-    ((func () []) ())
+    ({} (func () ()))
+    ((func () ()) ())
 }
 
 (dict)
@@ -77,28 +76,9 @@ my_dict.my_key1.my_key2
     ("" 'dict)
     ('dict [])
     ([] {})
-    ({} <point (x 1) (y 2)>)
-    (<point (x 1) (y 2)> (func () []))
-    ((func () []) ())
+    ({} (func () ()))
+    ((func () ()) ())
 )
-
-# structs
-
-(defstruct void)
-(defstruct one_of_each mandat (option 0))
-(defstruct two_of_each m1 m2 (o1 0) (o2 ""))
-
-<void>
-<one_of_each (mandat 123)>  # 'option defaults to 0
-<one_of_each (mandat 123) (option 456)>
-<two_of_each (m1 1) (m2 2)> # 'o1 and 'o2 default to 0 and "" resp.
-<two_of_each (m1 1) (m2 2) (o1 0) (o2 "")>
-
-(struct void)
-(struct one_of_each (mandat 123))
-(struct one_of_each (mandat 123) (option 456))
-(struct two_of_each (m1 1) (m2 2))
-(struct two_of_each (m1 1) (m2 2) (o1 0) (o2 ""))
 
 # functions
 (func () ())            # nullary, returns ()
@@ -107,13 +87,9 @@ my_dict.my_key1.my_key2
 # etc
 (func args args)        # variadic, returns its args
 
-(def id (func (x) x))
-(def apply (func (f x) (f x)))
-(def flip (func (f x y) (f y x)))
-(def cmp (func (f g) (func (x) (f (g x)))))
-
-# macros
-(def macro_evaluated    (macro 'evaluated ctx (x) [ctx x]))
-(def macro_quoted       (macro 'quoted (x) [ctx x]))
-(def macro_decompiled   (macro 'decompiled (x) [ctx x]))
-(def macro_compiled     (macro 'compiled (x) [ctx x]))
+# advanced functions
+(def func_evaled        (func ('evaled ctx)        (x) [ctx x]))
+(def func_quoted        (func ('quoted ctx)        (x) [ctx x]))
+(def func_unquoted      (func ('unquoted ctx)      (x) [ctx x]))
+(def func_deep_quoted   (func ('deep_quoted ctx)   (x) [ctx x]))
+(def func_deep_unquoted (func ('deep_unquoted ctx) (x) [ctx x]))
