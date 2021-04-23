@@ -7,20 +7,29 @@ The # symbol starts a single-comment, which ends at the end of the current line:
 
 There are no multi-line comments
 
+# Function invocation
+
+Parentheses (`(` and `)`) denote function invocation. For example:
+```
+(f)       # invokes 'f with zero arguments
+(f x)     # invokes 'f with one argument 'x
+(f x y)   # invokes 'f with two argument 'x and 'y
+(f x y z) # invokes 'f with three arguments 'x, 'y and 'z
+# etc
+```
+
 # Data Types
 
-There are nine data types:
-- the empty type `()`
+There are seven data types:
+- the unit type `()`, which has a single value: `()`
 - number
 - string
 - symbol
 - list
 - dictionary
-- struct
 - function
-- macro
 
-The `typeof` operation can be used to obtain the type of a value:
+The `typeof` function can be used to obtain the type of a value:
 ```
 (typeof ())         # -> ()
 (typeof any_num)    # -> 'num
@@ -28,18 +37,29 @@ The `typeof` operation can be used to obtain the type of a value:
 (typeof any_symb)   # -> 'symbol
 (typeof any_list)   # -> 'list
 (typeof any_dict)   # -> 'dict
-(typeof any_struct) # -> 'struct, then call struc_*
-(typeof any_func)   # -> 'func, then call func_*
-(typeof any_macro)  # -> 'macro, then call macro_*
+(typeof any_func)   # -> 'func
 ```
 
-# The empty type `()`
+Additionally, the following functions work on all types:
+```
+(eq x y)  # -> 'true | 'false. Whether x and y are equal
+# values of different types are automatically different
 
-Has only one value: `()`
+(lt x y)  # -> 'true | 'false. Whether x is less than y
+# values of different types are ordered as such:
+# () < any_number < any_string < any_symbol < any_list < any_dictionary < any_function
 
-Used to represent the absence of any meaningful value
+```
+
+# The unit type `()`
+
+Has only one value: `()`, which is also its own type
+
+Used to represent the absence of any meaningful value. Has no meaningful functions associated with it
 
 # Numbers
+
+Numbers can be ints (arbitrary size) or floats (64-bit)
 
 Integer literals (positive or negative):
 ```
@@ -54,22 +74,34 @@ Floating-point number literals:
 1.23e123 -123E-123
 ```
 
-All numbers have type `'num`, which corresponds to the following operation `num`:
+All numbers have type `'num`, which corresponds to the following functions `num`:
 ```
 (num any_num)   # -> any_num
 (num any_str)   # -> (parse_num any_str)
 (num x)         # raise error
 ```
+
+The following functions work on numbers:
+```
+(add x y)
+(sub x y)
+(mult x y)
+(div x y)
+(mod x y)
+(exp x y)
+(log x y)
+```
+
 # Strings
 
-Strings are represented by an array of unicode codepoints, encoded as utf-8
+Strings are represented by an array of unicode codepoints
 
 Strings cannot span multiple lines
 
 Some simple string literals:
 ```
 ""                  # empty string
-"abc123ACB_ !@#$%?" # ASCII printable characters
+"abc123ACB_ !@#$%?" # some ASCII printable characters
 "àéèïîôöù"          # Unicode printable characters
 ```
 
@@ -84,26 +116,32 @@ Certain codepoints must be escaped:
 - `\t` : tab
 - `\u{D*}` : one or more hex digits representing a unicode codepoint (must be at most `\u{10FFFF}`)
 
-All strings have type `'str`, which corresponds to the following variadic operation `str`:
+All strings have type `'str`, which corresponds to the following variadic function `str`:
 ```
-(str x)     # -> a nice, human-friendly representation
-(str x y)   # -> apply tostr to x and y, and concat the result
-(str x y z) # -> apply tostr to x, y and z, and concat the result
+(str x)     # -> a nice, human-friendly representation (not meant to be parsed)
+(str x y)   # -> apply tostr individually to x and y, and concat the result
+(str x y z) # -> apply tostr individually to x, y and z, and concat the result
 # etc
+```
+
+The following functions work on strings:
+```
+(str_size "")    # -> 0
+(str_size "abc") # -> 3
 ```
 
 # Symbols
 
 Symbols each represent a single value (themselves). They are formed by one or more quote (`'`) characters followed by either a letter or an underscore, followed by many letters, digits, or underscores
 
-Here are some examples of symbol literals:
+Here are some symbol literals:
 ```
-'a ''b ''c
+'a ''b '''c
 'abc
 '_foo ''BAR99 '''B4Z
 ```
 
-All symbols have type `'symb`, which corresponds to the following operation `symb`:
+All symbols have type `'symb`, which corresponds to the following function `symb`:
 ```
 (symb any_str)  # -> (parse_symb any_str)
 (symb any_symb) # -> any_symb
@@ -112,7 +150,7 @@ All symbols have type `'symb`, which corresponds to the following operation `sym
 
 Symbols can be combined into *qualified* symbols (ex: `'Symb1.symb_2`)
 
-Here are a few examples of qualified symbols:
+Here are a few qualified symbols:
 ```
 'Module.function
 ''Package.Module.function
@@ -120,7 +158,7 @@ Here are a few examples of qualified symbols:
 ''''my_dict.my_key1.my_key2
 ```
 
-The following operations are used to merge and split qualified symbols:
+The following functions are used to manipulate symbols:
 ```
 (symb_split 'foo)     # -> ['foo]
 (symb_merge 'foo [])  # -> 'foo
@@ -135,12 +173,12 @@ The following operations are used to merge and split qualified symbols:
 
 The number of quotes of a symbol can be obtained like this:
 ```
-(symb_nbr_quotes 'foo) # -> 1
+(symb_nbr_quotes 'foo)  # -> 1
 (symb_nbr_quotes ''bar) # -> 2
 (symb_nbr_quotes '''foo.bar.baz) # -> 3
 ```
 
-Booleans and other enum-like values can be represented using symbols like this:
+Booleans and other enum-like values are implemented using symbols like this:
 ```
 (def false 'false)
 (def true 'true)
@@ -148,7 +186,7 @@ Booleans and other enum-like values can be represented using symbols like this:
 
 ## Symbols and identifiers
 
-Symbols have a close relationship with identifiers. An identifier is a symbol, but without any leading quote (`'`) characters
+Symbols have a close relationship with identifiers. An identifier is a symbol, but without any leading quote. In other words, a symbol is a quoted identifier
 
 An identifier is just a name representing a previously defined value. In particular, an identifier is **not** a literal of any kind. For example, in the following:
 ```
@@ -156,7 +194,7 @@ An identifier is just a name representing a previously defined value. In particu
 ```
 We can say that identifier `my_value` represents the value `"hello world"`, and its matching symbols look like `'my_value`
 
-Here is a short list of identifiers, matching the previously mentioned symbols:
+Here are some identifiers, matching the previously mentioned symbols (i.e. without quotes):
 ```
 a b c
 abc
@@ -164,9 +202,9 @@ _foo BAR99 B4Z
 true false
 ```
 
-Like symbols, identifiers can be *qualified*, to represent a directory-like hierarchy of values. Furthermore, we say that an identifier is *fully qualified* if represents the absolute 'path' to a vicen value in said directory-like hierarchy
+Like symbols, identifiers can be *qualified*, to represent a directory-like hierarchy of values
 
-Here are a few examples of qualified identifiers:
+Here are some qualified identifiers:
 ```
 Module.function
 Package.Module.function
@@ -174,17 +212,19 @@ Package.Module.SubModule
 my_dict.my_key1.my_key2
 ```
 
-Any identifier can be converted into a symbol by *quoting* it, i.e. adding one or more quote (`'`) characters in front of it
+Any identifier can be converted into a symbol by *quoting* it, i.e. adding one or more leading quote
 
-Any symbol can be converted back into an identifier by *unquoting* it, i.e. removing one or more quote (`'`) characters that are in front of it. Keep in mind that unquoting a symbol may lead to an undefined identifier error
+Conversely, any symbol can be converted into an identifier by *unquoting* it, i.e. removing one or more leading quote. Keep in mind that unquoting a symbol may lead to an undefined identifier error
 
-In the macro section of this document, we will see how to quote and unquote programmatically
+Note that a symbol by itself is not required to correspond to a previously defined identifier. Only the unquoting process requires that relationship between symbols and identifiers. For example, symbol `'foo` is a perfectly valid symbol and can be freely passed around, even places where identifier `foo` may not be defined yet
+
+We will see alter on in this document how to programmatically quote and unquote identifiers / symbols, and how to determine if a symbol represents a previously defined identifier or not
 
 # Lists
 
 Lists are immutable and heterogenous value containers
 
-Here are some examples of list literals:
+Here are some list literals:
 ```
 []
 [0 1 2 3 4 5]
@@ -193,7 +233,7 @@ Here are some examples of list literals:
 [ [] [1 2 3] ["hello" 'world "!" ] ]
 ```
 
-The preceding examples can also be expressed using the `list `operation:
+The preceding examples can also be expressed using the `list` function:
 ```
 (list)
 (list 0 1 2 3 4 5)
@@ -202,18 +242,28 @@ The preceding examples can also be expressed using the `list `operation:
 (list (list) (list 1 2 3) (list "hello" 'world "!" ) )
 ```
 
-All lists have type `'list`, which corresponds to the previously mentioned `list` operation
+All lists have type `'list`, which corresponds to the previously mentioned `list` function
+
+The following functions are used to manipulate lists:
+```
+(list_is_empty [])      # -> 'true
+(list_is_empty [1 2 3]) # -> 'false
+
+(list_get_size [])      # -> 0
+(list_get_size [1 2 3]) # -> 3
+
+(list_head [])      # -> error
+(list_head [1 2 3]) # -> 1
+
+(list_tail [])      # -> error
+(list_tail [1 2 3]) # -> [2 3]
+```
 
 # Dictionaries
 
 Dictionaries are immutable and heterogenous containers of key/value pairs
 
-All types can be dictionary keys. Dictionaries store their key/value pairs as a sorted tree. The key ordering is as follows:
-```
-() < numbers < strings < symbols < lists < dictionaries < structs < functions < macros
-```
-
-Here are some examples of dictionary literals:
+Here are some dictionary literals:
 ```
 {}
 {
@@ -222,14 +272,12 @@ Here are some examples of dictionary literals:
     ("" 'dict)
     ('dict [])
     ([] {})
-    ({} <point (x 1) (y 2)>)
-    (<point (x 1) (y 2)> (func () []))
-    ((func () ()) (macro 'evaluated ctx () [ctx ()]))
-    ((macro 'evaluated ctx () [ctx ()]) ())
+    ({} (func () ()))
+    ((func () ()) ())
 }
 ```
 
-The preceding examples can also be expressed using the `dict `operation:
+The preceding examples can also be expressed using the `dict` function:
 ```
 (dict)
 (dict
@@ -238,19 +286,18 @@ The preceding examples can also be expressed using the `dict `operation:
     ("" 'dict)
     ('dict [])
     ([] {})
-    ({} <point (x 1) (y 2)>)
-    (<point (x 1) (y 2)> (func () []))
-    ((func () []) ())
+    ({} (func () ()))
+    ((func () ()) ())
 )
 ```
 
-All dictionaries have type `'dict`, which corresponds to the previously mentioned `dict` operation
+All dictionaries have type `'dict`, which corresponds to the previously mentioned `dict` function
 
 Dictionaries support a special syntax for obtaining and updating the value of symbol keys. Those symbol keys must be unqualified and single-quoted. The corresponding key/value pair must exist, otherwise an error is raised
 
 For example:
 ```
-# single key 'my_field (a symbol)
+# single key 'my_field (a symbol, unqualified and single-quoted)
 # single value "my_value" (a string)
 (def my_dict {('my_field "my_value)}
 
@@ -259,87 +306,35 @@ my_dict.my_field # -> "my_value"
 
 # updating value of symbol key
 # returns a new dictionary with the updated key/value pair
-(set my_dict.my_field "new_value") # -> {('my_field "new_value)}
+(set my_dict.my_field 123) # -> {('my_field 123)}
 ```
 
-Dictionary also support the following standard, dynamic operations:
-- obtain the list of keys
-- get the value associated to a key (regardlesss of key type)
-- put a key/value association, possibly adding it
-- del a key/value association, possibly removing it
-
-# Structs
-
-Structs are similar to dictionaries in that they are immutable, heterogenous containers of key/value pairs. However, structs also differ from dictionaries in the following ways:
-- struct definition must precede usage
-- struct definition includes type, keys, and default values
-- each struct type must be unique
-- all keys in a struct are single-quoted, unqualified symbols
-- struct keys cannot be added or removed
-
-Each struct defines a set of mandatory keys, which must be provided at creation along with a value, as well as optional keys each with a default value in case that key/value pair is not not provided at creation
-
-Here are some examples of struct definitions:
+The following functions are used to manipulate dictionaries (regardless of key type):
 ```
-(defstruct void)
-(defstruct one_of_each mandat (option 0))
-(defstruct two_of_each m1 m2 (o1 0) (o2 ""))
-```
-Where `'mandat`, `'m1` and `'m2` are mandatory keys, and `'option`, `'o1` and `'o2` are optional keys
+(dict_is_empty {})                      # -> 'true
+(dict_is_empty {("my_key" 'my_value)})  # -> 'false
 
-Here are some examples of struct literals:
-```
-<void>
-<one_of_each (mandat 123)>  # 'option defaults to 0
-<one_of_each (mandat 123) (option 456)>
-<two_of_each (m1 1) (m2 2)> # 'o1 and 'o2 default to 0 and "" resp.
-<two_of_each (m1 1) (m2 2) (o1 0) (o2 "")>
-```
+(dict_get_size {})                      # -> 0
+(dict_get_size {("my_key" 'my_value)})  # -> 1
 
-The preceding struct literal examples can also be expressed using the `struct `operation:
+(dict_get_keys {})                      # -> []
+(dict_get_keys {("my_key" 'my_value)})  # -> ["my_key"]
+
+(dict_get "my_key" {})                      # -> (), i.e. absent
+(dict_get "my_key" {("my_key" 'my_value)})  # -> 'my_value, i.e. present
+
+(dict_put "my_key" 'my_value {})                      # -> {("my_key" 'my_value)}, i.e. adds key/value pair
+(dict_put "my_key" 'my_value {("my_key" 123)})        # -> {("my_key" 'my_value)}, i.e. replaces key/value pair
+(dict_put "my_key" 'my_value {("my_key" 'my_value)})  # -> {("my_key" 'my_value)}, i.e. no change
+
+(dict_del "my_key" {})                # -> {}, i.e. no change
+(dict_del "my_key" {("my_key" 123)})  # -> {}, i.e. removes key/value pair
+
 ```
-(struct void)
-(struct one_of_each (mandat 123))
-(struct one_of_each (mandat 123) (option 456))
-(struct two_of_each (m1 1) (m2 2))
-(struct two_of_each (m1 1) (m2 2) (o1 0) (o2 ""))
-```
-
-All structs have type `'struct`, which corresponds to the previously mentioned `struct` operation
-
-Furthermore, the specific struct type can be obtained using the following operation:
-```
-(struct_type <void>) # -> 'void
-```
-
-Structs, like dictionaries, support a special syntax for obtaining and updating the value of keys. The key/value pair must exist, otherwise an error is raised
-
-For example:
-```
-# single key 'my_field
-# single value "my_value"
-(defstruct my_struct_type my_field))
-(def my_struct_val <my_struct_type (my_field "my_value")>)
-
-# obtain value for a given key
-my_struct_val.my_field # -> "my_value"
-
-# updating value for a given key
-# returns a new struct with the updated key/value pair
-(set my_struct_val.my_field "new_value")
-# -> <my_struct_type (my_field "new_value)>
-```
-
-Structs also support the the following dictionary dynamic operations:
-- obtain the list of keys
-- get the value associated to a key
-  - raise error if key does not exist
-- put a key/value association
-  - raise error if key does not exist
 
 # Functions
 
-Here are examples of function literals:
+Here are some function literals:
 ```
 (func () ())            # nullary, returns ()
 (func (x) x)            # unary, returns its arg
@@ -348,7 +343,7 @@ Here are examples of function literals:
 (func args args)        # variadic, returns its args
 ```
 
-Here are some examples of useful functions:
+Here are some useful functions:
 ```
 (def id (func (x) x))
 (def apply (func (f x) (f x)))
@@ -365,292 +360,312 @@ A function's argument list can be introspected like this:
 (func_args list)  # -> 'args, i.e. variadic
 ```
 
-Note that all functions arguments are evaluated left to right before being passed
+Note that, by default, function arguments are evaluated (left to right) before being passed to the function proper
 
-# Macros
+## Advanced functions
 
-Macros are like advanced functions. They can be configured to quote/unquote their arguments, and they can be used for advanced context operations like identifier definition, error handling, etc
-
-Here are examples of macro literals that behave exactly like functions:
+Here are some advanced function literals that behave exactly like in the previous examples:
 ```
-(macro 'evaluated ctx ()    [ctx ()])         # nullary macro, returns ()
-(macro 'evaluated ctx (x)   [ctx x])          # unary, returns its arg
-(macro 'evaluated ctx (n m) [ctx (add n m)])  # binary, sums its args
+(func ('evaled ctx) ()    [ctx ()])         # nullary func, returns ()
+(func ('evaled ctx) (x)   [ctx x])          # unary, returns its arg
+(func ('evaled ctx) (n m) [ctx (add n m)])  # binary, sums its args
 # etc
-(macro 'evaluated ctx args  [ctx args])       # variadic, returns its args
+(func ('evaled ctx) args  [ctx args])       # variadic, returns its args
 ```
 
-Thus, a macro has the following additional complexity:
-- an agrument-passing strategy must be declared (ex: `'evaluated` in the above examples)
-- an explicit context must be declared (ex: `ctx` in the above examples)
+Thus, an advanced function has the following additional complexity:
+- an pair must be provided before the formal arguments, containing:
+  - the agrument-passing strategy *symbol* (ex: `'evaled` in the above examples)
+  - the explicit context (ex: `ctx` in the above examples)
+
 - the return value must be a size-2 list containing:
   - a (possibly modified) explicit context (ex: `ctx` in the above examples)
-  - the effective return value (similar to a function's return value)
+  - the function's return value
 
-## Argument-passing strategy
+## Argument-passing strategy symbols
 
-The first argument in a macro literal is the argument-passing strategy, which must be one of the following symbols:
-- `'evaluated`: the macro arguments must be evaluated left to right before being passed
-- `'quoted`: the macro arguments must be quoted before before being passed
-- `'deep_quoted`: the macro arguments must be deep-quoted before before being passed
-- `'unquoted`: the macro arguments must be unquoted (and evaluated) left to right before being passed
-- `'deep_unquoted`: the macro arguments must be deep-unquoted (and evaluated) left to right before being passed
+Advanced function argument-passing strategy symbols instruct the interpreter on what to do with the function arguments right before passing them to the function proper. They must be one of the following:
+- `'evaled`: evaluate the arguments (left to right)
+- `'quoted`: convert the arguments to code (identifiers to symbols, etc)
+- `'unquoted`: the reverse of `'quoted`: convert (and evaluate) the arguments from code (left to right)
+- `'deep_quoted`: like `'quoted`, but replace an identifier with its associated value beforehand
+- `'deep_unquoted`: like `'unquoted`, but replace an identifier with its associated value beforehand
 
-Here are some examples of macros using such symbols:
+Here are some examples of advanced functions using such symbols:
 ```
 # evaluates the arguments left to right
-(macro 'evaluated ctx (x) [ctx x])
+(func ('evaled ctx) (x) [ctx x])
 
 # quotes the arguments
-(macro 'quoted ctx (x) [ctx x])
-
-# deep-quotes the arguments
-(macro 'deep_quoted ctx (x) [ctx x])
+(func ('quoted ctx) (x) [ctx x])
 
 # unquotes (and evaluates) the arguments left to right
-(macro 'unquoted ctx (x) [ctx x])
+(func ('unquoted ctx) (x) [ctx x])
+
+# deep-quotes the arguments
+(func ('deep_quoted ctx) (x) [ctx x])
 
 # deep-unquotes (and evaluates) the arguments left to right
-(macro 'deep_unquoted ctx (x) [ctx x])
+(func ('deep_unquoted ctx) (x) [ctx x])
 ```
 
-A macro's argument-passing strategy can be introspected like this:
+A function's argument-passing strategy can be introspected like this:
 ```
-(def macro_evaluated      (macro 'evaluated     ctx (x) [ctx x]))
-(def macro_quoted         (macro 'quoted        ctx (x) [ctx x]))
-(def macro_deep_quoted    (macro 'deep_qoted    ctx (x) [ctx x]))
-(def macro_unquoted       (macro 'unquoted      ctx (x) [ctx x]))
-(def macro_deep_unquoted  (macro 'deep_unquoted ctx (x) [ctx x]))
+(def func_evaled         (func ('evaled        ctx) (x) [ctx x]))
+(def func_quoted         (func ('quoted        ctx) (x) [ctx x]))
+(def func_unquoted       (func ('unquoted      ctx) (x) [ctx x]))
+(def func_deep_quoted    (func ('deep_quoted   ctx) (x) [ctx x]))
+(def func_deep_unquoted  (func ('deep_unquoted ctx) (x) [ctx x]))
 
-(macro_arg_pass_strat macro_evaluated)      # -> 'evaluated
-(macro_arg_pass_strat macro_quoted)         # -> 'quoted
-(macro_arg_pass_strat macro_deep_quoted)    # -> 'deep_qoted
-(macro_arg_pass_strat macro_unquoted)       # -> 'unquoted
-(macro_arg_pass_strat macro_deep_unquoted)  # -> 'deep_unquoted
+(func_arg_pass_strat func_evaled)         # -> 'evaled
+(func_arg_pass_strat func_quoted)         # -> 'quoted
+(func_arg_pass_strat func_unquoted)       # -> 'unquoted
+(func_arg_pass_strat func_deep_quoted)    # -> 'deep_quoted
+(func_arg_pass_strat func_deep_unquoted)  # -> 'deep_unquoted
 ```
 
-### Evaluating arguments with `'evaluated`
+The following sections describe each of these symbols in more details
+
+### Evaluating function arguments with `'evaled`
+
+This is the default argument-passing strategy symbol used by simple functions
 
 Arguments are evaluated in two different ways:
-- literals (ex: `()`, `0`, `""`, `'a`, `[]`, `{}`, `<void>`, `(func (x) x)`, `(macro 'evaluated ctx (x) [ctx x])`):
+- literals (ex: `()`, `0`, `""`, `'a`, `[]`, `{}`, `(func (x) x)`):
   - return the value represented by the literal
-  - lists, dictionaries, and structs may need to evaluate their contents recursively
+  - lists and dictionaries may need to evaluate their contents recursively
+
 - identifiers (ex: `true`, `fib`):
-  - return the value referenced by the identifier. Ex:
+  - return the value associated to the identifier. Ex:
     - given: `(def my_value "hello")`
     - evaluating `my_value` returns `"hello"`
-  - an undefined identifier error may be raised otherwise
+  - an undefined identifier error may be raised if the identifier is not previously defined
 
-Here is a more involved example:
+Here is a detailed example:
 ```
 # given:
-(def my_macro (macro 'evaluated ctx (x) [ctx x])) # eq. to (func (x) x)
-(def n 123)
-(def my_value [ 0 "" 'a [] {} <void> (fac 5) n])
-
-# when we evaluate my_value or the associated list literal:
-(my_macro my_value)
-(my_macro [ 0 "" 'a [] {} <void> (fac 5) n])
-
-# both return the same thing:
-# [ 0 "" 'a [] {} <void> 120 123]
-# notice how (fac 5) and n were evaluated to 120 and 123, respectively
-```
-### Quoting macro arguments with `'quoted`
-
-Macro arguments are quoted in two different ways:
-- literals (ex: `()`, `0`, `""`, `'a`, `[]`, `{}`, `<void>`, `(func (x) x)`, `(macro 'evaluated ctx (x) [ctx x])`):
-  - return the quoted version of the literal (see below)
-
-- identifiers (ex: `true`):
-  - return a matching symbol. Ex:
-    - `true` becomes `'true`
-    - `list` becomes `'list`
-
-Here is a more involved example:
-```
-# given:
-(def my_macro (macro 'quoted ctx (x) [ctx x]))
+(def my_func (func ('evaled ctx) (x) [ctx x])) # eq. to (func (x) x)
 (def n 123)
 
 # (fac 5) and n are evaluated here to 120 and 123 resp.
-(def my_value [ 0 "" 'a [] {} <void> (fac 5) n])
+(def my_value [ 0 "" 'a [] {} (fac 5) n])
 
-# when we quote my_value:
-(my_macro my_value)
+# when we evaluate my_value or the associated list literal:
+(my_func my_value)
+(my_func [ 0 "" 'a [] {} (fac 5) n])
 
-# then returns the identifier, quoted (i.e. a symbol):
+# both return the same thing:
+# [ 0 "" 'a [] {} 120 123]
+```
+
+### Quoting function arguments with `'quoted`
+
+See section *Quoting values* for mode details on how to quote values
+
+Here is a detailed example:
+```
+# given:
+(def my_func (func ('quoted ctx) (x) [ctx x]))
+(def n 123)
+(def my_value "this value is ignored by this example")
+
+# when we quote identifier my_value:
+(my_func my_value)
+
+# then returns the matching symbol:
 # 'my_value
 
 # when, instead, we quote the associated list literal:
-(my_macro [ 0 "" 'a [] {} <void> (fac 5) n])
+(my_func [ 0 "" 'a [] {} (fac 5) n])
 
 # then returns the literal, quoted:
-# ['list 0 "" ''a ['list] ['dict] ['struct 'void] ['fac 5] 'n]
+# ['list 0 "" ''a ['list] ['dict] ['fac 5] 'n]
 # notice how (fac 5) and n were not evaluated here, but quoted
-```
-
-### Deep-quoting macro arguments with `'deep_quoted`
-
-Deep-quoting macro arguments is similar to simply quoting them, except for one main difference
-
-Where quoting only works at the source-level (i.e. only works on literals and identifiers), encoding will first evaluate an identifier (i.e. replace it its associated value, this is the 'deep' in deep-quoting), and then quote said value as if it were a literal. Furthermore, deep-quoting a literal has the same effect as simply quoting it
-
-In other words, macro arguments are deep-quoted in two different ways:
-- literals (ex: `()`, `0`, `""`, `'a`, `[]`, `{}`, `<void>`, `(func (x) x)`, `(macro 'evaluated ctx (x) [ctx x])`):
-  - return the quoted version of the literal (see below)
-
-- identifiers (ex: `true`, `zero`, `fac`):
-  - evaluate the identifier to obtain its associated value
-  - return a the quoted version of this value (see below). Ex:
-    - given: `(def my_func (func (x) x))`
-    - deep-quoting `my_func`
-      - evaluate identifier `my_func`, which gives us the function `(func (x) x)`
-      - returns the quoted function `['func ['x] 'x]`
-
-  - note that deep-quoting only ever replaces **one** identifier with its value. In order to perform recursive deep-quoting, you need to write a custom macro for it
-
-Here is a more involved example:
-```
-# given:
-(def my_macro (macro 'deep_quoted ctx (x) [ctx x]))
-(def n 123)
-
-# (fac 5) and n are evaluated here to 120 and 123 resp.
-(def my_value [ 0 "" 'a [] {} <void> (fac 5) n])
-
-# when we deep-quote my_value:
-(my_macro my_value)
-
-# then returns the referenced value, quoted:
-# ['list 0 "" ''a ['list] ['dict] ['struct 'void] 120 123]
-# notice how (fac 5) and n were already evaluated, therefore not quoted
-
-# when, instead we deep-quote the associated list literal:
-(my_macro [ 0 "" 'a [] {} <void> (fac 5) n])
-
-# then returns the literal, quoted:
-# ['list 0 "" ''a ['list] ['dict] ['struct 'void] ['fac 5] 'n]
-# notice how (fac 5) and n were not evaluated, but quoted
 ```
 
 ### Unquoting function arguments with `'unquoted`
 
-Unquoting macro arguments is the reverse process of quoting them. Unquoting only works on number, string, symbol and list literals only. The resulting value is immediately evaluated. Errors may be raised by this process for various reasons (undefined identifier, malformed function call, etc). See below for details about unquoting listerals
+Unquoting is the reverse operation of quoting
 
-Here is a more involved example:
+See section *Unquoting values* for mode details on how to unquote values
+
+Here is a detailed example:
 ```
 # given:
-(def my_macro (macro 'unquoted ctx (x) [ctx x]))
+(def my_func (func ('unquoted ctx) (x) [ctx x]))
 (def n 123)
-(def my_code ['list 0 "" ''a ['list] ['dict] ['struct 'void] ['fac 5] 'n])
+(def my_code ['list 0 "" ''a ['list] ['dict] ['fac 5] 'n])
 
-# when we unquote 'my_code (symbol) or its associated list literal:
-(my_macro 'my_code)
-(my_macro ['list 0 "" ''a ['list] ['dict] ['struct 'void] ['fac 5] 'n])
+# when we unquote symbol 'my_code:
+(my_func 'my_code)
+
+# then returns the identifier my_code, evaluated:
+# ['list 0 "" ''a ['list] ['dict] ['fac 5] 'n]
+# notice how (fac 5) and n were not evaluated yet
+
+# when, instead, we quote the associated list literal:
+(my_func ['list 0 "" ''a ['list] ['dict] ['fac 5] 'n])
 
 # then returns the literal, unquoted:
-# [0 "" 'a [] {} <void> 120 123]
+# [0 "" 'a [] {} 120 123]
 # notice how (fac 5) and n were evaluated to 120 and 123, respectively
+```
+
+### Deep-quoting function arguments with `'deep_quoted`
+
+Deep-quoting function arguments is similar to simply quoting them, except for one main difference
+
+When quoting an identifier produces a symbol, deep-quoting an identifier will first evaluate the identifier, and then quote the resulting value. Deep-quoting a literal is the same as quoting it normally
+
+See section *Quoting values* for mode details on how to quote values
+
+Here is a detailed example:
+```
+# given:
+(def my_func (func ('deep_quoted ctx) (x) [ctx x]))
+(def n 123)
+(def my_value [ 0 "" 'a [] {} (fac 5) n])
+
+# when we quote identifier my_value or the associated list literal:
+(my_func my_value)
+(my_func [ 0 "" 'a [] {} (fac 5) n])
+
+# then returns the literal, quoted:
+# ['list 0 "" ''a ['list] ['dict] ['fac 5] 'n]
+# notice how (fac 5) and n were not evaluated here, but quoted
 ```
 
 ### Deep-unquoting function arguments with `'unquoted`
 
-Deep-unquoting macro arguments is similar to simply unquoting them, except for one main difference
+Deep-unquoting function arguments is similar to simply unquoting them, except for one main difference
 
-Where unquoting only works at the source-level (i.e. only works on literals, and **not** identifiers), deep-unquoting will first evaluate an identifier (i.e. replace it its associated value, this is the 'deep' in deep-unquoting), and then unquote said value as if it were a literal. Furthermore, deep-unquoting a literal has the same effect as simply unquoting it. Deep-unquoting has the same type restrictions and consequences as normal unquoting
+When unquoting an identifier is not allowed, deep-quoting an identifier will first evaluate the identifier, and then unquote the resulting value. Deep-unquoting a literal is the same as unquoting it normally
 
-In other words, macro arguments are deep-unquoted in two different ways:
-- literals (ex: `0`, `""`, `'a`, `[]`):
-  - return the unquoted version of the literal (see below)
+See section *Unquoting values* for mode details on how to unquote values
 
-- identifiers (ex: `true`, `zero`, `fac`):
-  - evaluate the identifier to obtain its associated value
-  - return a the unquoted version of this value (see below). Ex:
-    - given: `(def my_func ['func ['x] ['x]])`
-    - deep-unquoting `my_func`
-      - evaluate identifier `my_func`, which gives us the list `['func ['x] ['x]]`
-      - returns the unquoted and evaluated function `(func (x) x)`
-
-  - note that deep-unquoting only ever replaces **one** identifier with its value. In order to perform recursive deep-unquoting, you need to write a custom macro for it
-
-Here is a more involved example:
+Here is a detailed example:
 ```
 # given:
-(def my_macro (macro 'deep_unquoted ctx (x) [ctx x]))
+(def my_func (func ('deep_unquoted ctx) (x) [ctx x]))
 (def n 123)
-(def my_code ['list 0 "" ''a ['list] ['dict] ['struct 'void] ['fac 5] 'n])
+(def my_code ['list 0 "" ''a ['list] ['dict] ['fac 5] 'n])
 
-# when we deep-unquote my_code (identifier) or its associated list literal:
-(my_macro my_code)
-(my_macro ['list 0 "" ''a ['list] ['dict] ['struct 'void] ['fac 5] 'n])
+# when we deep-unquote symbol 'my_code:
+(my_func 'my_code)
+
+# then returns the identifier my_code, evaluated (not unquoted):
+# ['list 0 "" ''a ['list] ['dict] ['fac 5] 'n]
+# notice how (fac 5) and n were not evaluated
+
+# when, instead, we deep-unquote identifier my_code or the associated list literal:
+(my_func my_code)
+(my_func ['list 0 "" ''a ['list] ['dict] ['fac 5] 'n])
 
 # then returns the literal, unquoted:
-# [0 "" 'a [] {} <void> 120 123]
+# [0 "" 'a [] {} 120 123]
 # notice how (fac 5) and n were evaluated to 120 and 123, respectively
 ```
 
-### Quoting literals
+### Quoting values
 
-This operation is the reverse of unquoting literals (see below). Note that identifiers are **not** literals in any way. See deep-quoting for how they are quoted
+This operation is the reverse of unquoting values (see below)
 
-Each literal can be quoted in the following ways:
-- literals for the empty type `()`, numbers and strings:
-  - return their own value. Ex:
-    - `()` becomes `()`
-    - `123` becomes `123`
-    - `"hello"` becomes `"hello"`
+Quoting any value will only produce results of the following types:
+- numbers
+- strings
+- symbols
+- lists, containing zero or more recursive sub-results (i.e. numbers, strings, symbols, lists)
 
-- symbol literals (ex: `'true`):
-  - return a new symbol literal with one more quote (`'`) character prepended to it. Ex:
-    - `'fib` (one quote) becomes `''fib` (two quotes)
-    - `''list` (two quotes) becomes `'''list` (three quotes)
+Note that quoted values are *not* evaluated beforehand
 
-- lists, dictionaries and struct literals (ex: `[]`, `{}`, `<void>`):
-  - first convert it to an evaluation literal using the corresponding operation. Ex:
-    - `[1 2 3]` becomes `(list 1 2 3)`
-    - `{(1 2) (3 4)}` becomes `(dict (1 2) (3 4))`
-    - `<point (x 0) (y 0)>` becomes `(struct point (x 0) (y 0))`
-  - then return the quoted version of this evaluation literal (see next point)
+Quoting adheres to the following rules:
+- quoting an identifier produces the matching single-quoted symbol. Ex:
+  - quoting `true` produces `'true`
 
-- evaluation literals (ex: `(list 1 2 3)`, `(dict (1 2) (3 4))`, `(struct point (x 0) (y 0))`, `(func (x) x)` and `(macro 'evaluated ctx (x) [ctx x])`):
-  - return a list containing each element quoted recursively. Parentheses are treated as list brackets. Ex:
-    - `(list 1 2 3)` becomes `['list 1 2 3]`
-    - `(dict (1 2) (3 4))` becomes `['dict [1 2] [3 4]]`
-    - `(struct point (x 0) (y 0))` becomes `['struct 'point ['x 0] ['y 0]]`
-    - `(func (x) x)` becomes `['func ['n] 'n]`
-    - `(macro 'evaluated ctx (x) [ctx x])` becomes `['macro ''evaluated 'ctx ['n] ['ctx 'n]]`
-      - note the double-quote on the right-hand side, in `''evaluated`
+- quoting a literal of the unit type produces an empty list. Ex:
+  - quoting `()` produces `[]`
 
-### Unquoting literals
+- quoting a number literal produces the number itself. Ex:
+  - quoting `123` produces `123`
 
-This operation is the inverse of quoting literals (see above). Note that identifiers are **not** literals in any way. See deep-unquoting for how they are unquoted
+- quoting a string literal produces the string itself. Ex:
+  - quoting `"abc"` produces `"abc"`
 
-Each literal can be unquoted in the following ways:
-- the empty type `()`, numbers and strings:
-  - return their own value. Ex:
-    - `()` becomes `()`
-    - `123` becomes `123`
-    - `"hello"` becomes `"hello"`
+- quoting a symbol literal produces a new symbol with one more leading quote. Ex:
+  - quoting `'true` (one quote) produces `''true` (two quotes)
+  - quoting `''true` (two quotes) produces `'''true` (three quotes)
 
-- symbol literals with two or more quotes (ex: `''true`):
-  - return a new symbol literal with one less quote (`'`) character prepended to it. Ex:
-    - `''fib` (two quotes) becomes `'fib` (one quotes)
-    - `'''list` (three quotes) becomes `''list` (two quotes)
+- quoting a list literal instead quotes the corresponding function invocation. Ex:
+  - quoting `[() 0 "" 'a [] {} (func () ()) (fac 5)]` instead quotes:
+    - `(list () 0 "" 'a [] {} (func () ()) (fac 5))`
+    - see below on how to quote function invocations
 
-- symbol literals with one quote (ex: `'true`):
-  - remove the quote (`'`) character to obtain an identifier
-  - return the value associated to this identifier
-  - raise an error if this identifier is not defined
+- quoting a dictionary literal instead quotes the corresponding function invocation. Ex:
+  - quoting `{(() 0) ("" 'a) ([] {}) ((func () ()) (fac 5))}` instead quotes:
+    - `(dict (() 0) ("" 'a) ([] {}) ((func () ()) (fac 5)))`
+    - see below on how to quote function invocations
 
-- evaluation literals (ex: `['list 1 2 3]`, `['dict [1 2] [3 4]]`, `['struct 'point ['x 0] ['y 0]]`, `['func ['x] 'x]` and `['macro ''evaluated 'ctx ['n] ['ctx 'n]]`):
-  - first, unquote each element recursively, evaluating each from left to right
-  - evaluate the resulting operation
-  - raise an error if this operation is malformed
+- quoting a function invocation produces a list of each elements, quoted recursively. Parentheses are replaced with square brackets during this process. Ex:
+  - quoting `(func (x) x)` produces:
+    - `['func ['x] 'x]`
 
-## Macros and contexts
+  - quoting `(func ('evaled ctx) (x) [ctx x])` produces:
+    - `['func [''evaled 'ctx] ['x] ['list 'ctx 'x]]`
 
-A context is a dictionary made up of symbol keys each associated to a given value. Such values can be of any type. This context dictionary is initialized at the beginning of a module evaluation, and can be used and modified by macros
+  - quoting `(list () 0 "" 'a [] {} (func () ()) (fac 5))` produces:
+    - `['list [] 0 "" ''a ['list] ['dict] ['func [] []] ['fac 5]]`
+    - note how `(fac 5)` is not evaluated by this process
+
+  - quoting `(dict (() 0) ("" 'a) ([] {}) ((func () ()) (fac 5)))` produces:
+    - `['dict [[] 0] ["" ''a] [['list] ['dict]] [['func [] []] ['fac 5]]]`
+    - note how `(fac 5)` is not evaluated by this process
+
+### Unquoting values
+
+This operation is the reverse of quoting values (see above)
+
+Unquoting only works on the types produced by quoting, i.e. numbers, strings, symbols and lists
+
+Unquoting adheres to the following rules:
+- unquoting a number literal produces the number itself. Ex:
+  - quoting `123` produces `123`
+
+- unquoting a string literal produces the string itself. Ex:
+  - quoting `"abc"` produces `"abc"`
+
+- quoting a symbol literal with at least two leading quotes produces a new symbol with one less leading quote. Ex:
+  - quoting `'''true` (three quotes) produces `''true` (two quotes)
+  - quoting `''true` (two quote) produces `'true` (one quotes)
+
+- unquoting a single-quoted symbol literal evaluates the corresponding identifier (i.e. without the leading quote). An error may be raised if this identifier is not previously defined. Ex:
+  - unquoting `'true` evaluates the identifier `true`, which produces `'true`
+  - unquoting `'id` evaluates the identifier `id`, which produces `(func (x) x)`
+
+- unquoting a list literal produces an unevaluated function invocation with each elements unquoted recursively. Square brackets are replaced with parentheses during this process. Each invocation is then evaluated according to the function's specified argument-passing strategy. Ex: 
+  - unquoting `[]` produces the unit type `()`
+  - unquoting `['func ['x] 'x]` produces:
+    - `(func (x) x)`
+    - which evaluates to the corresponding function
+
+  - unquoting `['func [''evaled 'ctx] ['x] ['list 'ctx 'x]]` produces:
+    - `(func ('evaled ctx) (x) [ctx x])`
+    - which evaluates to the corresponding function
+
+  - unquoting `['list [] 0 "" ''a ['list] ['dict] ['func [] []] ['fac 5]]` produces:
+    - `(list () 0 "" 'a [] {} (func () ()) (fac 5))`
+    - which evaluates to `[() 0 "" 'a [] {} (func () ()) 120]`
+    - note how `(fac 5)` is evaluated by this process
+
+  - unquoting `['dict [[] 0] ["" ''a] [['list] ['dict]] [['func [] []] ['fac 5]]]` produces:
+    - `(dict (() 0) ("" 'a) ([] {}) ((func () ()) (fac 5)))`
+    - which evaluates to `{(() 0) ("" 'a) ([] {}) ((func () ()) 120)}`
+    - note how `(fac 5)` is evaluated by this process
+
+## Functions and contexts
+
+Any function has access to an implicit context. Advance functions have access to an additional, explicit context
+
+A context is a dictionary made up of unqualified, single-quoted symbol keys each associated to a given value. Such values can be of any type. This context dictionary is initialized at the beginning of a module evaluation, and can be used and modified by advanced functions
 
 A context is said to be implicit when its keys can be referenced without being qualified by the context name, as simple identifiers. Conversely, a context is said to be explicit when its keys must be qualified with the context name, resulting in a qualified identifier. For example:
 ```
@@ -669,32 +684,34 @@ A context is said to be implicit when its keys can be referenced without being q
 
 ### The function implicit context
 
-By default, a function or macro only has access to one implicit context, called the *function implicit context*
+By default, a function only has access to one implicit context, called the *function implicit context*
 
-This *function implicit context* is the context of all identifiers (arguments, lambda closure, etc) available to the function or macro when it gets invoked. This context is determined when the function or macro is created. As a reminder, here are the two ways to create a function or macro:
-- by using the `func` identifier in source code:
-  - `(func (n) (add n 1)` or `(macro 'evaluated ctx (n) [ctx (add n 1)])`
+This *function implicit context* is the context of all identifiers (arguments, lambda closure, etc) available to the function when it is invoked. This context is determined when the function is created. As a reminder, here are the two ways to create a function:
+- by using the `func` function in source code:
+  - `(func (n) (add n 1)` or `(func ('evaled ctx) (n) [ctx (add n 1)])`
   - the implicit context will contain all defined symbols up to that point in the module
-  - in in particular, symbol `'add` must be defined up to that point in the module for the function or macro to succeed
+  - in in particular, symbol `'add` must be defined up to that point in the module for the function invocation to succeed
 
-- by unquoting a list starting with the `'func` or `'macro`symbol:
-  - `['func ['n] ['add 'n 1]]` or `['macro ''evaluated 'ctx ['n] ['ctx ['add 'n 1]]]`
-  - the implicit context will contain all defined in the context of the unquoting
+- by unquoting a list starting with the `'func` symbol:
+  - `['func ['n] ['add 'n 1]]` or `['func [''evaled 'ctx] ['n] ['list 'ctx ['add 'n 1]]]`
+  - the implicit context will contain all defined symbols up to the unquoting invocation
 
-A function's or macro's implicit context can be introspected like this:
+A function's implicit context can be introspected like this:
 ```
+# given
 (def add (func (x y) (...)))
-(def compile (macro 'deep_unquoted ctx (x) [ctx x]))
+(def unquote (func ('deep_unquoted ctx) (x) [ctx x]))
 
-# getting implicit context
+# define custom functions
 (def my_add (func (n) (add n 1)))
-(def my_add2 (compile ['func ['n] ['add 'n 1]]))
+(def my_add2 (unquote ['func ['n] ['add 'n 1]]))
 
+# when getting the implicit context
 (func_get_ctx my_add)
 (func_get_ctx my_add2)
-# both return the following:
+# both return
 # {
-#   (n ()) # argument, with default value
+#   (n ()) # argument, with placeholder value
 #   (add (func (x y) (...))) # lambda closure
 # }
 
@@ -707,25 +724,22 @@ The `def` operation seen up until now will also add the defined name to a functi
 
 For mutually-recursive functions, one can devise an operation `mutual` that takes a number of functions, and will add all of them in each of the implicit contexts.
 
-### The macro explicit context
+### The function explicit context
 
-A macro receives an additional context argument, called the *macro explicit context*
+An advanced function receives an additional context argument, called the *function explicit context*
 
-This *macro explicit context* is the context of all definitions available to the *caller* of the macro. Since it is an explicit context, all of its keys must be qualified with the context name
+This *function explicit context* is the context of all definitions available to the *caller* of the function. Since it is an explicit context, all of its keys must be qualified with the context name
 
-Furthermore, a macro must return a size-2 list containing the explicit context (updated if needed), followed by the normal macro return value
+Note that when using an explicit context, the identifier `'ctx` will be added to the function's implicit context, unless such an identifier is already defined in the function's implicit context, in which case an error is raised
 
-Note that when using an explicit context, the identifier `'ctx` will be added to the macro's implicit context, unless such an identifier is already defined in the macro's implicit context
-
-Here is an example of receiving an additional context:
+Here is an example of receiving the explicit context:
 ```
-# explicit caller context in identifier ctx
 # evaluation semantics symbol must be provided
-def my_macro (macro 'evaluated ctx (x y z)
+def my_func (func ('evaled ctx) (x y z)
   (print ctx.zero)
   (print ctx.hello)
 
-  [ ctx         # unchanged explicit context
+  [ ctx         # unchanged
     (add x y z) # return value
   ]
 ))
@@ -734,8 +748,8 @@ def my_macro (macro 'evaluated ctx (x y z)
 (def zero 0)
 (def hello "hello")
 
-# invoke macro
-(macro 1 2 3) # -> 6
+# invoke func
+(func 1 2 3) # -> 6
 # prints: 0
 # prints: "hello"
 
@@ -746,8 +760,7 @@ def my_macro (macro 'evaluated ctx (x y z)
 
 Here is an example of modifying the explicit context:
 ```
-# explicit caller context in identifier ctx
-def my_macro (macro 'evaluated ctx (x y z)
+def my_func (func ('evaled ctx) (x y z)
   (print ctx.n)
   (print ctx.hello)
 
@@ -755,7 +768,7 @@ def my_macro (macro 'evaluated ctx (x y z)
   # contexts are just dictionaries
   (def out_ctx (set ctx.n (add ctx.n 1)))
 
-  [ out_ctx     # updated explicit context
+  [ out_ctx     # updated
     (add x y z) # return value
   ]
 ))
@@ -764,8 +777,8 @@ def my_macro (macro 'evaluated ctx (x y z)
 (def n 0)
 (def hello "hello")
 
-# invoke macro
-(my_macro 1 2 3)
+# invoke func
+(my_func 1 2 3)
 # prints: 0
 # prints: "hello"
 
@@ -775,30 +788,21 @@ def my_macro (macro 'evaluated ctx (x y z)
 
 ## Other uses for the explicit context
 
-Beyond simply manipulating the caller context, the *macro explicit context* can also be used to do the following:
-- defining custom structs
+Beyond simply manipulating the caller context, the *function explicit context* can also be used to do the following:
 - performing I/O
-- requesting other module definition contexts
+- getting other module contexts
 - aborting and resuming evaluation
 
 They are implemented using *volatile variables*, which are variables that can be modified at any time by the interpreter. They should **not** be relied upon for anything other that what is specified in the following sections
 
-### Defining custom structs
-
-The *macro explicit context* can be used to define and create custom structs. This allows the implementation of features like:
-- validating mandatory fields
-- setting default values for optional fields
-
-Operations like `'defstruct` and `'struct` (see section about custom structs) will read and update key `"__CUSTOM_STRUCTS_`, which contains the types, fields, etc, of structs that are defined in the current context
-
 ### Performing I/O
 
-The *macro explicit context* can be used to open, read and write files. This allows the implementation of features like:
+The *function explicit context* can be used to open, read and write files. This allows the implementation of features like:
 - read and write to the console
 - read and write to disk
 - send and receive data over the network
 
-Assume a macro invokation `M` that receives an explicit context. Once `M` finishes, the interpreter will search the resulting explicit context for the key `'__REQUEST_IO__`. If found, the interpreter will do the following:
+Assume a function invocation `F` that receives an explicit context. Once `F` finishes, the interpreter will search the resulting explicit context for the key `'__REQUEST_IO__`. If found, the interpreter will do the following:
 - analyze the associated value for the type of I/O to perform. Ex:
   - for writing `"Hello World"` to the console, the value could be: `['std_out, "Hello World!"]`
   - for reading from the console, the value could be: `'std_in`
@@ -811,17 +815,24 @@ Assume a macro invokation `M` that receives an explicit context. Once `M` finish
 Here is an example of reading and writing to the console:
 ```
 # prompt 1/3: request the writing of the prompt string
-(def prompt1 (macro 'evaluated ctx (str)
+(def prompt1 (func ('evaled ctx) (str)
   [ (put ctx '__REQUEST_IO__  ['std_out str])
     ()
   ]
 ))
 
 # prompt 2/3: request the reading of the user string
-(def prompt2 (macro 'evaluated ctx ()
-  # (get ctx '__RESPONSE_IO__) # ignore 'std_out response
+(def prompt2 (func ('evaled ctx) ()
+  # ignore 'prompt1 response
   [ (put ctx '__REQUEST_IO__ 'std_in)
     ()
+  ]
+))
+
+# prompt 3/3: process user string response
+(def prompt3 (func ('evaled ctx) ()
+  [ ctx
+    ctx.__RESPONSE_IO__
   ]
 ))
 
@@ -832,66 +843,77 @@ Here is an example of reading and writing to the console:
 (prompt2)
 # user enters their name: John
 
-(print __RESPONSE_IO__)
-# prints: John
+(prompt3) # -> "John"
 ```
 
-### Requesting other module definition contexts
+### Getting other module contexts
 
-The *macro explicit context* can be used to request other module definition contexts (i.e. the final context after a module has finished evaluating). This allows the implementation of features like:
+The *function explicit context* can be used to get other module definition contexts (i.e. the final context after a module has finished evaluating). This allows the implementation of features like:
 - importing all or a subset of another module's definition
 - aliasing, qualifying or hiding a subset of another module's definition
 
-Assume a macro invokation `M` that receives an explicit context. Once `M` finishes, the interpreter will search the resulting explicit context for the key `'__REQUEST_MODULE_CTX__`. If found with a fully-qualified, single-quoted symbol `S`, the interpreter will do the following:
+Assume a function invocation `F` that receives an explicit context. Once `F` finishes, the interpreter will search the resulting explicit context for the key `'__REQUEST_MODULE_CTX__`. If found with a fully-qualified, single-quoted symbol `S`, the interpreter will do the following:
 - remove this key from the explicit context
 - search the module directory for the module `M` matching symbol `S`
 - if module `M` is already evaluated, denote its final context as `C`
 - if module `M` is not evaluated, evaluate it now, denoting its final context as `C`
+  - see below for full module evaluation order
 - put a key `'__RESPONSE_MODULE_CTX__` with value `C` in the explicit context
 
 Here is an example of requesting a module context:
 ```
-(def req_data_list_ctx (macro 'evaluated ctx ()
-  [ (put ctx '__REQUEST_MODULE_CTX__  'Data.List)
+# get module context 1/2: send request
+(def get_module_context1 (func ('evaled ctx) (module)
+  [ (put ctx '__REQUEST_MODULE_CTX__  module)
     ()
   ]
 ))
 
-(req_data_list_ctx)
-(print '__RESPONSE_MODULE_CTX__)
-# prints: { ... }
+# get module context 2/2: process response
+(def get_module_context2 (func ('evaled ctx) ()
+  [ ctx
+    ctx.__RESPONSE_MODULE_CTX__
+  ]
+))
+
+(get_module_context1 'Data.List)
+(get_module_context2) # -> context for module Data.List
 ```
 
 ### Aborting and resuming evaluation
 
-The *macro explicit context* can be used to abort and resume evaluation. This allows the implementation of features like:
+The *function explicit context* can be used to abort and resume evaluation. This allows the implementation of features like:
 - error-handling with try/recover/finally
 - forcefully return a value, thus bypassing API restrictions
 
-Assume a macro invokation `M` that receives an explicit context. Once `M` finishes, the interpreter will search the resulting explicit context for the key `'__ABORT_EVAL_WITH__`. If found with any value `V`, the interpreter will do the following:
-- look for a macro invokation `N` with the following properties:
+Assume a function invocation `F` that receives an explicit context. Once `F` finishes, the interpreter will search the resulting explicit context for the key `'__ABORT_EVAL_WITH__`. If found with any value `V`, the interpreter will do the following:
+- look for a function invocation `G` with the following properties:
+  - advanced function that receives and returns an explicit context
   - nullary (i.e. zero-length argument list)
-  - immediately follows `M` or the last aborted evaluation
-- if such a macro invocation `N` is found, invoke it. Once `N` finishes, if this field has been removed from the explicit context, resume evaluation
-- otherwise, abort evaluation, and move up the call stack until such a function invokation `N` is found
-- if no such macro invokation `N` is ever found, the interpreter will halt with an message derived from `V`
+  - immediately follows `F` or the last aborted evaluation
+- if such a function invocation `G` is found, invoke it. Once `G` finishes, if this field has been removed from the explicit context, resume evaluation
+- otherwise, abort evaluation, and move up the call stack until such a function invocation `G` is found
+- if no such function invocation `G` is ever found, the interpreter will halt with an message derived from `V`
 
 Here is an example of aborting and resuming evaluation:
 ```
-# this macro will abort evaluation
-(def my_abort (macro 'evaluated ctx (abort_with)
+# this function will abort evaluation
+(def my_abort (func ('evaled ctx) (abort_with)
   [ (put ctx '__ABORT_EVAL_WITH__  abort_with)
     ()
   ]
 ))
 
+# this function will resume evaluation
+(def my_resume (func ('evaled ctx) ()
+  [ (del ctx '__ABORT_EVAL_WITH__)
+    ctx.__ABORT_EVAL_WITH__
+  ]
+))
+
 # abort then resume evaluation
 (my_abort "Hello Crash World!")
-(macro 'evaluated ctx ()
-  [ (del ctx '__ABORT_EVAL_WITH__)
-    ()
-  ]
-)
+(my_resume) # -> "Hello Crash World!"
 
 # abort evaluation and halting the interpreter
 (my_abort "Hello Crash World!")
@@ -900,7 +922,7 @@ Here is an example of aborting and resuming evaluation:
 
 # Modules
 
-Source code can be split in multiple files. Each file corresponds to a module, and the path of a file corresponds to the module identifier. In particular, the relative path from the source root of any given file corresponds to the fully-qualified identifier of the corresponding module. For example, the following file structure:
+Source code can be split in multiple files. Each file corresponds to a module, and the path of a file corresponds to the module identifier. In particular, the relative path from the source root of any given file corresponds to the fully-qualified identifier of the corresponding module. For example, the following file structure and associated module identifiers:
 ```
 src/
   main.pz       # module 'main
@@ -910,82 +932,6 @@ src/
     list.pz     # module 'data.list
     list/
       lazy.pz   # module 'data.list.lazy
-```
-
-## Imports
-
-In order for a module to use identifiers defined by another module, it first needs to `import` those identifiers. The operation for importing identifiers from a module requires the fully-qualified identifier of the module to import, and simply creates a dictionary structure in the current context to hold the new identifiers
-
-Here are some example of imports and symbol manipulations:
-```
-# import a module
-(import data.list)
-(data.list.concat [1 2 3] [4 5 6]) # -> [1 2 3 4 5 6]
-(data.list.zip [1 2 3] [4 5 6]) # -> [[1 4] [2 5] [3 6]]
-
-# define alias
-(def list data.list)
-(list.concat [1 2 3] [4 5 6]) # -> [1 2 3 4 5 6]
-(list.zip [1 2 3] [4 5 6]) # -> [[1 4] [2 5] [3 6]]
-
-# expose specific identifiers
-(def zip list.zip)
-(list.concat [1 2 3] [4 5 6]) # -> [1 2 3 4 5 6]
-(zip [1 2 3] [4 5 6]) # -> [[1 4] [2 5] [3 6]]
-```
-
-## Exports and private identifiers
-
-By default, every definition in a module `M` will be exported (i.e. made available to all other modules importing `M`). This includes identifiers defined in the module itself, as well as those imported from other modules (transitive imports, or re-exports)
-
-In other words, if module `A` defines identifier `a`, and if module `B` defines identifier `b` and imports module `A`, and if module `C` imports module `B` only and defines nothing itself, then module `C` will have access to identifiers `a` and `b`
-
-It is possible to prevent re-exporting identifiers by deleting their symbols from the current context at the end of the module. This can be done using `get_curr_ctx` and `set_curr_ctx`, which are implemented using the *macro explicit context*, like this:
-```
-# main.pz
-
-# a private definition, should be made available
-(def _private "I'm private!")
-
-# a public definition, should be made available
-(def public_func (func () _private))
-
-# ...
-
-# get the current context, i.e. a dictionary
-(def ctx (get_curr_ctx))
-
-# delete '_private to make it unavailable
-# this does not impact any previous use of '_private
-(def new_ctx (del ctx '_private)_
-
-# this will be forgotten by next statement
-(def forgotten "This will be forgotten!")
-
-# overwrite the current context
-(set_curr_ctx new_ctx)
-```
-
-## The `base` module
-
-There exists a module named `base`, of which all identifiers are automatically accessible to all modules. This module contains identifiers that are widely used and have no other dependencies than themselves. Think of it like if every module started with the following:
-```
-
-# this makes (base.add 1 2) possible
-# i.e. base is a dictionary
-(import base)
-
-# obtain current context
-# contexts are dictionaries
-(def ctx (get_curr_ctx))
-
-# add all base keys to current context
-# this makes (add 1 2) possible
-# also (base.add 1 2) is still possible if needed
-(def new_ctx (merge ctx base)
-
-# overwrite current context
-(set_curr_ctx new_ctx)
 ```
 
 ## Module evaluation order
@@ -1013,16 +959,16 @@ The `(evaluate modules module)` function algorithm is as follows:
         1. keeping track of modifications to `ctx`
         2. no need to update `modules` on each modification
 
-    2. if `e` access the context of another module `m2`:
+    2. if `e` access the context of another module `m`:
         1. let `modules` now be: `(put modules module ctx)`
-        2. call `(evaluate modules m2)`
+        2. call `(evaluate modules m)`
         3. finish evaluating `e`
 
 6. when `module` is fully evaluated with a final context `ctx`:
     1. let `modules` now be: `(put modules module ctx)`
 
 This algorithm ensures that:
-  - required (and only required) modules are ever compiles and evaluated
+  - required (and only required) modules are ever compiled and evaluated
   - circular dependencies are allowed and will not cause an infinite recursion
     - they MAY cause undefined identifier errors, ex:
       - module `A` imports module `B`, in which module `B` imports module `A`
@@ -1032,3 +978,104 @@ This algorithm ensures that:
     - this can be fixed by doing one of the following:
       - creating a `friend zone` in A and B, where code required for both to evaluate correctly comes before the import statement of the other
       - moving dependencies to a new module
+
+# TODOs
+
+The preceding only touches upon built-in primitives of the language. The goal is that more advanced features can be implemented in the language itself using those primitives
+
+## Error Handling
+
+(try (try_statement)
+  (recover e (recover_statement)) # optional if 'finally is present
+  (finally (finally statement))   # optional if 'recover is present
+)
+
+Uses `'__ABORT_EVAL_WITH__` under the hood
+
+## Modules and imports
+
+In order for a module to use identifiers defined by another module, it first needs to `import` those identifiers. The operation for importing identifiers from a module requires the fully-qualified identifier of the module to import, and simply creates a dictionary structure in the current context to hold the new identifiers
+
+Here are some example of imports and symbol manipulations:
+```
+# import a module
+(import data.list)
+(data.list.concat [1 2 3] [4 5 6]) # -> [1 2 3 4 5 6]
+(data.list.zip [1 2 3] [4 5 6]) # -> [[1 4] [2 5] [3 6]]
+
+# define alias
+(def list data.list)
+(list.concat [1 2 3] [4 5 6]) # -> [1 2 3 4 5 6]
+(list.zip [1 2 3] [4 5 6]) # -> [[1 4] [2 5] [3 6]]
+
+# expose specific identifiers
+(def zip list.zip)
+(list.concat [1 2 3] [4 5 6]) # -> [1 2 3 4 5 6]
+(zip [1 2 3] [4 5 6]) # -> [[1 4] [2 5] [3 6]]
+```
+
+### Exports and private identifiers
+
+By default, every definition in a module `F` will be exported (i.e. made available to all other modules importing `F`). This includes identifiers defined in the module itself, as well as those imported from other modules (transitive imports, or re-exports)
+
+In other words, if module `A` defines identifier `a`, and if module `B` defines identifier `b` and imports module `A`, and if module `C` imports module `B` only and defines nothing itself, then module `C` will have access to identifiers `a` and `b`
+
+It is possible to prevent re-exporting identifiers by deleting their symbols from the current context at the end of the module. This can be done using `get_curr_ctx` and `set_curr_ctx`, which are implemented using the *function explicit context*, like this:
+```
+# main.pz
+
+# a private definition, should be made available
+(def _private "I'm private!")
+
+# a public definition, should be made available
+(def public_func (func () _private))
+
+# ...
+
+# get the current context, i.e. a dictionary
+(def ctx (get_curr_ctx))
+
+# delete '_private to make it unavailable
+# this does not impact any previous use of '_private
+(def new_ctx (del ctx '_private)_
+
+# this will be forgotten by next statement
+(def forgotten "This will be forgotten!")
+
+# overwrite the current context
+(set_curr_ctx new_ctx)
+```
+
+### The `base` module
+
+There exists a module named `base`, of which all identifiers are automatically accessible to all modules. This module contains identifiers that are widely used and have no other dependencies than themselves. Think of it like if every module started with the following:
+```
+
+# this makes (base.add 1 2) possible
+# i.e. base is a dictionary
+(import base)
+
+# obtain current context
+# contexts are dictionaries
+(def ctx (get_curr_ctx))
+
+# add all base keys to current context
+# this makes (add 1 2) possible
+# also (base.add 1 2) is still possible if needed
+(def new_ctx (merge ctx base)
+
+# overwrite current context
+(set_curr_ctx new_ctx)
+```
+
+## Defining custom structs
+
+A struct is just a dictionary with a special field `'__STRUCT__` that contains the type of the struct
+
+Redefine `'typeof` to check this field
+
+Operations like `'defstruct` and `'struct` will read and update context key `'__STRUCTS__`, which contains the types, fields, etc, of structs that are defined in the current context
+
+## Protocols
+
+Operations like `'protocol` and `'impl` will read and update context key `'__PROTOCOLS__`, which contains the types, functions, implementations of protocols that are defined in the current context. Protocol (i.e. abstract) functions will check this to find the appropriate implementation
