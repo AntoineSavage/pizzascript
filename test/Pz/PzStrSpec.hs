@@ -33,4 +33,4 @@ toAstSpec = describe "toAst" $ do
             toAst (PzStr s) `shouldBe` AstStr s
 
 instance Arbitrary PzStr where
-    arbitrary = PzStr <$> (chooseInt (0, 20) >>= vector)
+    arbitrary = fromAst <$> arbitrary

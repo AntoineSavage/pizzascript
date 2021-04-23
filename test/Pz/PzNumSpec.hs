@@ -41,8 +41,4 @@ toAstSpec = describe "toAst" $ do
             toAst (PzDouble d) `shouldBe` AstDouble d
 
 instance Arbitrary PzNum where
-    arbitrary = do
-    choice <- arbitrary
-    if choice
-        then PzInteger <$> arbitrary
-        else PzDouble . (+0.1) <$> arbitrary
+    arbitrary = fromAst <$> arbitrary      
