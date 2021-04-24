@@ -26,6 +26,7 @@ data ExprVal
     | ValList (L.AstList AstExpr)
     deriving (Show, Eq)
 
+-- Parse / unparse expr
 parser :: Parser String -> String -> Parser AstExpr
 parser doc d = liftM2 (`AstExpr` d) getPosition $
             ValNum <$> (N.parser <?> "number")
@@ -37,10 +38,45 @@ parser doc d = liftM2 (`AstExpr` d) getPosition $
         <|> ValList <$> (L.parser L.KindForm doc (parser doc) <?> "form")
 
 unparse :: AstExpr -> String
-unparse (AstExpr _ d val) =
-    d ++ case val of
+unparse (AstExpr _ d v) =
+    d ++ case v of
         ValNum n -> N.unparse n
         ValStr s -> St.unparse s
         ValIdent i -> I.unparse i
         ValSymb s -> Sy.unparse s
         ValList l -> L.unparse unparse l
+
+-- Quote / unquote expr
+quote :: AstExpr -> AstExpr
+quote e@(AstExpr p d v) =
+    let toExpr = AstExpr p d in
+    case v of
+        ValNum _ -> e
+        ValStr _ -> e
+        ValIdent ident -> toExpr $ ValSymb $ quoteIdent ident 
+        ValSymb symb -> toExpr $ ValSymb $ quoteSymb symb
+        ValList list -> toExpr $ ValList $ quoteList p list
+
+-- Quote / unquote specific
+quoteIdent :: I.AstIdent -> Sy.AstSymb
+quoteIdent = Sy.AstSymb 1
+
+quoteSymb :: Sy.AstSymb -> Sy.AstSymb
+quoteSymb (Sy.AstSymb n ident) = Sy.AstSymb (n+1) ident
+
+quoteList :: SourcePos -> L.AstList AstExpr -> L.AstList AstExpr
+quoteList p (L.AstList k d es) =
+    let toExpr = AstExpr p "" . ValIdent 
+        toForm = case k of
+            L.KindList -> (toExpr identList:)
+            L.KindDict -> (toExpr identDict:)
+            L.KindForm -> id
+
+    in L.AstList L.KindList d $ map quote $ toForm es
+
+-- Identifiers / symbols
+identList :: I.AstIdent
+identList = I.AstIdent (I.AstIdentPart 'l' "ist") []
+
+identDict :: I.AstIdent
+identDict = I.AstIdent (I.AstIdentPart 'd' "ict") []
