@@ -7,8 +7,8 @@ import qualified Ast.AstStr as AstStr
 import qualified Ast.AstSymb as AstSymb
 
 import Control.Monad ( liftM2 )
-import Text.Parsec ( SourcePos, (<|>), (<?>), getPosition)
-import Text.Parsec.String (Parser)
+import Text.Parsec ( SourcePos, (<|>), (<?>), getPosition )
+import Text.Parsec.String ( Parser )
 
 data AstExpr
     = AstExpr SourcePos String AstVal
