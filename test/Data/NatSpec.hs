@@ -14,23 +14,53 @@ spec = do
 lenVsUnlenSpec :: Spec
 lenVsUnlenSpec = describe "len vs unlen" $ do
     it "composes len and unlen into id" $ do
-        property $ \n m -> do
-            n + m `shouldBe` m + (n :: Int)
-    -- TODO
+        property $ \n -> do
+            len (unlen undefined n ) `shouldBe` n
 
 lenSpec :: Spec
 lenSpec = describe "len" $ do
-    it "consumes list" $ do
-        property $ \n -> do
-            n `shouldBe` (n :: Int)
-    -- TODO
+    it "lens zero elements" $ do
+        len [] `shouldBe` Z
+
+    it "lens one element" $ do
+        len [()] `shouldBe` (S Z)
+
+    it "lens two elements" $ do
+        len [(),()] `shouldBe` (S $ S Z)
+
+    it "lens three elements" $ do
+        len [(),(),()] `shouldBe` (S $ S $ S $ Z)
+
+    it "lens n elements" $ do
+        property $ \n ->
+            len (replicate (toInt n) ()) `shouldBe` n
 
 unlenSpec :: Spec
 unlenSpec = describe "unlen" $ do
-    it "produces list" $ do
+    it "unlens zero elements" $ do
+        unlen () Z `shouldBe` []
+
+    it "unlens one element" $ do
+        unlen () (S Z) `shouldBe` [()]
+
+    it "unlens two elements" $ do
+        unlen () (S $ S Z) `shouldBe` [(),()]
+
+    it "unlens three elements" $ do
+        unlen () (S $ S $ S Z) `shouldBe` [(),(),()]
+
+    it "unlens n elements list" $ do
         property $ \n -> do
-            n `shouldBe` (n :: Int)
-    -- TODO
+            unlen () n `shouldBe` replicate (toInt n) ()
+
+toInt :: Nat -> Int
+toInt Z     = 0
+toInt (S n) = 1 + toInt n
+
+fromInt :: Int -> Nat
+fromInt n = if n <= 0 then Z else S $ fromInt $ n-1
 
 instance Arbitrary Nat where
-    arbitrary = return Z -- TODO
+    arbitrary = do
+        Positive n <- arbitrary
+        return $ fromInt n
