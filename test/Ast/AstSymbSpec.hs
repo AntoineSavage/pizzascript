@@ -3,7 +3,8 @@ module Ast.AstSymbSpec where
 import Test.Hspec
 import Test.QuickCheck
 
-import qualified Ast.AstIdent as AstIdent
+import qualified Ast.AstIdent as I
+
 import Ast.AstIdentSpec () -- instances
 import Ast.AstSymb
 import Control.Monad
@@ -31,24 +32,24 @@ parseSpec = describe "parse" $ do
 
     it "parses single quote followed by ident" $ do
         property $ \ident -> do
-            let s = '\'' : AstIdent.unparse ident
+            let s = '\'' : I.unparse ident
             parse parser "tests" s `shouldBe` Right (AstSymb 1 ident)
 
     it "parses n quotes followed by ident" $ do
         property $ \(Positive n) ident -> do
-            let s = replicate n '\'' ++ AstIdent.unparse ident
+            let s = replicate n '\'' ++ I.unparse ident
             parse parser "tests" s `shouldBe` Right (AstSymb n ident)
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do
     it "unparses single quote followed by ident" $ do
         property $ \(Negative n) ident -> do
-            unparse (AstSymb n ident) `shouldBe` '\'' : AstIdent.unparse ident
-            unparse (AstSymb 0 ident) `shouldBe` '\'' : AstIdent.unparse ident
+            unparse (AstSymb n ident) `shouldBe` '\'' : I.unparse ident
+            unparse (AstSymb 0 ident) `shouldBe` '\'' : I.unparse ident
     
     it "unparses n quotes followed by ident" $ do
         property $ \(Positive n) ident -> do
-            unparse (AstSymb n ident) `shouldBe` replicate n '\'' ++ AstIdent.unparse ident
+            unparse (AstSymb n ident) `shouldBe` replicate n '\'' ++ I.unparse ident
 
 instance Arbitrary AstSymb where
     arbitrary = do

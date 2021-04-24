@@ -1,4 +1,4 @@
-module Ast.AstList (AstKind(..), AstList(..), getStart, getEnd, parser, parseElems, unparse, unparseElems) where
+module Ast.AstList (ListKind(..), AstList(..), getEnd, getStart, parser, parseElems, unparse, unparseElems) where
 
 import Control.Monad ( void )
 import Data.List ()
@@ -6,17 +6,17 @@ import Text.Parsec ( char, optionMaybe )
 import Text.Parsec.String (Parser)
 
 data AstList a
-    = AstList AstKind String [a]
+    = AstList ListKind String [a]
     deriving (Show, Eq)
 
-data AstKind
-    = AstKindList
-    | AstKindDict
-    | AstKindForm
+data ListKind
+    = KindList
+    | KindDict
+    | KindForm
     deriving (Show, Eq)
 
 -- Parse/unparse list
-parser :: AstKind -> Parser String -> (String -> Parser a) -> Parser (AstList a)
+parser :: ListKind -> Parser String -> (String -> Parser a) -> Parser (AstList a)
 parser k doc p = char (getStart k) >> uncurry (flip $ AstList k) <$> parseElems doc p (void $ char $ getEnd k)
 
 unparse :: (a -> String) -> AstList a -> String
@@ -41,12 +41,12 @@ unparseElems :: String -> (a -> String) -> [a] -> String
 unparseElems d f xs = concatMap f xs ++ d
 
 -- Start/end chars
-getStart :: AstKind -> Char
-getStart AstKindList = '['
-getStart AstKindDict = '{'
-getStart AstKindForm = '('
+getStart :: ListKind -> Char
+getStart KindList = '['
+getStart KindDict = '{'
+getStart KindForm = '('
 
-getEnd :: AstKind -> Char
-getEnd AstKindList = ']'
-getEnd AstKindDict = '}'
-getEnd AstKindForm = ')'
+getEnd :: ListKind -> Char
+getEnd KindList = ']'
+getEnd KindDict = '}'
+getEnd KindForm = ')'

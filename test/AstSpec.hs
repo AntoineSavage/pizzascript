@@ -3,9 +3,9 @@ module AstSpec where
 import Test.Hspec
 import Test.QuickCheck
 
-import qualified Ast.AstExprSpec as AstExprSpec
-import qualified Ast.AstExpr as AstExpr
-import qualified Ast.AstList as AstList
+import qualified Ast.AstExpr as E
+import qualified Ast.AstExprSpec as ES
+import qualified Ast.AstList as L
 
 import Ast
 import Ast.AstListSpec (D(..))
@@ -101,19 +101,19 @@ parseSpec = describe "parse" $ do
 
     it "parses single expression" $ do
         property $ \(D d) e -> do
-            parse parser "tests" (AstExpr.unparse e ++ d) `shouldBe` Right (Ast d [e])
+            parse parser "tests" (E.unparse e ++ d) `shouldBe` Right (Ast d [e])
 
     it "parses two expressions" $ do
         property $ \(D d) e1 e2 -> do
-            parse parser "tests" (AstExpr.unparse e1 ++ AstExpr.unparse e2 ++ d) `shouldBe` Right (Ast d [e1, e2])
+            parse parser "tests" (E.unparse e1 ++ E.unparse e2 ++ d) `shouldBe` Right (Ast d [e1, e2])
 
     it "parses three expressions" $ do
         property $ \(D d) e1 e2 e3 -> do
-            parse parser "tests" (AstExpr.unparse e1 ++ AstExpr.unparse e2 ++ AstExpr.unparse e3 ++ d) `shouldBe` Right (Ast d [e1, e2, e3])
+            parse parser "tests" (E.unparse e1 ++ E.unparse e2 ++ E.unparse e3 ++ d) `shouldBe` Right (Ast d [e1, e2, e3])
 
     it "parses n expressions" $ do
         property $ \(Ast d es) -> do
-            parse parser "tests" (concatMap AstExpr.unparse es ++ d) `shouldBe` Right (Ast d es)
+            parse parser "tests" (concatMap E.unparse es ++ d) `shouldBe` Right (Ast d es)
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do
@@ -123,19 +123,19 @@ unparseSpec = describe "unparse" $ do
 
     it "unparses single expression" $ do
         property $ \(D d) e -> do
-            unparse (Ast d [e]) `shouldBe` AstExpr.unparse e ++ d
+            unparse (Ast d [e]) `shouldBe` E.unparse e ++ d
 
     it "unparses two expressions" $ do
         property $ \(D d) e1 e2 -> do
-            unparse (Ast d [e1, e2])`shouldBe` AstExpr.unparse e1 ++ AstExpr.unparse e2 ++ d
+            unparse (Ast d [e1, e2])`shouldBe` E.unparse e1 ++ E.unparse e2 ++ d
 
     it "unparses three expressions" $ do
         property $ \(D d) e1 e2 e3 -> do
-            unparse (Ast d [e1, e2, e3]) `shouldBe` AstExpr.unparse e1 ++ AstExpr.unparse e2 ++ AstExpr.unparse e3 ++ d
+            unparse (Ast d [e1, e2, e3]) `shouldBe` E.unparse e1 ++ E.unparse e2 ++ E.unparse e3 ++ d
 
     it "unparses n expressions" $ do
         property $ \(D d) es -> do
-            unparse (Ast d es) `shouldBe` (concatMap AstExpr.unparse es ++ d)
+            unparse (Ast d es) `shouldBe` (concatMap E.unparse es ++ d)
 
 -- Utils
 instance Arbitrary Ast where

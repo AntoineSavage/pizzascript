@@ -1,10 +1,11 @@
 module Pz.PzSymb (PzSymb(..), eval, uneval) where
 
+import qualified Ast.AstIdent as I
+
 import Ast.AstSymb (AstSymb(..))
-import qualified Ast.AstIdent as AstIdent
 
 data PzSymb
-    = PzSymb Int AstIdent.AstIdent
+    = PzSymb Int I.AstIdent
     deriving (Show, Eq)
 
 eval :: AstSymb -> PzSymb

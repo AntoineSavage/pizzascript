@@ -1,7 +1,7 @@
 module Ast (Ast(..), doc, parser, unparse) where
 
-import qualified Ast.AstExpr as AstExpr
-import qualified Ast.AstList as AstList
+import qualified Ast.AstExpr as E
+import qualified Ast.AstList as L
 
 import Control.Monad ( liftM2, void )
 import Data.Char (isControl)
@@ -10,14 +10,14 @@ import Text.Parsec
 import Text.Parsec.String (Parser)
 
 data Ast
-    = Ast String [AstExpr.AstExpr]
+    = Ast String [E.AstExpr]
     deriving (Show, Eq)
 
 parser :: Parser Ast
-parser = uncurry (flip Ast) <$> AstList.parseElems doc (AstExpr.parser doc) eof
+parser = uncurry (flip Ast) <$> L.parseElems doc (E.parser doc) eof
 
 unparse :: Ast -> String
-unparse (Ast d xs) = AstList.unparseElems d AstExpr.unparse xs
+unparse (Ast d xs) = L.unparseElems d E.unparse xs
 
 doc :: Parser String 
 doc = concat <$> many (comment <|> many1 space <|> many1 (satisfy isControl))

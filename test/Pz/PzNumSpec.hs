@@ -3,9 +3,9 @@ module Pz.PzNumSpec where
 import Test.Hspec
 import Test.QuickCheck
 
-import Pz.PzNum
 import Ast.AstNum
 import Ast.AstNumSpec
+import Pz.PzNum
 
 spec :: Spec
 spec = do

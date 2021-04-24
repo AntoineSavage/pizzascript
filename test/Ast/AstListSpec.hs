@@ -140,16 +140,16 @@ unparseElemsSpec = describe "unparseElems" $ do
 getStartSpec :: Spec
 getStartSpec = describe "getStart" $ do
     it "returns start for kind" $ do
-        getStart AstKindList `shouldBe` '['
-        getStart AstKindDict `shouldBe` '{'
-        getStart AstKindForm `shouldBe` '('
+        getStart KindList `shouldBe` '['
+        getStart KindDict `shouldBe` '{'
+        getStart KindForm `shouldBe` '('
 
 getEndSpec :: Spec
 getEndSpec = describe "getEnd" $ do
     it "returns end for kind" $ do
-        getEnd AstKindList `shouldBe` ']'
-        getEnd AstKindDict `shouldBe` '}'
-        getEnd AstKindForm `shouldBe` ')'
+        getEnd KindList `shouldBe` ']'
+        getEnd KindDict `shouldBe` '}'
+        getEnd KindForm `shouldBe` ')'
 
 -- Utils
 data Elem = Elem String Int deriving (Show, Eq)
@@ -169,7 +169,7 @@ unparseElems' d ps = unparseElems d unparseElem ps
 end = void $ char '$'
 doc = many space
 
-astKinds = [ AstKindList, AstKindDict, AstKindForm ]
+astKinds = [ KindList, KindDict, KindForm ]
 ds = [" ", "\n", "\t", "\r\n", "\v"]
 
 newtype D = D String deriving (Show, Eq)

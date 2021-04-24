@@ -3,18 +3,18 @@ module Ast.AstExprSpec where
 import Test.Hspec
 import Test.QuickCheck
 
-import Ast.AstExpr
-import qualified Ast.AstIdentSpec as AstIdentSpec
-import qualified Ast.AstIdent as AstIdent
-import qualified Ast.AstListSpec as AstListSpec
-import qualified Ast.AstList as AstList
-import qualified Ast.AstNumSpec as AstNumSpec
-import qualified Ast.AstNum as AstNum
-import qualified Ast.AstStrSpec as AstStrSpec
-import qualified Ast.AstStr as AstStr
-import qualified Ast.AstSymbSpec as AstSymbSpec
-import qualified Ast.AstSymb as AstSymb
+import qualified Ast.AstIdent as I
+import qualified Ast.AstIdentSpec as IS
+import qualified Ast.AstList as L
+import qualified Ast.AstListSpec as LS
+import qualified Ast.AstNum as N
+import qualified Ast.AstNumSpec as NS
+import qualified Ast.AstStr as St
+import qualified Ast.AstStrSpec as StS
+import qualified Ast.AstSymb as Sy
+import qualified Ast.AstSymbSpec as SyS
 
+import Ast.AstExpr
 import Ast.AstListSpec (D(..))
 import Control.Monad
 import Data.Either as Either
@@ -38,45 +38,45 @@ parseSpec :: Spec
 parseSpec = describe "parse" $ do
     it "parses num" $ do
         property $ \(D d) n -> do
-            parse (parser doc d) "tests" (AstNum.unparse n) `shouldBe` Right (AstExpr pos d $ AstValNum n)
+            parse (parser doc d) "tests" (N.unparse n) `shouldBe` Right (AstExpr pos d $ AstValNum n)
 
     it "parses str" $ do
         property $ \(D d) s -> do
-            parse (parser doc d) "tests" (AstStr.unparse s) `shouldBe` Right (AstExpr pos d $ AstValStr s)
+            parse (parser doc d) "tests" (St.unparse s) `shouldBe` Right (AstExpr pos d $ AstValStr s)
 
     it "parses ident" $ do
         property $ \(D d) i -> do
-            parse (parser doc d) "tests" (AstIdent.unparse i) `shouldBe` Right (AstExpr pos d $ AstValIdent i)
+            parse (parser doc d) "tests" (I.unparse i) `shouldBe` Right (AstExpr pos d $ AstValIdent i)
 
     it "parses symb" $ do
         property $ \(D d) s -> do
-            parse (parser doc d) "tests" (AstSymb.unparse s) `shouldBe` Right (AstExpr pos d $ AstValSymb s)
+            parse (parser doc d) "tests" (Sy.unparse s) `shouldBe` Right (AstExpr pos d $ AstValSymb s)
 
     it "parses list" $ do
         property $ \(D d) l -> do
-            parse (parser doc d) "tests" (AstList.unparse unparse l) `shouldBe` Right (AstExpr pos d $ AstValList l)
+            parse (parser doc d) "tests" (L.unparse unparse l) `shouldBe` Right (AstExpr pos d $ AstValList l)
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do
     it "unparses num" $ do
         property $ \(D d) n -> do
-            unparse (AstExpr pos d $ AstValNum n) `shouldBe` d ++ AstNum.unparse n
+            unparse (AstExpr pos d $ AstValNum n) `shouldBe` d ++ N.unparse n
 
     it "unparses str" $ do
         property $ \(D d) s -> do
-            unparse (AstExpr pos d $ AstValStr s) `shouldBe` d ++ AstStr.unparse s
+            unparse (AstExpr pos d $ AstValStr s) `shouldBe` d ++ St.unparse s
 
     it "unparses ident" $ do
         property $ \(D d) i -> do
-            unparse (AstExpr pos d $ AstValIdent i) `shouldBe` d ++ AstIdent.unparse i
+            unparse (AstExpr pos d $ AstValIdent i) `shouldBe` d ++ I.unparse i
 
     it "unparses symb" $ do
         property $ \(D d) s -> do
-            unparse (AstExpr pos d $ AstValSymb s) `shouldBe` d ++ AstSymb.unparse s
+            unparse (AstExpr pos d $ AstValSymb s) `shouldBe` d ++ Sy.unparse s
 
     it "unparses list" $ do
         property $ \(D d) l -> do
-            unparse (AstExpr pos d $ AstValList l) `shouldBe` d ++ AstList.unparse unparse l
+            unparse (AstExpr pos d $ AstValList l) `shouldBe` d ++ L.unparse unparse l
 
 -- Utils
 doc = many space
@@ -94,4 +94,4 @@ arbitraryOf depth = do
         1 -> AstValStr <$> arbitrary
         2 -> AstValIdent <$> arbitrary
         3 -> AstValSymb <$> arbitrary
-        4 -> AstValList <$> AstListSpec.arbitraryOf (arbitraryOf $ depth-1)
+        4 -> AstValList <$> LS.arbitraryOf (arbitraryOf $ depth-1)
