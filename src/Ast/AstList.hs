@@ -12,7 +12,7 @@ data AstList a
 data AstKind
     = AstKindList
     | AstKindDict
-    | AstKindInv
+    | AstKindForm
     deriving (Show, Eq)
 
 -- Parse/unparse list
@@ -44,9 +44,9 @@ unparseElems d f xs = concatMap f xs ++ d
 getStart :: AstKind -> Char
 getStart AstKindList = '['
 getStart AstKindDict = '{'
-getStart AstKindInv = '('
+getStart AstKindForm = '('
 
 getEnd :: AstKind -> Char
 getEnd AstKindList = ']'
 getEnd AstKindDict = '}'
-getEnd AstKindInv = ')'
+getEnd AstKindForm = ')'

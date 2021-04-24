@@ -7,9 +7,9 @@ The # symbol starts a single-comment, which ends at the end of the current line:
 
 There are no multi-line comments
 
-# Function invocation
+# Forms
 
-Parentheses (`(` and `)`) denote function invocation. For example:
+Parentheses (`(` and `)`) denote forms (i.e. a function invokation). For example:
 ```
 (f)       # invokes 'f with zero arguments
 (f x)     # invokes 'f with one argument 'x
@@ -594,17 +594,17 @@ Quoting adheres to the following rules:
   - quoting `'true` (one quote) produces `''true` (two quotes)
   - quoting `''true` (two quotes) produces `'''true` (three quotes)
 
-- quoting a list literal instead quotes the corresponding function invocation. Ex:
+- quoting a list literal instead quotes the corresponding form. Ex:
   - quoting `[() 0 "" 'a [] {} (func () ()) (fac 5)]` instead quotes:
     - `(list () 0 "" 'a [] {} (func () ()) (fac 5))`
-    - see below on how to quote function invocations
+    - see below on how to quote forms
 
-- quoting a dictionary literal instead quotes the corresponding function invocation. Ex:
+- quoting a dictionary literal instead quotes the corresponding form. Ex:
   - quoting `{(() 0) ("" 'a) ([] {}) ((func () ()) (fac 5))}` instead quotes:
     - `(dict (() 0) ("" 'a) ([] {}) ((func () ()) (fac 5)))`
-    - see below on how to quote function invocations
+    - see below on how to quote forms
 
-- quoting a function invocation produces a list of each elements, quoted recursively. Parentheses are replaced with square brackets during this process. Ex:
+- quoting a form produces a list of each elements, quoted recursively. Parentheses are replaced with square brackets during this process. Ex:
   - quoting `(func (x) x)` produces `['func ['x] 'x]`
 
   - quoting `(func ('evaled ctx) (x) [ctx x])` produces:
@@ -639,7 +639,7 @@ Unquoting adheres to the following rules:
   - unquoting `'true` evaluates the identifier `true`, which produces `'true`
   - unquoting `'id` evaluates the identifier `id`, which produces `(func (x) x)`
 
-- unquoting a list literal produces an unevaluated function invocation with each elements unquoted recursively. Square brackets are replaced with parentheses during this process. Each invocation is then evaluated according to the function's specified argument-passing strategy. Ex: 
+- unquoting a list literal produces an unevaluated form with each elements unquoted recursively. Square brackets are replaced with parentheses during this process. Each invocation is then evaluated according to the function's specified argument-passing strategy. Ex: 
   - unquoting `[]` produces the unit type `()`
   - unquoting `['func ['x] 'x]` produces:
     - `(func (x) x)`
@@ -688,7 +688,7 @@ This *function implicit context* is the context of all identifiers (arguments, l
 - by using the `func` function in source code:
   - `(func (n) (add n 1)` or `(func ('evaled ctx) (n) [ctx (add n 1)])`
   - the implicit context will contain all defined symbols up to that point in the module
-  - in in particular, symbol `'add` must be defined up to that point in the module for the function invocation to succeed
+  - in in particular, symbol `'add` must be defined up to that point in the module for the form to succeed
 
 - by unquoting a list starting with the `'func` symbol:
   - `['func ['n] ['add 'n 1]]` or `['func [''evaled 'ctx] ['n] ['list 'ctx ['add 'n 1]]]`
@@ -800,7 +800,7 @@ The *function explicit context* can be used to open, read and write files. This 
 - read and write to disk
 - send and receive data over the network
 
-Assume a function invocation `F` that receives an explicit context. Once `F` finishes, the interpreter will search the resulting explicit context for the key `'__REQUEST_IO__`. If found, the interpreter will do the following:
+Assume a form `F` that receives an explicit context. Once `F` finishes, the interpreter will search the resulting explicit context for the key `'__REQUEST_IO__`. If found, the interpreter will do the following:
 - analyze the associated value for the type of I/O to perform. Ex:
   - for writing `"Hello World"` to the console, the value could be: `['std_out, "Hello World!"]`
   - for reading from the console, the value could be: `'std_in`
@@ -850,7 +850,7 @@ The *function explicit context* can be used to get other module definition conte
 - importing all or a subset of another module's definition
 - aliasing, qualifying or hiding a subset of another module's definition
 
-Assume a function invocation `F` that receives an explicit context. Once `F` finishes, the interpreter will search the resulting explicit context for the key `'__REQUEST_MODULE_CTX__`. If found with a fully-qualified, single-quoted symbol `S`, the interpreter will do the following:
+Assume a form `F` that receives an explicit context. Once `F` finishes, the interpreter will search the resulting explicit context for the key `'__REQUEST_MODULE_CTX__`. If found with a fully-qualified, single-quoted symbol `S`, the interpreter will do the following:
 - remove this key from the explicit context
 - search the module directory for the module `M` matching symbol `S`
 - if module `M` is already evaluated, denote its final context as `C`
@@ -884,14 +884,14 @@ The *function explicit context* can be used to abort and resume evaluation. This
 - error-handling with try/recover/finally
 - forcefully return a value, thus bypassing API restrictions
 
-Assume a function invocation `F` that receives an explicit context. Once `F` finishes, the interpreter will search the resulting explicit context for the key `'__ABORT_EVAL_WITH__`. If found with any value `V`, the interpreter will do the following:
-- look for a function invocation `G` with the following properties:
+Assume a form `F` that receives an explicit context. Once `F` finishes, the interpreter will search the resulting explicit context for the key `'__ABORT_EVAL_WITH__`. If found with any value `V`, the interpreter will do the following:
+- look for a form `G` with the following properties:
   - advanced function that receives and returns an explicit context
   - nullary (i.e. zero-length argument list)
   - immediately follows `F` or the last aborted evaluation
-- if such a function invocation `G` is found, invoke it. Once `G` finishes, if this field has been removed from the explicit context, resume evaluation
-- otherwise, abort evaluation, and move up the call stack until such a function invocation `G` is found
-- if no such function invocation `G` is ever found, the interpreter will halt with an message derived from `V`
+- if such a form `G` is found, evaluate it. Once `G` finishes, if this field has been removed from the explicit context, resume evaluation
+- otherwise, abort evaluation, and move up the call stack until such a form `G` is found
+- if no such form `G` is ever found, the interpreter will halt with an message derived from `V`
 
 Here is an example of aborting and resuming evaluation:
 ```
