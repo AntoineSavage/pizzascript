@@ -9,36 +9,36 @@ import Ast.AstNumSpec
 
 spec :: Spec
 spec = do
-    fromAstVsToAstSpec
-    fromAstSpec
-    toAstSpec
+    evalVsUnevalSpec
+    evalSpec
+    unevalSpec
 
-fromAstVsToAstSpec :: Spec
-fromAstVsToAstSpec = describe "fromAst vs toAst" $ do
-    it "composes fromAst and toAst into id" $ do
+evalVsUnevalSpec :: Spec
+evalVsUnevalSpec = describe "eval vs uneval" $ do
+    it "composes eval and uneval into id" $ do
         property $ \ast pz -> do
-            toAst (fromAst ast) `shouldBe` ast
-            fromAst (toAst pz) `shouldBe` pz
+            uneval (eval ast) `shouldBe` ast
+            eval (uneval pz) `shouldBe` pz
 
-fromAstSpec :: Spec
-fromAstSpec = describe "fromAst" $ do
+evalSpec :: Spec
+evalSpec = describe "eval" $ do
     it "converts pz integer" $ do
         property $ \n -> do
-            fromAst (AstInteger n) `shouldBe` PzInteger n
+            eval (AstInteger n) `shouldBe` PzInteger n
 
     it "converts pz double" $ do
         property $ \d -> do
-            fromAst (AstDouble d) `shouldBe` PzDouble d
+            eval (AstDouble d) `shouldBe` PzDouble d
 
-toAstSpec :: Spec
-toAstSpec = describe "toAst" $ do
+unevalSpec :: Spec
+unevalSpec = describe "uneval" $ do
     it "converts ast integer" $ do
         property $ \n -> do
-            toAst (PzInteger n) `shouldBe` AstInteger n
+            uneval (PzInteger n) `shouldBe` AstInteger n
 
     it "converts ast double" $ do
         property $ \d -> do
-            toAst (PzDouble d) `shouldBe` AstDouble d
+            uneval (PzDouble d) `shouldBe` AstDouble d
 
 instance Arbitrary PzNum where
-    arbitrary = fromAst <$> arbitrary      
+    arbitrary = eval <$> arbitrary      

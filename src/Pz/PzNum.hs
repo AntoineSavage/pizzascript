@@ -1,4 +1,4 @@
-module Pz.PzNum (PzNum(..), fromAst, toAst) where
+module Pz.PzNum (PzNum(..), eval, uneval) where
 
 import Ast.AstNum (AstNum(..))
 
@@ -7,10 +7,10 @@ data PzNum
     | PzDouble Double
     deriving (Show, Eq)
 
-fromAst :: AstNum -> PzNum
-fromAst (AstInteger n) = PzInteger n
-fromAst (AstDouble d) = PzDouble d
+eval :: AstNum -> PzNum
+eval (AstInteger n) = PzInteger n
+eval (AstDouble d) = PzDouble d
 
-toAst :: PzNum -> AstNum
-toAst (PzInteger n) = AstInteger n
-toAst (PzDouble d) = AstDouble d
+uneval :: PzNum -> AstNum
+uneval (PzInteger n) = AstInteger n
+uneval (PzDouble d) = AstDouble d

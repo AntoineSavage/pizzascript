@@ -1,4 +1,4 @@
-module Pz.PzStr (PzStr(..), fromAst, toAst) where
+module Pz.PzStr (PzStr(..), eval, uneval) where
 
 import Ast.AstStr (AstStr(..))
 
@@ -6,8 +6,8 @@ newtype PzStr =
     PzStr String
     deriving (Show, Eq)
 
-fromAst :: AstStr -> PzStr
-fromAst (AstStr s) = PzStr s
+eval :: AstStr -> PzStr
+eval (AstStr s) = PzStr s
 
-toAst :: PzStr -> AstStr
-toAst (PzStr s) = AstStr s
+uneval :: PzStr -> AstStr
+uneval (PzStr s) = AstStr s

@@ -9,28 +9,28 @@ import Ast.AstStrSpec
 
 spec :: Spec
 spec = do
-    fromAstVsToAstSpec
-    fromAstSpec
-    toAstSpec
+    evalVsUnevalSpec
+    evalSpec
+    unevalSpec
 
-fromAstVsToAstSpec :: Spec
-fromAstVsToAstSpec = describe "fromAst vs toAst" $ do
-    it "composes fromAst and toAst into id" $ do
+evalVsUnevalSpec :: Spec
+evalVsUnevalSpec = describe "eval vs uneval" $ do
+    it "composes eval and uneval into id" $ do
         property $ \ast pz -> do
-            toAst (fromAst ast) `shouldBe` ast
-            fromAst (toAst pz) `shouldBe` pz
+            uneval (eval ast) `shouldBe` ast
+            eval (uneval pz) `shouldBe` pz
 
-fromAstSpec :: Spec
-fromAstSpec = describe "fromAst" $ do
+evalSpec :: Spec
+evalSpec = describe "eval" $ do
     it "converts pz string" $ do
         property $ \s -> do
-            fromAst (AstStr s) `shouldBe` PzStr s
+            eval (AstStr s) `shouldBe` PzStr s
 
-toAstSpec :: Spec
-toAstSpec = describe "toAst" $ do
+unevalSpec :: Spec
+unevalSpec = describe "uneval" $ do
     it "converts ast string" $ do
         property $ \s -> do
-            toAst (PzStr s) `shouldBe` AstStr s
+            uneval (PzStr s) `shouldBe` AstStr s
 
 instance Arbitrary PzStr where
-    arbitrary = fromAst <$> arbitrary
+    arbitrary = eval <$> arbitrary

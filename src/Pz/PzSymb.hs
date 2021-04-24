@@ -1,14 +1,14 @@
-module Pz.PzSymb (PzSymb(..), fromAst, toAst) where
+module Pz.PzSymb (PzSymb(..), eval, uneval) where
 
 import Ast.AstSymb (AstSymb(..))
-import qualified Pz.PzIdent as PzIdent
+import qualified Ast.AstIdent as AstIdent
 
 data PzSymb
-    = PzSymb Int PzIdent.PzIdent
+    = PzSymb Int AstIdent.AstIdent
     deriving (Show, Eq)
 
-fromAst :: AstSymb -> PzSymb
-fromAst (AstSymb n ident) = PzSymb n $ PzIdent.fromAst ident
+eval :: AstSymb -> PzSymb
+eval (AstSymb n ident) = PzSymb n ident
 
-toAst :: PzSymb -> AstSymb
-toAst (PzSymb n ident) = AstSymb n $ PzIdent.toAst ident
+uneval :: PzSymb -> AstSymb
+uneval (PzSymb n ident) = AstSymb n ident
