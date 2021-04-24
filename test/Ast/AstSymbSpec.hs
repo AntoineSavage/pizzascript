@@ -8,6 +8,8 @@ import qualified Ast.AstIdent as I
 import Ast.AstIdentSpec () -- instances
 import Ast.AstSymb
 import Control.Monad
+import Data.Nat
+import Data.NatSpec
 import Data.Either
 import Text.Parsec
 
@@ -30,28 +32,25 @@ parseSpec = describe "parse" $ do
     it "rejects empty string" $ do
         isLeft (parse parser "tests" "") `shouldBe` True
 
-    it "parses single quote followed by ident" $ do
+    it "parses one quote followed by ident" $ do
         property $ \ident -> do
             let s = '\'' : I.unparse ident
-            parse parser "tests" s `shouldBe` Right (AstSymb 1 ident)
+            parse parser "tests" s `shouldBe` Right (AstSymb Z ident)
 
-    it "parses n quotes followed by ident" $ do
-        property $ \(Positive n) ident -> do
-            let s = replicate n '\'' ++ I.unparse ident
+    it "parses n+1 quotes followed by ident" $ do
+        property $ \n ident -> do
+            let s = "'" ++ unlen '\'' n ++ I.unparse ident
             parse parser "tests" s `shouldBe` Right (AstSymb n ident)
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do
-    it "unparses single quote followed by ident" $ do
-        property $ \(Negative n) ident -> do
-            unparse (AstSymb n ident) `shouldBe` '\'' : I.unparse ident
-            unparse (AstSymb 0 ident) `shouldBe` '\'' : I.unparse ident
+    it "unparses one quote followed by ident" $ do
+        property $ \ident -> do
+            unparse (AstSymb Z ident) `shouldBe` '\'' : I.unparse ident
     
-    it "unparses n quotes followed by ident" $ do
-        property $ \(Positive n) ident -> do
-            unparse (AstSymb n ident) `shouldBe` replicate n '\'' ++ I.unparse ident
+    it "unparses n+1 quotes followed by ident" $ do
+        property $ \n ident -> do
+            unparse (AstSymb n ident) `shouldBe` "'" ++ unlen '\'' n ++ I.unparse ident
 
 instance Arbitrary AstSymb where
-    arbitrary = do
-        Positive n <- arbitrary
-        AstSymb n <$> arbitrary
+    arbitrary = liftM2 AstSymb arbitrary arbitrary

@@ -9,6 +9,8 @@ import Ast.AstSymb
 import Ast.AstSymbSpec () -- instances
 import Control.Monad
 import Data.Either
+import Data.Nat
+import Data.NatSpec
 import Pz.PzSymb
 import Text.Parsec
 
@@ -28,13 +30,13 @@ evalVsUnevalSpec = describe "eval vs uneval" $ do
 evalSpec :: Spec
 evalSpec = describe "eval" $ do
     it "converts pz symb" $ do
-        property $ \(Positive n) ident -> 
+        property $ \n ident -> 
             eval (AstSymb n ident) `shouldBe` PzSymb n ident
 
 unevalSpec :: Spec
 unevalSpec = describe "uneval" $ do
     it "converts ast symb" $ do
-        property $ \(Positive n) ident -> do
+        property $ \n ident -> do
             uneval (PzSymb n ident) `shouldBe` AstSymb n ident
 
 instance Arbitrary PzSymb where

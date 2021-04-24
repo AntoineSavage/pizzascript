@@ -7,6 +7,7 @@ import qualified Ast.AstStr as St
 import qualified Ast.AstSymb as Sy
 
 import Control.Monad ( liftM2 )
+import Data.Nat ( Nat(..) )
 import Text.Parsec ( SourcePos, (<|>), (<?>), getPosition )
 import Text.Parsec.String ( Parser )
 
@@ -59,10 +60,10 @@ quote e@(AstExpr p d v) =
 
 -- Quote / unquote specific
 quoteIdent :: I.AstIdent -> Sy.AstSymb
-quoteIdent = Sy.AstSymb 1
+quoteIdent = Sy.AstSymb Z
 
 quoteSymb :: Sy.AstSymb -> Sy.AstSymb
-quoteSymb (Sy.AstSymb n ident) = Sy.AstSymb (n+1) ident
+quoteSymb (Sy.AstSymb n ident) = Sy.AstSymb (S n) ident
 
 quoteList :: SourcePos -> L.AstList AstExpr -> L.AstList AstExpr
 quoteList p (L.AstList k d es) =

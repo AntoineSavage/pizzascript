@@ -3,9 +3,10 @@ module Pz.PzSymb (PzSymb(..), eval, uneval) where
 import qualified Ast.AstIdent as I
 
 import Ast.AstSymb (AstSymb(..))
+import Data.Nat ( Nat )
 
 data PzSymb
-    = PzSymb Int I.AstIdent
+    = PzSymb Nat I.AstIdent
     deriving (Show, Eq)
 
 eval :: AstSymb -> PzSymb
