@@ -361,6 +361,8 @@ A function's argument list can be introspected like this:
 
 Note that, by default, function arguments are evaluated (left to right) before being passed to the function proper
 
+All functions have type `'func`, which corresponds to the `func` function used in function literals
+
 ## Advanced functions
 
 Here are some advanced function literals that behave exactly like in the previous examples:
