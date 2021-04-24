@@ -1,11 +1,11 @@
-parse: string -> ast
-unparse: ast -> string
-
-eval: ast -> pz
-uneval: pz -> ast
+# parse: string -> ast
+# unparse: ast -> string
 
 quote: ast -> ast
 unquote: ast -> ast
+
+eval: ast -> pz     # need to rename fromAst to eval
+uneval: pz -> ast   # need to rename toAst to eval
 
 deep_quote: ast -> ast
 deep_unquote: ast -> ast
