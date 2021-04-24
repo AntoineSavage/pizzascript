@@ -19,6 +19,7 @@ import Ast.AstListSpec (D(..))
 import Control.Monad
 import Data.Either as Either
 import Text.Parsec
+import Text.Parsec.Pos
 
 spec :: Spec
 spec = do
@@ -79,7 +80,7 @@ unparseSpec = describe "unparse" $ do
 
 -- Utils
 doc = many space
-pos = Either.fromRight undefined $ parse getPosition "" ""
+pos = newPos "" 0 0
 
 instance Arbitrary AstExpr where
     arbitrary = chooseInt (0, 3) >>= arbitraryOf
