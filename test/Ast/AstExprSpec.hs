@@ -38,45 +38,45 @@ parseSpec :: Spec
 parseSpec = describe "parse" $ do
     it "parses num" $ do
         property $ \(D d) n -> do
-            parse (parser doc d) "tests" (N.unparse n) `shouldBe` Right (AstExpr pos d $ AstValNum n)
+            parse (parser doc d) "tests" (N.unparse n) `shouldBe` Right (AstExpr pos d $ ValNum n)
 
     it "parses str" $ do
         property $ \(D d) s -> do
-            parse (parser doc d) "tests" (St.unparse s) `shouldBe` Right (AstExpr pos d $ AstValStr s)
+            parse (parser doc d) "tests" (St.unparse s) `shouldBe` Right (AstExpr pos d $ ValStr s)
 
     it "parses ident" $ do
         property $ \(D d) i -> do
-            parse (parser doc d) "tests" (I.unparse i) `shouldBe` Right (AstExpr pos d $ AstValIdent i)
+            parse (parser doc d) "tests" (I.unparse i) `shouldBe` Right (AstExpr pos d $ ValIdent i)
 
     it "parses symb" $ do
         property $ \(D d) s -> do
-            parse (parser doc d) "tests" (Sy.unparse s) `shouldBe` Right (AstExpr pos d $ AstValSymb s)
+            parse (parser doc d) "tests" (Sy.unparse s) `shouldBe` Right (AstExpr pos d $ ValSymb s)
 
     it "parses list" $ do
         property $ \(D d) l -> do
-            parse (parser doc d) "tests" (L.unparse unparse l) `shouldBe` Right (AstExpr pos d $ AstValList l)
+            parse (parser doc d) "tests" (L.unparse unparse l) `shouldBe` Right (AstExpr pos d $ ValList l)
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do
     it "unparses num" $ do
         property $ \(D d) n -> do
-            unparse (AstExpr pos d $ AstValNum n) `shouldBe` d ++ N.unparse n
+            unparse (AstExpr pos d $ ValNum n) `shouldBe` d ++ N.unparse n
 
     it "unparses str" $ do
         property $ \(D d) s -> do
-            unparse (AstExpr pos d $ AstValStr s) `shouldBe` d ++ St.unparse s
+            unparse (AstExpr pos d $ ValStr s) `shouldBe` d ++ St.unparse s
 
     it "unparses ident" $ do
         property $ \(D d) i -> do
-            unparse (AstExpr pos d $ AstValIdent i) `shouldBe` d ++ I.unparse i
+            unparse (AstExpr pos d $ ValIdent i) `shouldBe` d ++ I.unparse i
 
     it "unparses symb" $ do
         property $ \(D d) s -> do
-            unparse (AstExpr pos d $ AstValSymb s) `shouldBe` d ++ Sy.unparse s
+            unparse (AstExpr pos d $ ValSymb s) `shouldBe` d ++ Sy.unparse s
 
     it "unparses list" $ do
         property $ \(D d) l -> do
-            unparse (AstExpr pos d $ AstValList l) `shouldBe` d ++ L.unparse unparse l
+            unparse (AstExpr pos d $ ValList l) `shouldBe` d ++ L.unparse unparse l
 
 -- Utils
 doc = many space
@@ -90,8 +90,8 @@ arbitraryOf depth = do
     D d <- arbitrary
     choice <- chooseInt (0, if depth <= 0 then 3 else 4)
     AstExpr pos d <$> case choice of
-        0 -> AstValNum <$> arbitrary
-        1 -> AstValStr <$> arbitrary
-        2 -> AstValIdent <$> arbitrary
-        3 -> AstValSymb <$> arbitrary
-        4 -> AstValList <$> LS.arbitraryOf (arbitraryOf $ depth-1)
+        0 -> ValNum <$> arbitrary
+        1 -> ValStr <$> arbitrary
+        2 -> ValIdent <$> arbitrary
+        3 -> ValSymb <$> arbitrary
+        4 -> ValList <$> LS.arbitraryOf (arbitraryOf $ depth-1)
