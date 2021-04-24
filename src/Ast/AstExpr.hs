@@ -50,34 +50,55 @@ unparse (AstExpr _ d v) =
 -- Quote / unquote expr
 quote :: AstExpr -> AstExpr
 quote e@(AstExpr p d v) =
-    let toExpr = AstExpr p d in
+    let toExpr = AstExpr p d
+        identPartToExpr c s = AstExpr p "" $ ValIdent $ I.AstIdent (I.AstIdentPart c s) []
+        toForm k = case k of
+            L.KindList -> (identPartToExpr 'l' "ist":)
+            L.KindDict -> (identPartToExpr 'd' "ict":)
+            L.KindForm -> id
+    in
     case v of
+        -- Numbers and strings quote as themselves
         ValNum _ -> e
         ValStr _ -> e
-        ValIdent ident -> toExpr $ ValSymb $ quoteIdent ident 
-        ValSymb symb -> toExpr $ ValSymb $ quoteSymb symb
-        ValList list -> toExpr $ ValList $ quoteList p list
 
--- Quote / unquote specific
-quoteIdent :: I.AstIdent -> Sy.AstSymb
-quoteIdent = Sy.AstSymb Z
+        -- Identifiers quote as symbols
+        ValIdent ident ->
+            toExpr $ ValSymb $ Sy.AstSymb Z ident 
 
-quoteSymb :: Sy.AstSymb -> Sy.AstSymb
-quoteSymb (Sy.AstSymb n ident) = Sy.AstSymb (S n) ident
+        -- Symbols quote as themselves with one more quote
+        ValSymb (Sy.AstSymb n ident) ->
+            toExpr $ ValSymb $ Sy.AstSymb (S n) ident
 
-quoteList :: SourcePos -> L.AstList AstExpr -> L.AstList AstExpr
-quoteList p (L.AstList k d es) =
-    let toExpr = AstExpr p "" . ValIdent 
-        toForm = case k of
-            L.KindList -> (toExpr identList:)
-            L.KindDict -> (toExpr identDict:)
-            L.KindForm -> id
+        -- Lists quote as forms prepended with list
+        -- Dicts quote as forms prepended with dict
+        -- Forms quote as list with elements quoted recursively
+        ValList (L.AstList k d es) ->
+            toExpr $ ValList $ L.AstList L.KindList d $ map quote $ toForm k es
 
-    in L.AstList L.KindList d $ map quote $ toForm es
+unquote :: AstExpr -> Either String AstExpr
+unquote e@(AstExpr p d v) =
+    let toExpr = AstExpr p d in
+    case v of
+        -- Numbers and strings unquote as themselves
+        ValNum _ -> return e
+        ValStr _ -> return e
 
--- Identifiers / symbols
-identList :: I.AstIdent
-identList = I.AstIdent (I.AstIdentPart 'l' "ist") []
+        -- Identifiers cannot be unquoted
+        ValIdent ident ->
+            Left $ "Unquote: unexpected identifier: " ++ I.unparse ident
 
-identDict :: I.AstIdent
-identDict = I.AstIdent (I.AstIdentPart 'd' "ict") []
+        -- Symbols with one quote unquote to identifiers
+        -- Symbols with two or more quotes unquote to symbols with one less quote
+        ValSymb (Sy.AstSymb n ident) ->
+            return $ toExpr $ case n of
+                Z -> ValIdent ident
+                (S n) -> ValSymb $ Sy.AstSymb n ident
+
+        -- Lists unquote to forms with elements unquoted recursively
+        -- Dicts and forms cannot be unquoted
+        ValList l@(L.AstList k d es) ->
+            case k of
+                L.KindList -> toExpr . ValList . L.AstList L.KindForm d <$> mapM unquote es
+                L.KindDict -> Left $ "Unquote: unexpected dictionary: " ++ L.unparse unparse l
+                L.KindForm -> Left $ "Unquote: unexpected form: " ++ L.unparse unparse l
