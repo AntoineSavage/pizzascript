@@ -8,6 +8,7 @@ import qualified Ast.AstNum as N
 import qualified Ast.AstStr as St
 import qualified Ast.AstSymb as Sy
 
+import Control.Monad ( forM_ )
 import Data.Nat ( Nat )
 
 data PzVal
@@ -48,3 +49,8 @@ data PzDict
 data PzFunc
     = PzFunc -- TODO
     deriving (Show, Eq)
+
+eval :: A.Ast -> IO ()
+eval (A.Ast _ es) = do
+    forM_ es $ \e -> do
+        print e
