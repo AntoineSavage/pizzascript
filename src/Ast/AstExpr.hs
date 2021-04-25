@@ -1,4 +1,4 @@
-module Ast.AstExpr (AstExpr(..), ExprVal(..), parser, unparse) where
+module Ast.AstExpr (AstExpr(..), ExprVal(..), parser, quote, unparse, unquote) where
 
 import qualified Ast.AstIdent as I
 import qualified Ast.AstList as L

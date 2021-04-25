@@ -18,6 +18,7 @@ import Ast.AstExpr
 import Ast.AstListSpec (D(..))
 import Control.Monad
 import Data.Either as Either
+import Data.Nat (Nat(..))
 import Text.Parsec
 import Text.Parsec.Pos
 
@@ -84,29 +85,97 @@ unparseSpec = describe "unparse" $ do
 quoteVsUnquoteSpec :: Spec
 quoteVsUnquoteSpec = describe "quote vs unquote" $ do
     it "composes quote and unquote into id" $ do
-        1+1 `shouldBe` 2
-        -- TODO
+        property $ \e1 (UnquoteValid e2) -> do
+            quote <$> unquote (quote e1) `shouldBe` Right (quote e1)
+            quote <$> unquote e2 `shouldBe` Right e2
 
-quote :: Spec
-quote = describe "quote" $ do
-    it "quotes" $ do
-        1+1 `shouldBe` 2
-        -- TODO
+quoteSpec :: Spec
+quoteSpec = describe "quote" $ do
+    it "converts numbers into themselves" $ do
+        property $ \(D d) n -> do
+            let e = AstExpr pos d $ ValNum n
+            quote e `shouldBe` e
 
-unquote :: Spec
-unquote = describe "unquote" $ do
-    it "unquotes" $ do
-        1+1 `shouldBe` 2
-        -- TODO
+    it "converts strings into themselves" $ do
+        property $ \(D d) s -> do
+            let e = AstExpr pos d $ ValStr s
+            quote e `shouldBe` e
+
+    it "converts identifiers into single-quoted symbols" $ do
+        property $ \(D d) i -> do
+            quote (AstExpr pos d $ ValIdent i) `shouldBe` AstExpr pos d (ValSymb $ Sy.AstSymb Z i)
+
+    it "converts symbols into one-more-quoted symbols" $ do
+        property $ \(D d) s@(Sy.AstSymb n i) -> do
+            quote (AstExpr pos d $ ValSymb s) `shouldBe` AstExpr pos d (ValSymb $ Sy.AstSymb (S n) i)
+
+    it "converts lists into 'list-prefixed lists" $ do
+        property $ \(D d1) (L.AstList _ d2 es) -> do
+            quote (AstExpr pos d1 $ ValList $ L.AstList L.KindList d2 es) `shouldBe`
+                AstExpr pos d1 (ValList $ L.AstList L.KindList d2 $ map quote $ identList : es)
+
+    it "converts dicts into 'dict-prefixed lists" $ do
+        property $ \(D d1) (L.AstList _ d2 es) -> do
+            quote (AstExpr pos d1 $ ValList $ L.AstList L.KindDict d2 es) `shouldBe`
+                AstExpr pos d1 (ValList $ L.AstList L.KindList d2 $ map quote $ identDict : es)
+
+    it "converts forms into lists" $ do
+        property $ \(D d1) (L.AstList _ d2 es) -> do
+            quote (AstExpr pos d1 $ ValList $ L.AstList L.KindForm d2 es) `shouldBe`
+                AstExpr pos d1 (ValList $ L.AstList L.KindList d2 $ map quote es)
+
+unquoteSpec :: Spec
+unquoteSpec = describe "unquote" $ do
+    it "converts numbers into themselves" $ do
+        property $ \(D d) n -> do
+            let e = AstExpr pos d $ ValNum n
+            unquote e `shouldBe` Right e
+
+    it "converts strings into themselves" $ do
+        property $ \(D d) s -> do
+            let e = AstExpr pos d $ ValStr s
+            unquote e `shouldBe` Right e
+
+    it "rejects identifiers" $ do
+        property $ \(D d) i -> do
+            let e = AstExpr pos d $ ValIdent i
+            unquote e `shouldBe` Left ("Unquote: unexpected identifier: " ++ I.unparse i)
+
+    it "converts single-quoted symbols into identifiers" $ do
+        property $ \(D d) i -> do
+            unquote (AstExpr pos d $ ValSymb $ Sy.AstSymb Z i) `shouldBe` Right (AstExpr pos d $ ValIdent i)
+
+    it "converts two-or-more-quoted symbols into one-less-quoted symbol" $ do
+        property $ \(D d) n i -> do
+            unquote (AstExpr pos d $ ValSymb $ Sy.AstSymb (S n) i) `shouldBe` Right (AstExpr pos d $ ValSymb $ Sy.AstSymb n i)
+
+    it "converts lists into forms" $ do
+        property $ \(D d1) (D d2) (UnquoteValids es) -> do
+            let list = L.AstList L.KindList d2 es
+                mactual = unquote $ AstExpr pos d1 $ ValList list
+            isRight mactual `shouldBe` True
+            mactual `shouldBe` (AstExpr pos d1 . ValList . L.AstList L.KindForm d2 <$> mapM unquote es)
+    
+    it "rejects dictionaries" $ do
+        property $ \(D d1) (D d2) es -> do
+            let dictionary = L.AstList L.KindDict d2 es
+            unquote (AstExpr pos d1 $ ValList dictionary) `shouldBe`
+                Left ("Unquote: unexpected dictionary: " ++ L.unparse unparse dictionary)
+
+    it "rejects forms" $ do
+        property $ \(D d1) (D d2) es -> do
+            let form = L.AstList L.KindForm d2 es
+            unquote (AstExpr pos d1 $ ValList form) `shouldBe`
+                Left ("Unquote: unexpected form: " ++ L.unparse unparse form)
 
 -- Utils
 doc = many space
 pos = newPos "" 0 0
 
 instance Arbitrary AstExpr where
-    arbitrary = chooseInt (0, 3) >>= arbitraryOf
+    arbitrary = chooseInt (0, 3) >>= arbitraryExprOf
 
-arbitraryOf depth = do
+arbitraryExprOf depth = do
     -- Num: 0, Str: 1, Ident: 2, Symb: 3, List: 4
     D d <- arbitrary
     choice <- chooseInt (0, if depth <= 0 then 3 else 4)
@@ -115,4 +184,36 @@ arbitraryOf depth = do
         1 -> ValStr <$> arbitrary
         2 -> ValIdent <$> arbitrary
         3 -> ValSymb <$> arbitrary
-        4 -> ValList <$> LS.arbitraryOf (arbitraryOf $ depth-1)
+        4 -> ValList <$> LS.arbitraryOf (arbitraryExprOf $ depth-1)
+
+identList = AstExpr pos "" $ ValIdent $ I.AstIdent (I.AstIdentPart 'l' "ist") []
+identDict = AstExpr pos "" $ ValIdent $ I.AstIdent (I.AstIdentPart 'd' "ict") []
+
+newtype UnquoteValid
+    = UnquoteValid AstExpr
+    deriving (Show, Eq)
+
+newtype UnquoteValids
+    = UnquoteValids [AstExpr]
+    deriving (Show, Eq)
+
+instance Arbitrary UnquoteValid where
+    arbitrary = UnquoteValid <$> (chooseInt (0, 3) >>= arbitraryUnquoteValidOf)
+
+instance Arbitrary UnquoteValids where
+    arbitrary = do
+        depth <- chooseInt (0, 3)
+        L.AstList _ _ es <- LS.arbitraryOf $ arbitraryUnquoteValidOf depth
+        return $ UnquoteValids es
+
+arbitraryUnquoteValidOf depth = do
+    -- Num: 0, Str: 1, Symb: 2, List: 3
+    D d <- arbitrary
+    choice <- chooseInt (0, if depth <= 0 then 2 else 3)
+    AstExpr pos d <$> case choice of
+        0 -> ValNum <$> arbitrary
+        1 -> ValStr <$> arbitrary
+        2 -> ValSymb <$> arbitrary
+        3 -> do
+            L.AstList _ d es <- LS.arbitraryOf $ arbitraryUnquoteValidOf $ depth-1
+            return $ ValList $ L.AstList L.KindList d es

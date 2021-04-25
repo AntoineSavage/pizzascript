@@ -1,8 +1,8 @@
 # parse: string -> ast
 # unparse: ast -> string
 
-quote: ast -> ast
-unquote: ast -> ast
+# quote: ast -> ast
+# unquote: ast -> ast
 
 eval: ast -> pz     # PzList, PzDict, PzFunc, PzUnit
 uneval: pz -> ast   # PzList, PzDict, PzFunc, PzUnit
