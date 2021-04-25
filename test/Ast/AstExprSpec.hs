@@ -26,6 +26,9 @@ spec = do
     parseVsUnparseSpec
     parseSpec
     unparseSpec
+    quoteVsUnquoteSpec
+    quoteSpec
+    unquoteSpec
 
 parseVsUnparseSpec :: Spec
 parseVsUnparseSpec = describe "parse vs unparse" $ do
@@ -77,6 +80,24 @@ unparseSpec = describe "unparse" $ do
     it "unparses list" $ do
         property $ \(D d) l -> do
             unparse (AstExpr pos d $ ValList l) `shouldBe` d ++ L.unparse unparse l
+
+quoteVsUnquoteSpec :: Spec
+quoteVsUnquoteSpec = describe "quote vs unquote" $ do
+    it "composes quote and unquote into id" $ do
+        1+1 `shouldBe` 2
+        -- TODO
+
+quote :: Spec
+quote = describe "quote" $ do
+    it "quotes" $ do
+        1+1 `shouldBe` 2
+        -- TODO
+
+unquote :: Spec
+unquote = describe "unquote" $ do
+    it "unquotes" $ do
+        1+1 `shouldBe` 2
+        -- TODO
 
 -- Utils
 doc = many space
