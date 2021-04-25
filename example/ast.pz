@@ -87,7 +87,7 @@ my_dict.my_key1.my_key2
 # etc
 (func args args)        # variadic, returns its args
 
-# advanced functions
+# impure functions
 (def func_evaled        (func ('evaled ctx)        (x) [ctx x]))
 (def func_quoted        (func ('quoted ctx)        (x) [ctx x]))
 (def func_unquoted      (func ('unquoted ctx)      (x) [ctx x]))
