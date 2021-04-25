@@ -912,7 +912,7 @@ Here is an example of implementing an import functionality:
   ]
 ))
 
-(import1 'Data.List)
+(import1 'data.list)
 (import2)
 # returns: context for module Data.List
 ```
