@@ -127,7 +127,6 @@ eval (A.Ast _ es) = do
 evalExpr :: E.AstExpr -> PzVal
 evalExpr (E.AstExpr _ _ v) =
     case v of
-        E.ValList (L.AstList L.KindForm  _ []) -> ValUnit
         E.ValNum n -> ValNum $ evalNum n
         E.ValStr s -> ValStr $ evalStr s
         E.ValIdent i -> evalIdent i
@@ -156,7 +155,22 @@ evalList :: L.AstList E.AstExpr -> PzVal
 evalList (L.AstList k _ es) =
     case k of
         L.KindList -> ValList $ PzList $ map evalExpr es
-        _ -> ValUnit
+        L.KindDict -> ValDict $ PzDict $ M.fromList $ map evalDictPair es
+        L.KindForm -> evalForm es
+
+evalDictPair :: E.AstExpr -> (PzVal, PzVal)
+evalDictPair (E.AstExpr _ _ v) =
+    case v of
+        (E.ValList (L.AstList L.KindForm _ [k, v])) ->
+            (evalExpr k, evalExpr v)
+        _ -> (ValUnit, ValUnit)
+
+evalForm :: [E.AstExpr] -> PzVal
+evalForm [] = ValUnit
+evalForm (f:as) =
+    case f of
+        _ -> ValList $ PzList $ map evalExpr as
+
 
 -- Built-in functions
 dictGet :: PzVal -> PzDict -> PzVal
