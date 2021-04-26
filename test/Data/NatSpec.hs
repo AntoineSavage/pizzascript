@@ -15,7 +15,7 @@ lenVsUnlenSpec :: Spec
 lenVsUnlenSpec = describe "len vs unlen" $ do
     it "composes len and unlen into id" $ do
         property $ \n -> do
-            len (unlen undefined n ) `shouldBe` n
+            len (unlen n undefined) `shouldBe` n
 
 lenSpec :: Spec
 lenSpec = describe "len" $ do
@@ -38,20 +38,20 @@ lenSpec = describe "len" $ do
 unlenSpec :: Spec
 unlenSpec = describe "unlen" $ do
     it "unlens zero elements" $ do
-        unlen () Z `shouldBe` []
+        unlen Z () `shouldBe` []
 
     it "unlens one element" $ do
-        unlen () (S Z) `shouldBe` [()]
+        unlen (S Z) () `shouldBe` [()]
 
     it "unlens two elements" $ do
-        unlen () (S $ S Z) `shouldBe` [(),()]
+        unlen (S $ S Z) () `shouldBe` [(),()]
 
     it "unlens three elements" $ do
-        unlen () (S $ S $ S Z) `shouldBe` [(),(),()]
+        unlen (S $ S $ S Z) () `shouldBe` [(),(),()]
 
     it "unlens n elements list" $ do
         property $ \n -> do
-            unlen () n `shouldBe` replicate (toInt n) ()
+            unlen n () `shouldBe` replicate (toInt n) ()
 
 toInt :: Nat -> Int
 toInt Z     = 0

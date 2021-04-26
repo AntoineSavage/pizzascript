@@ -9,6 +9,6 @@ len :: [a] -> Nat
 len []     = Z
 len (_:xs) = S $ len xs
 
-unlen :: a -> Nat -> [a]
-unlen _ Z     = []
-unlen x (S n) = x : unlen x n 
+unlen :: Nat -> a -> [a]
+unlen Z     _ = []
+unlen (S n) x = x : unlen n x

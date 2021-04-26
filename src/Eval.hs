@@ -1,12 +1,6 @@
 module Eval where
 
 import qualified Ast as A
-import qualified Ast.AstExpr as E
-import qualified Ast.AstIdent as I
-import qualified Ast.AstList as L
-import qualified Ast.AstNum as N
-import qualified Ast.AstStr as St
-import qualified Ast.AstSymb as Sy
 import qualified Data.Map as M
 
 import Control.Monad ( forM_ )
@@ -17,44 +11,44 @@ data PzVal
     = PzUnit
     | PzNum Double
     | PzStr String
-    | PzSymb Nat I.AstIdent
+    | PzSymb Nat A.Ident
     | PzList [PzVal]
     | PzDict (M.Map PzVal PzVal)
     | PzFunc String -- TODO
     deriving (Show, Eq, Ord)
 
-ident_a :: I.AstIdent
-ident_a = I.AstIdent (I.AstIdentPart 'a' "") []
-ident_b :: I.AstIdent
-ident_b = I.AstIdent (I.AstIdentPart 'b' "") []
-ident_c :: I.AstIdent
-ident_c = I.AstIdent (I.AstIdentPart 'c' "") []
-ident_abc :: I.AstIdent
-ident_abc = I.AstIdent (I.AstIdentPart 'a' "bc") []
-ident__foo :: I.AstIdent
-ident__foo = I.AstIdent (I.AstIdentPart '_' "foo") []
-ident_BAR99 :: I.AstIdent
-ident_BAR99 = I.AstIdent (I.AstIdentPart 'B' "AR99") []
-ident_B4Z :: I.AstIdent
-ident_B4Z = I.AstIdent (I.AstIdentPart 'B' "4Z") []
-ident_true :: I.AstIdent
-ident_true = I.AstIdent (I.AstIdentPart 't' "rue") []
-ident_false :: I.AstIdent
-ident_false = I.AstIdent (I.AstIdentPart 'f' "alse") []
-ident_Module_function :: I.AstIdent
-ident_Module_function = I.AstIdent (I.AstIdentPart 'M' "odule") [I.AstIdentPart 'f' "unction"]
-ident_Package_Module_function :: I.AstIdent
-ident_Package_Module_function = I.AstIdent (I.AstIdentPart 'P' "ackage") [I.AstIdentPart 'M' "odule",I.AstIdentPart 'f' "unction"]
-ident_Package_Module_Submodule :: I.AstIdent
-ident_Package_Module_Submodule = I.AstIdent (I.AstIdentPart 'P' "ackage") [I.AstIdentPart 'M' "odule",I.AstIdentPart 'S' "ubModule"]
-ident_my_dict_my_key1_my_key2 :: I.AstIdent
-ident_my_dict_my_key1_my_key2 = I.AstIdent (I.AstIdentPart 'm' "y_dict") [I.AstIdentPart 'm' "y_key1",I.AstIdentPart 'm' "y_key2"]
-ident_list :: I.AstIdent
-ident_list = I.AstIdent (I.AstIdentPart 'l' "ist") []
-ident_dict :: I.AstIdent
-ident_dict = I.AstIdent (I.AstIdentPart 'd' "ict") []
-ident_func :: I.AstIdent
-ident_func = I.AstIdent (I.AstIdentPart 'f' "unc") []
+ident_a :: A.Ident
+ident_a = A.Ident ["a"]
+ident_b :: A.Ident
+ident_b = A.Ident ["b"]
+ident_c :: A.Ident
+ident_c = A.Ident ["c"]
+ident_abc :: A.Ident
+ident_abc = A.Ident ["abc"]
+ident__foo :: A.Ident
+ident__foo = A.Ident ["_foo"]
+ident_BAR99 :: A.Ident
+ident_BAR99 = A.Ident ["BAR99"]
+ident_B4Z :: A.Ident
+ident_B4Z = A.Ident ["B4Z"]
+ident_true :: A.Ident
+ident_true = A.Ident ["true"]
+ident_false :: A.Ident
+ident_false = A.Ident ["false"]
+ident_Module_function :: A.Ident
+ident_Module_function = A.Ident ["Module", "function"]
+ident_Package_Module_function :: A.Ident
+ident_Package_Module_function = A.Ident ["Package", "Module", "function"]
+ident_Package_Module_Submodule :: A.Ident
+ident_Package_Module_Submodule = A.Ident ["Package", "Module", "SubModule"]
+ident_my_dict_my_key1_my_key2 :: A.Ident
+ident_my_dict_my_key1_my_key2 = A.Ident ["my_dict", "my_key1", "my_key2"]
+ident_list :: A.Ident
+ident_list = A.Ident ["list"]
+ident_dict :: A.Ident
+ident_dict = A.Ident ["dict"]
+ident_func :: A.Ident
+ident_func = A.Ident ["func"]
 
 symb_a :: PzVal
 symb_a = PzSymb Z ident_a
@@ -114,48 +108,39 @@ evalAst (A.Ast _ es) = do
     forM_ es $ \e -> do
         print $ eval e
 
-eval :: E.AstExpr -> PzVal
-eval (E.AstExpr _ _ v) =
+eval :: A.AstExpr -> PzVal
+eval (A.AstExpr _ _ v) =
     case v of
-        E.ValNum n -> evalNum n
-        E.ValStr s -> evalStr s
-        E.ValIdent i -> evalIdent i
-        E.ValSymb s -> evalSymb s
-        E.ValList l -> evalList l
+        A.AstNum n -> PzNum n
+        A.AstStr s -> PzStr s
+        A.AstIdent i -> evalIdent i
+        A.AstSymb n i -> PzSymb n i
+        A.AstList k _ l -> evalList k l
 
-evalNum :: N.AstNum -> PzVal
-evalNum (N.AstNum n) = PzNum n
-
-evalStr :: St.AstStr -> PzVal
-evalStr (St.AstStr s) = PzStr s
-
-evalIdent :: I.AstIdent -> PzVal
+evalIdent :: A.Ident -> PzVal
 evalIdent ident =
     let k = PzSymb Z ident
     in case dictGet k ctx of
         PzUnit -> PzStr $ "undefined identifier: " ++ show ident
         val -> val
 
-evalSymb :: Sy.AstSymb -> PzVal
-evalSymb (Sy.AstSymb n i) = PzSymb n i
-
-evalList :: L.AstList E.AstExpr -> PzVal
-evalList (L.AstList k _ es) =
+evalList :: A.ListKind -> [A.AstExpr] -> PzVal
+evalList k es =
     case k of
-        L.KindList -> PzList $ map eval es
-        L.KindDict -> PzDict $ M.fromList $ map evalDictEntry es
-        L.KindForm -> evalForm es
+        A.KindList -> PzList $ map eval es
+        A.KindDict -> PzDict $ M.fromList $ map evalDictEntry es
+        A.KindForm -> evalForm es
 
-evalDictEntry :: E.AstExpr -> (PzVal, PzVal)
-evalDictEntry (E.AstExpr _ _ v) =
+evalDictEntry :: A.AstExpr -> (PzVal, PzVal)
+evalDictEntry (A.AstExpr _ _ v) =
     case v of
-        (E.ValList (L.AstList L.KindForm _ [k, v])) ->
+        (A.AstList A.KindForm _ [k, v]) ->
             (eval k, eval v)
 
         -- malformed dictionary entry
         _ -> (PzUnit, PzUnit)
 
-evalForm :: [E.AstExpr] -> PzVal
+evalForm :: [A.AstExpr] -> PzVal
 evalForm [] = PzUnit
 evalForm (f:as) =
     case eval f of
@@ -164,7 +149,7 @@ evalForm (f:as) =
         -- malformed form
         _ -> PzUnit
 
-evalFunc :: String -> [E.AstExpr] -> PzVal
+evalFunc :: String -> [A.AstExpr] -> PzVal
 evalFunc name astArgs =
     case name of
         "list" -> list $ map eval astArgs

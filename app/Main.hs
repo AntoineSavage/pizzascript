@@ -7,7 +7,7 @@ import Text.Parsec.String ( parseFromFile )
 
 main :: IO ()
 main = do
-    mast <- parseFromFile A.parser "example/ast.pz"
+    mast <- parseFromFile A.parseAst "example/ast.pz"
     case mast of
         Left err -> print err
         Right ast -> evalAst ast

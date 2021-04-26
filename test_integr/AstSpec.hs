@@ -10,5 +10,5 @@ integrationTests = do
     s <- readFile "example/ast.pz"
     hspec $ do
         describe "parse example/ast.pz" $ do
-            it "composes parse and unparse into id" $ do
-                unparse <$> parse parser "integrationTests" s `shouldBe` Right s
+            it "composes parseAst and unparseAst into id" $ do
+                unparseAst <$> parse parseAst "integrationTests" s `shouldBe` Right s
