@@ -143,8 +143,7 @@ evalStr (St.AstStr s) = PzStr s
 evalIdent :: I.AstIdent -> PzVal
 evalIdent ident =
     let k = ValSymb $ PzSymb Z ident
-        mval = dictGet k ctx
-    in case mval of
+    in case dictGet k (ValDict ctx) of
         ValUnit -> ValStr $ PzStr $ "undefined identifier: " ++ show ident
         val -> val
 
@@ -155,23 +154,60 @@ evalList :: L.AstList E.AstExpr -> PzVal
 evalList (L.AstList k _ es) =
     case k of
         L.KindList -> ValList $ PzList $ map evalExpr es
-        L.KindDict -> ValDict $ PzDict $ M.fromList $ map evalDictPair es
+        L.KindDict -> ValDict $ PzDict $ M.fromList $ map evalDictEntry es
         L.KindForm -> evalForm es
 
-evalDictPair :: E.AstExpr -> (PzVal, PzVal)
-evalDictPair (E.AstExpr _ _ v) =
+evalDictEntry :: E.AstExpr -> (PzVal, PzVal)
+evalDictEntry (E.AstExpr _ _ v) =
     case v of
         (E.ValList (L.AstList L.KindForm _ [k, v])) ->
             (evalExpr k, evalExpr v)
+
+        -- malformed dictionary entry
         _ -> (ValUnit, ValUnit)
 
 evalForm :: [E.AstExpr] -> PzVal
 evalForm [] = ValUnit
 evalForm (f:as) =
-    case f of
-        _ -> ValList $ PzList $ map evalExpr as
+    case evalExpr f of
+        ValFunc PzFunc -> ValList $ PzList $ map evalExpr as
 
+        -- malformed form
+        _ -> ValUnit
 
 -- Built-in functions
-dictGet :: PzVal -> PzDict -> PzVal
-dictGet k (PzDict m) = fromMaybe ValUnit $ M.lookup k m
+
+-- number functions
+numAdd :: PzVal -> PzVal -> PzVal
+numAdd (ValNum (PzInteger n)) (ValNum (PzInteger m)) = ValNum $ PzInteger $ n + m
+numAdd _                      _                      = ValUnit
+
+-- string functions
+-- TODO
+
+-- symbol functions
+-- TODO
+
+-- list functions
+list :: [PzVal] -> PzVal
+list = ValList . PzList
+
+listHead :: PzVal -> PzVal
+listHead (ValList (PzList (h:_))) = h
+listHead _                        = ValUnit -- invalid type or empty
+
+listTail :: PzVal -> PzVal
+listTail (ValList (PzList (_:t))) = ValList $ PzList t
+listTail _                        = ValUnit -- invalid type or empty
+
+-- dictionary functions
+dict :: [PzVal] -> PzVal
+dict _ = ValDict $ PzDict M.empty -- need to quote args
+
+dictGet :: PzVal -> PzVal -> PzVal
+dictGet k (ValDict (PzDict m)) = fromMaybe ValUnit $ M.lookup k m
+dictGet _ _                    = ValUnit -- Invalid type
+
+dictPut :: PzVal -> PzVal -> PzVal -> PzVal
+dictPut k v (ValDict (PzDict m)) = ValDict $ PzDict $ M.insert k v m
+dictPut _ _ _                    = ValUnit -- Invalid type
