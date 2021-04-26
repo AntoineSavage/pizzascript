@@ -13,15 +13,49 @@ data PzVal
     | PzStr String
     | PzSymb Nat A.Ident
     | PzList [PzVal]
-    | PzDict (M.Map PzVal PzVal)
-    | PzFunc String -- TODO
+    | PzDict Dict
+    | PzFunc ArgPass ImpureCtx Args FuncBody
     deriving (Show, Eq, Ord)
+
+type Dict = M.Map PzVal PzVal
+
+data ArgPass
+    = Eval
+    | Quote
+    | Unquote
+    | DeepQuote
+    | DeepUnquote
+    deriving (Show, Eq, Ord)
+
+type ImpureCtx = Maybe A.Ident
+
+data Args
+    = Variadic A.Ident
+    | Arity [A.Ident]
+    deriving (Show, Eq, Ord)
+
+data FuncBody
+    = BuiltIn String
+    | Custom [A.AstExpr]
+    deriving (Show, Eq, Ord)
+
+argPassToSymb :: M.Map ArgPass PzVal
+argPassToSymb = M.map (PzSymb Z) $ M.fromList
+    [ (Eval,        A.Ident ["eval"])
+    , (Quote,       A.Ident ["quote"])
+    , (Unquote,     A.Ident ["unquote"])
+    , (DeepQuote,   A.Ident ["deep_quote"])
+    , (DeepUnquote, A.Ident ["deep_unquote"])
+    ]
+
+varargs :: Args
+varargs = Variadic $ A.Ident ["args"]
 
 ctx :: PzVal
 ctx = PzDict $ M.fromList
-    [ (PzSymb Z $ A.Ident ["list"], PzFunc "list")
-    , (PzSymb Z $ A.Ident ["dict"], PzFunc "dict")
-    , (PzSymb Z $ A.Ident ["func"], PzFunc "func")
+    [(PzSymb Z $ A.Ident ["list"], PzFunc Eval Nothing varargs $ BuiltIn "list")
+    , (PzSymb Z $ A.Ident ["dict"], PzFunc Quote Nothing varargs $ BuiltIn "dict")
+    , (PzSymb Z $ A.Ident ["func"], PzFunc Quote Nothing varargs $ BuiltIn "func")
     ]
 
 evalAst :: A.Ast -> IO ()
@@ -65,17 +99,15 @@ evalForm :: [A.AstExpr] -> PzVal
 evalForm [] = PzUnit
 evalForm (f:as) =
     case eval f of
-        PzFunc s -> evalFunc s as
-
-        -- malformed form
+        PzFunc _ _ _ (BuiltIn s) -> evalFunc s as
         _ -> PzUnit
 
 evalFunc :: String -> [A.AstExpr] -> PzVal
-evalFunc name astArgs =
+evalFunc name args =
     case name of
-        "list" -> list $ map eval astArgs
-        "dict" -> dict $ map evalDictEntry astArgs
-        "func" -> PzFunc $ name ++ ": " ++ show astArgs
+        "list" -> list $ map eval args
+        "dict" -> dict $ map evalDictEntry args
+        "func" -> PzUnit
         _ -> PzUnit
 
 

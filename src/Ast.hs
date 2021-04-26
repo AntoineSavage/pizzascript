@@ -16,9 +16,15 @@ data AstExpr
     = AstExpr SourcePos String ExprVal
     deriving (Show)
 
+-- Ignore position in Eq and Ord
 instance Eq AstExpr where 
-    -- Ignore position
     (==) (AstExpr _ d1 v1) (AstExpr _ d2 v2) = d1 == d2 && v1 == v2
+
+instance Ord AstExpr where 
+    compare (AstExpr _ d1 v1) (AstExpr _ d2 v2) =
+        let dCmp = compare d1 d2
+            vCmp = compare v1 v2
+        in if dCmp /= EQ then dCmp else vCmp 
 
 data ExprVal
     = AstNum Double
@@ -26,7 +32,7 @@ data ExprVal
     | AstIdent Ident
     | AstSymb Nat Ident
     | AstList ListKind String [AstExpr]
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 newtype Ident
     = Ident [String]
@@ -36,7 +42,7 @@ data ListKind
     = KindList
     | KindDict
     | KindForm
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 -- AST
 parseAst :: Parser Ast
