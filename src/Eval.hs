@@ -45,7 +45,7 @@ newtype PzDict
     deriving (Show, Eq, Ord)
 
 data PzFunc
-    = PzFunc -- TODO
+    = PzFunc String -- TODO
     deriving (Show, Eq, Ord)
 
 ident_a :: I.AstIdent
@@ -74,6 +74,12 @@ ident_Package_Module_Submodule :: I.AstIdent
 ident_Package_Module_Submodule = I.AstIdent (I.AstIdentPart 'P' "ackage") [I.AstIdentPart 'M' "odule",I.AstIdentPart 'S' "ubModule"]
 ident_my_dict_my_key1_my_key2 :: I.AstIdent
 ident_my_dict_my_key1_my_key2 = I.AstIdent (I.AstIdentPart 'm' "y_dict") [I.AstIdentPart 'm' "y_key1",I.AstIdentPart 'm' "y_key2"]
+ident_list :: I.AstIdent
+ident_list = I.AstIdent (I.AstIdentPart 'l' "ist") []
+ident_dict :: I.AstIdent
+ident_dict = I.AstIdent (I.AstIdentPart 'd' "ict") []
+ident_func :: I.AstIdent
+ident_func = I.AstIdent (I.AstIdentPart 'f' "unc") []
 
 symb_a :: PzVal
 symb_a = ValSymb $ PzSymb Z ident_a
@@ -101,6 +107,12 @@ symb_Package_Module_Submodule :: PzVal
 symb_Package_Module_Submodule = ValSymb $ PzSymb (S (S Z)) ident_Package_Module_Submodule
 symb_my_dict_my_key1_my_key2 :: PzVal
 symb_my_dict_my_key1_my_key2 = ValSymb $ PzSymb (S (S (S Z))) ident_my_dict_my_key1_my_key2
+symb_list :: PzVal
+symb_list = ValSymb $ PzSymb Z ident_list
+symb_dict :: PzVal
+symb_dict = ValSymb $ PzSymb Z ident_dict
+symb_func :: PzVal
+symb_func = ValSymb $ PzSymb Z ident_func
 
 ctx :: PzDict
 ctx = PzDict $ M.fromList
@@ -117,15 +129,18 @@ ctx = PzDict $ M.fromList
     , (symb_Package_Module_function, symb_Package_Module_function)
     , (symb_Package_Module_Submodule, symb_Package_Module_Submodule)
     , (symb_my_dict_my_key1_my_key2, symb_my_dict_my_key1_my_key2)
+    , (symb_list, ValFunc $ PzFunc "list")
+    , (symb_dict, ValFunc $ PzFunc "dict")
+    , (symb_func, ValFunc $ PzFunc "func")
     ]
 
-eval :: A.Ast -> IO ()
-eval (A.Ast _ es) = do
+evalAst :: A.Ast -> IO ()
+evalAst (A.Ast _ es) = do
     forM_ es $ \e -> do
-        print $ evalExpr e
+        print $ eval e
 
-evalExpr :: E.AstExpr -> PzVal
-evalExpr (E.AstExpr _ _ v) =
+eval :: E.AstExpr -> PzVal
+eval (E.AstExpr _ _ v) =
     case v of
         E.ValNum n -> ValNum $ evalNum n
         E.ValStr s -> ValStr $ evalStr s
@@ -153,7 +168,7 @@ evalSymb (Sy.AstSymb n i) = PzSymb n i
 evalList :: L.AstList E.AstExpr -> PzVal
 evalList (L.AstList k _ es) =
     case k of
-        L.KindList -> ValList $ PzList $ map evalExpr es
+        L.KindList -> ValList $ PzList $ map eval es
         L.KindDict -> ValDict $ PzDict $ M.fromList $ map evalDictEntry es
         L.KindForm -> evalForm es
 
@@ -161,7 +176,7 @@ evalDictEntry :: E.AstExpr -> (PzVal, PzVal)
 evalDictEntry (E.AstExpr _ _ v) =
     case v of
         (E.ValList (L.AstList L.KindForm _ [k, v])) ->
-            (evalExpr k, evalExpr v)
+            (eval k, eval v)
 
         -- malformed dictionary entry
         _ -> (ValUnit, ValUnit)
@@ -169,11 +184,20 @@ evalDictEntry (E.AstExpr _ _ v) =
 evalForm :: [E.AstExpr] -> PzVal
 evalForm [] = ValUnit
 evalForm (f:as) =
-    case evalExpr f of
-        ValFunc PzFunc -> ValList $ PzList $ map evalExpr as
+    case eval f of
+        ValFunc (PzFunc s) -> evalFunc s as
 
         -- malformed form
         _ -> ValUnit
+
+evalFunc :: String -> [E.AstExpr] -> PzVal
+evalFunc name astArgs =
+    case name of
+        "list" -> list $ map eval astArgs
+        "dict" -> dict $ map evalDictEntry astArgs
+        "func" -> ValFunc $ PzFunc $ name ++ ": " ++ show astArgs
+        _ -> ValUnit
+
 
 -- Built-in functions
 
@@ -201,8 +225,8 @@ listTail (ValList (PzList (_:t))) = ValList $ PzList t
 listTail _                        = ValUnit -- invalid type or empty
 
 -- dictionary functions
-dict :: [PzVal] -> PzVal
-dict _ = ValDict $ PzDict M.empty -- need to quote args
+dict :: [(PzVal, PzVal)] -> PzVal
+dict es = ValDict $ PzDict $ M.fromList es
 
 dictGet :: PzVal -> PzVal -> PzVal
 dictGet k (ValDict (PzDict m)) = fromMaybe ValUnit $ M.lookup k m
