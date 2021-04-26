@@ -23,9 +23,8 @@ data PzVal
     | ValFunc PzFunc
     deriving (Show, Eq, Ord)
 
-data PzNum
-    = PzInteger Integer
-    | PzDouble Double
+newtype PzNum
+    = PzNum Double
     deriving (Show, Eq, Ord)
 
 newtype PzStr =
@@ -149,8 +148,7 @@ eval (E.AstExpr _ _ v) =
         E.ValList l -> evalList l
 
 evalNum :: N.AstNum -> PzNum
-evalNum (N.AstInteger n) = PzInteger n
-evalNum (N.AstDouble d) = PzDouble d
+evalNum (N.AstNum n) = PzNum n
 
 evalStr :: St.AstStr -> PzStr
 evalStr (St.AstStr s) = PzStr s
@@ -203,8 +201,8 @@ evalFunc name astArgs =
 
 -- number functions
 numAdd :: PzVal -> PzVal -> PzVal
-numAdd (ValNum (PzInteger n)) (ValNum (PzInteger m)) = ValNum $ PzInteger $ n + m
-numAdd _                      _                      = ValUnit
+numAdd (ValNum (PzNum n)) (ValNum (PzNum m)) = ValNum $ PzNum $ n + m
+numAdd _                  _                  = ValUnit
 
 -- string functions
 -- TODO

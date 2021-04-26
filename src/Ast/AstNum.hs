@@ -1,36 +1,26 @@
-module Ast.AstNum (AstNum(..), parser, unparse, fromIntOrDouble) where
+module Ast.AstNum (AstNum(..), parser, unparse) where
 
 import Control.Monad ( liftM2 )
 import Data.Maybe ( fromMaybe )
-import Data.Ratio ( denominator, numerator )
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
-data AstNum
-    = AstInteger Integer
-    | AstDouble Double
+newtype AstNum
+    = AstNum Double
     deriving (Show, Eq)
 
 parser :: Parser AstNum
 parser = do
     let uint = many1 digit
         sint = liftM2 (++) (option "" $ string "-") uint
-        consOrNothing h t = optionMaybe $ liftM2 (:) h t
-        emptyOr mx = fromMaybe "" mx
-    i <- sint
-    md <- consOrNothing (char '.') uint
-    me <- consOrNothing (oneOf "eE") sint
-    case (md, me) of
-        (Nothing, Nothing) -> return $ AstInteger $ read i
-        (_, _) -> return $ fromIntOrDouble AstInteger AstDouble $ read $ i ++ emptyOr md ++ emptyOr me
+        consOrEmpty h t = option "" $ liftM2 (:) h t
+        dec = consOrEmpty (char '.') uint
+        exp = consOrEmpty (oneOf "eE") sint
+    AstNum . read . concat <$> sequence [sint, dec, exp]
 
 unparse :: AstNum -> String
-unparse (AstInteger i) = show i
-unparse (AstDouble d) = fromIntOrDouble show show d
-
-fromIntOrDouble :: (Integer -> a) -> (Double -> a) -> Double -> a
-fromIntOrDouble fromInt fromDouble d =
+unparse (AstNum d) =
     let truncated = truncate d
     in if d == fromIntegral truncated
-        then fromInt truncated
-        else fromDouble d
+        then show truncated
+        else show d

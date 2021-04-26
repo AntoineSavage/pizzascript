@@ -12,7 +12,6 @@ spec = do
     parseVsUnparseSpec
     parseSpec
     unparseSpec
-    fromIntOrDoubleSpec
 
 parseVsUnparseSpec :: Spec
 parseVsUnparseSpec = describe "parse vs unparse" $ do
@@ -28,55 +27,35 @@ parseSpec = describe "parse" $ do
 
     it "parses integers" $ do
         property $ \n -> do
-            parse parser "tests" (show n) `shouldBe` Right (AstInteger n)
+            parse parser "tests" (show (n :: Int)) `shouldBe` Right (AstNum $ fromIntegral n)
 
     it "parses doubles with decimal part" $ do
         property $ \intPart (Positive decPart) -> do
             let _ = (intPart :: Integer, decPart :: Integer)
                 d = read $ show intPart ++ "." ++ show decPart
-            parse parser "tests" (show d) `shouldBe` Right (AstDouble d)
+            parse parser "tests" (show d) `shouldBe` Right (AstNum d)
 
     it "parses doubles with exponential part" $ do
         property $ \intPart (Positive decPart) expPart -> do
             let _ = (intPart :: Integer, decPart :: Integer, expPart :: Integer)
                 d1 = read (show intPart ++ "." ++ show (decPart + 1) ++ "e" ++ show expPart)
                 d2 = read (show intPart ++ "." ++ show (decPart + 1) ++ "E" ++ show expPart)
-            parse parser "tests" (show d1) `shouldBe` Right (fromIntOrDouble AstInteger AstDouble d1)
-            parse parser "tests" (show d2) `shouldBe` Right (fromIntOrDouble AstInteger AstDouble d2)
+            parse parser "tests" (show d1) `shouldBe` Right (AstNum d1)
+            parse parser "tests" (show d2) `shouldBe` Right (AstNum d2)
 
     it "parses doubles" $ do
         property $ \d -> do
-            parse parser "tests" (show $ d + 0.1) `shouldBe` Right (AstDouble $ d + 0.1)
+            parse parser "tests" (show d) `shouldBe` Right (AstNum d)
 
 unparseSpec :: Spec
 unparseSpec = describe "unparse" $ do
-    it "returns show<int> for any int" $ do
+    it "returns show<int> for any integer" $ do
         property $ \n -> do
-            unparse (AstInteger n) `shouldBe` show n
+            unparse (AstNum $ fromIntegral n) `shouldBe` show (n :: Int)
 
-    it "returns show<int> for any int-valued double" $ do
-        property $ \n -> do
-            unparse (AstDouble $ fromIntegral n) `shouldBe` show (n :: Integer)
-
-    it "returns show<double> for any non-int-valued double" $ do
+    it "returns show<double> for any non-integer" $ do
         property $ \d -> do
-            unparse (AstDouble $ d + 0.1) `shouldBe` show (d + 0.1)
-
-fromIntOrDoubleSpec :: Spec
-fromIntOrDoubleSpec = describe "fromIntOrDouble" $ do
-    it "applies f to integers" $ do
-        property $ \n -> do
-            let d = fromIntegral n
-            fromIntOrDouble id undefined d `shouldBe` n
-
-    it "applies f to doubles" $ do
-        property $ \d_ -> do
-            let d = d_ + 0.1
-            fromIntOrDouble undefined id d `shouldBe` d
+            unparse (AstNum $ d + 0.1) `shouldBe` show (d + 0.1)
 
 instance Arbitrary AstNum where
-    arbitrary = do
-        choice <- arbitrary
-        if choice
-            then AstInteger <$> arbitrary
-            else AstDouble . (+0.1) <$> arbitrary
+    arbitrary = AstNum <$> arbitrary
