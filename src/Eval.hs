@@ -14,37 +14,13 @@ import Data.Maybe ( fromMaybe )
 import Data.Nat ( Nat(..) )
 
 data PzVal
-    = ValUnit
-    | ValNum PzNum
-    | ValStr PzStr
-    | ValSymb PzSymb
-    | ValList PzList
-    | ValDict PzDict
-    | ValFunc PzFunc
-    deriving (Show, Eq, Ord)
-
-newtype PzNum
-    = PzNum Double
-    deriving (Show, Eq, Ord)
-
-newtype PzStr =
-    PzStr String
-    deriving (Show, Eq, Ord)
-
-data PzSymb
-    = PzSymb Nat I.AstIdent
-    deriving (Show, Eq, Ord)
-
-newtype PzList
-    = PzList [PzVal]
-    deriving (Show, Eq, Ord)
-
-newtype PzDict
-    = PzDict (M.Map PzVal PzVal)
-    deriving (Show, Eq, Ord)
-
-data PzFunc
-    = PzFunc String -- TODO
+    = PzUnit
+    | PzNum Double
+    | PzStr String
+    | PzSymb Nat I.AstIdent
+    | PzList [PzVal]
+    | PzDict (M.Map PzVal PzVal)
+    | PzFunc String -- TODO
     deriving (Show, Eq, Ord)
 
 ident_a :: I.AstIdent
@@ -81,39 +57,39 @@ ident_func :: I.AstIdent
 ident_func = I.AstIdent (I.AstIdentPart 'f' "unc") []
 
 symb_a :: PzVal
-symb_a = ValSymb $ PzSymb Z ident_a
+symb_a = PzSymb Z ident_a
 symb_b :: PzVal
-symb_b = ValSymb $ PzSymb (S Z) ident_b
+symb_b = PzSymb (S Z) ident_b
 symb_c :: PzVal
-symb_c = ValSymb $ PzSymb (S Z) ident_c
+symb_c = PzSymb (S Z) ident_c
 symb_abc :: PzVal
-symb_abc = ValSymb $ PzSymb Z ident_abc
+symb_abc = PzSymb Z ident_abc
 symb__foo :: PzVal
-symb__foo = ValSymb $ PzSymb Z ident__foo
+symb__foo = PzSymb Z ident__foo
 symb_BAR99 :: PzVal
-symb_BAR99 = ValSymb $ PzSymb (S Z) ident_BAR99
+symb_BAR99 = PzSymb (S Z) ident_BAR99
 symb_B4Z :: PzVal
-symb_B4Z = ValSymb $ PzSymb (S (S Z)) ident_B4Z
+symb_B4Z = PzSymb (S (S Z)) ident_B4Z
 symb_true :: PzVal
-symb_true = ValSymb $ PzSymb Z ident_true
+symb_true = PzSymb Z ident_true
 symb_false :: PzVal
-symb_false = ValSymb $ PzSymb Z ident_false
+symb_false = PzSymb Z ident_false
 symb_Module_function :: PzVal
-symb_Module_function = ValSymb $ PzSymb Z ident_Module_function
+symb_Module_function = PzSymb Z ident_Module_function
 symb_Package_Module_function :: PzVal
-symb_Package_Module_function = ValSymb $ PzSymb (S Z) ident_Package_Module_function
+symb_Package_Module_function = PzSymb (S Z) ident_Package_Module_function
 symb_Package_Module_Submodule :: PzVal
-symb_Package_Module_Submodule = ValSymb $ PzSymb (S (S Z)) ident_Package_Module_Submodule
+symb_Package_Module_Submodule = PzSymb (S (S Z)) ident_Package_Module_Submodule
 symb_my_dict_my_key1_my_key2 :: PzVal
-symb_my_dict_my_key1_my_key2 = ValSymb $ PzSymb (S (S (S Z))) ident_my_dict_my_key1_my_key2
+symb_my_dict_my_key1_my_key2 = PzSymb (S (S (S Z))) ident_my_dict_my_key1_my_key2
 symb_list :: PzVal
-symb_list = ValSymb $ PzSymb Z ident_list
+symb_list = PzSymb Z ident_list
 symb_dict :: PzVal
-symb_dict = ValSymb $ PzSymb Z ident_dict
+symb_dict = PzSymb Z ident_dict
 symb_func :: PzVal
-symb_func = ValSymb $ PzSymb Z ident_func
+symb_func = PzSymb Z ident_func
 
-ctx :: PzDict
+ctx :: PzVal
 ctx = PzDict $ M.fromList
     [ (symb_a, symb_a)
     , (symb_b, symb_b)
@@ -128,9 +104,9 @@ ctx = PzDict $ M.fromList
     , (symb_Package_Module_function, symb_Package_Module_function)
     , (symb_Package_Module_Submodule, symb_Package_Module_Submodule)
     , (symb_my_dict_my_key1_my_key2, symb_my_dict_my_key1_my_key2)
-    , (symb_list, ValFunc $ PzFunc "list")
-    , (symb_dict, ValFunc $ PzFunc "dict")
-    , (symb_func, ValFunc $ PzFunc "func")
+    , (symb_list, PzFunc "list")
+    , (symb_dict, PzFunc "dict")
+    , (symb_func, PzFunc "func")
     ]
 
 evalAst :: A.Ast -> IO ()
@@ -141,33 +117,33 @@ evalAst (A.Ast _ es) = do
 eval :: E.AstExpr -> PzVal
 eval (E.AstExpr _ _ v) =
     case v of
-        E.ValNum n -> ValNum $ evalNum n
-        E.ValStr s -> ValStr $ evalStr s
+        E.ValNum n -> evalNum n
+        E.ValStr s -> evalStr s
         E.ValIdent i -> evalIdent i
-        E.ValSymb s -> ValSymb $ evalSymb s
+        E.ValSymb s -> evalSymb s
         E.ValList l -> evalList l
 
-evalNum :: N.AstNum -> PzNum
+evalNum :: N.AstNum -> PzVal
 evalNum (N.AstNum n) = PzNum n
 
-evalStr :: St.AstStr -> PzStr
+evalStr :: St.AstStr -> PzVal
 evalStr (St.AstStr s) = PzStr s
 
 evalIdent :: I.AstIdent -> PzVal
 evalIdent ident =
-    let k = ValSymb $ PzSymb Z ident
-    in case dictGet k (ValDict ctx) of
-        ValUnit -> ValStr $ PzStr $ "undefined identifier: " ++ show ident
+    let k = PzSymb Z ident
+    in case dictGet k ctx of
+        PzUnit -> PzStr $ "undefined identifier: " ++ show ident
         val -> val
 
-evalSymb :: Sy.AstSymb -> PzSymb
+evalSymb :: Sy.AstSymb -> PzVal
 evalSymb (Sy.AstSymb n i) = PzSymb n i
 
 evalList :: L.AstList E.AstExpr -> PzVal
 evalList (L.AstList k _ es) =
     case k of
-        L.KindList -> ValList $ PzList $ map eval es
-        L.KindDict -> ValDict $ PzDict $ M.fromList $ map evalDictEntry es
+        L.KindList -> PzList $ map eval es
+        L.KindDict -> PzDict $ M.fromList $ map evalDictEntry es
         L.KindForm -> evalForm es
 
 evalDictEntry :: E.AstExpr -> (PzVal, PzVal)
@@ -177,32 +153,32 @@ evalDictEntry (E.AstExpr _ _ v) =
             (eval k, eval v)
 
         -- malformed dictionary entry
-        _ -> (ValUnit, ValUnit)
+        _ -> (PzUnit, PzUnit)
 
 evalForm :: [E.AstExpr] -> PzVal
-evalForm [] = ValUnit
+evalForm [] = PzUnit
 evalForm (f:as) =
     case eval f of
-        ValFunc (PzFunc s) -> evalFunc s as
+        PzFunc s -> evalFunc s as
 
         -- malformed form
-        _ -> ValUnit
+        _ -> PzUnit
 
 evalFunc :: String -> [E.AstExpr] -> PzVal
 evalFunc name astArgs =
     case name of
         "list" -> list $ map eval astArgs
         "dict" -> dict $ map evalDictEntry astArgs
-        "func" -> ValFunc $ PzFunc $ name ++ ": " ++ show astArgs
-        _ -> ValUnit
+        "func" -> PzFunc $ name ++ ": " ++ show astArgs
+        _ -> PzUnit
 
 
 -- Built-in functions
 
 -- number functions
 numAdd :: PzVal -> PzVal -> PzVal
-numAdd (ValNum (PzNum n)) (ValNum (PzNum m)) = ValNum $ PzNum $ n + m
-numAdd _                  _                  = ValUnit
+numAdd (PzNum n) (PzNum m) = PzNum $ n + m
+numAdd _         _         = PzUnit
 
 -- string functions
 -- TODO
@@ -212,24 +188,24 @@ numAdd _                  _                  = ValUnit
 
 -- list functions
 list :: [PzVal] -> PzVal
-list = ValList . PzList
+list = PzList
 
 listHead :: PzVal -> PzVal
-listHead (ValList (PzList (h:_))) = h
-listHead _                        = ValUnit -- invalid type or empty
+listHead (PzList (h:_)) = h
+listHead _              = PzUnit -- invalid type or empty
 
 listTail :: PzVal -> PzVal
-listTail (ValList (PzList (_:t))) = ValList $ PzList t
-listTail _                        = ValUnit -- invalid type or empty
+listTail (PzList (_:t)) = PzList t
+listTail _              = PzUnit -- invalid type or empty
 
 -- dictionary functions
 dict :: [(PzVal, PzVal)] -> PzVal
-dict es = ValDict $ PzDict $ M.fromList es
+dict es = PzDict $ M.fromList es
 
 dictGet :: PzVal -> PzVal -> PzVal
-dictGet k (ValDict (PzDict m)) = fromMaybe ValUnit $ M.lookup k m
-dictGet _ _                    = ValUnit -- Invalid type
+dictGet k (PzDict m) = fromMaybe PzUnit $ M.lookup k m
+dictGet _ _          = PzUnit -- Invalid type
 
 dictPut :: PzVal -> PzVal -> PzVal -> PzVal
-dictPut k v (ValDict (PzDict m)) = ValDict $ PzDict $ M.insert k v m
-dictPut _ _ _                    = ValUnit -- Invalid type
+dictPut k v (PzDict m) = PzDict $ M.insert k v m
+dictPut _ _ _          = PzUnit -- Invalid type
