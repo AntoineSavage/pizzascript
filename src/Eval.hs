@@ -17,90 +17,11 @@ data PzVal
     | PzFunc String -- TODO
     deriving (Show, Eq, Ord)
 
-ident_a :: A.Ident
-ident_a = A.Ident ["a"]
-ident_b :: A.Ident
-ident_b = A.Ident ["b"]
-ident_c :: A.Ident
-ident_c = A.Ident ["c"]
-ident_abc :: A.Ident
-ident_abc = A.Ident ["abc"]
-ident__foo :: A.Ident
-ident__foo = A.Ident ["_foo"]
-ident_BAR99 :: A.Ident
-ident_BAR99 = A.Ident ["BAR99"]
-ident_B4Z :: A.Ident
-ident_B4Z = A.Ident ["B4Z"]
-ident_true :: A.Ident
-ident_true = A.Ident ["true"]
-ident_false :: A.Ident
-ident_false = A.Ident ["false"]
-ident_Module_function :: A.Ident
-ident_Module_function = A.Ident ["Module", "function"]
-ident_Package_Module_function :: A.Ident
-ident_Package_Module_function = A.Ident ["Package", "Module", "function"]
-ident_Package_Module_Submodule :: A.Ident
-ident_Package_Module_Submodule = A.Ident ["Package", "Module", "SubModule"]
-ident_my_dict_my_key1_my_key2 :: A.Ident
-ident_my_dict_my_key1_my_key2 = A.Ident ["my_dict", "my_key1", "my_key2"]
-ident_list :: A.Ident
-ident_list = A.Ident ["list"]
-ident_dict :: A.Ident
-ident_dict = A.Ident ["dict"]
-ident_func :: A.Ident
-ident_func = A.Ident ["func"]
-
-symb_a :: PzVal
-symb_a = PzSymb Z ident_a
-symb_b :: PzVal
-symb_b = PzSymb (S Z) ident_b
-symb_c :: PzVal
-symb_c = PzSymb (S Z) ident_c
-symb_abc :: PzVal
-symb_abc = PzSymb Z ident_abc
-symb__foo :: PzVal
-symb__foo = PzSymb Z ident__foo
-symb_BAR99 :: PzVal
-symb_BAR99 = PzSymb (S Z) ident_BAR99
-symb_B4Z :: PzVal
-symb_B4Z = PzSymb (S (S Z)) ident_B4Z
-symb_true :: PzVal
-symb_true = PzSymb Z ident_true
-symb_false :: PzVal
-symb_false = PzSymb Z ident_false
-symb_Module_function :: PzVal
-symb_Module_function = PzSymb Z ident_Module_function
-symb_Package_Module_function :: PzVal
-symb_Package_Module_function = PzSymb (S Z) ident_Package_Module_function
-symb_Package_Module_Submodule :: PzVal
-symb_Package_Module_Submodule = PzSymb (S (S Z)) ident_Package_Module_Submodule
-symb_my_dict_my_key1_my_key2 :: PzVal
-symb_my_dict_my_key1_my_key2 = PzSymb (S (S (S Z))) ident_my_dict_my_key1_my_key2
-symb_list :: PzVal
-symb_list = PzSymb Z ident_list
-symb_dict :: PzVal
-symb_dict = PzSymb Z ident_dict
-symb_func :: PzVal
-symb_func = PzSymb Z ident_func
-
 ctx :: PzVal
 ctx = PzDict $ M.fromList
-    [ (symb_a, symb_a)
-    , (symb_b, symb_b)
-    , (symb_c, symb_c)
-    , (symb_abc, symb_abc)
-    , (symb__foo, symb__foo)
-    , (symb_BAR99, symb_BAR99)
-    , (symb_B4Z, symb_B4Z)
-    , (symb_true, symb_true)
-    , (symb_false, symb_false)
-    , (symb_Module_function, symb_Module_function)
-    , (symb_Package_Module_function, symb_Package_Module_function)
-    , (symb_Package_Module_Submodule, symb_Package_Module_Submodule)
-    , (symb_my_dict_my_key1_my_key2, symb_my_dict_my_key1_my_key2)
-    , (symb_list, PzFunc "list")
-    , (symb_dict, PzFunc "dict")
-    , (symb_func, PzFunc "func")
+    [ (PzSymb Z $ A.Ident ["list"], PzFunc "list")
+    , (PzSymb Z $ A.Ident ["dict"], PzFunc "dict")
+    , (PzSymb Z $ A.Ident ["func"], PzFunc "func")
     ]
 
 evalAst :: A.Ast -> IO ()
