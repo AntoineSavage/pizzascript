@@ -3,7 +3,7 @@ module Data.Nat (Nat(..), len, unlen) where
 data Nat
     = Z
     | S Nat
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 len :: [a] -> Nat
 len []     = Z

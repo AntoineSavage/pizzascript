@@ -27,6 +27,7 @@
 'a ''b ''c
 'abc
 '_foo ''BAR99 '''B4Z
+'true 'false
 
 'Module.function
 ''Package.Module.function

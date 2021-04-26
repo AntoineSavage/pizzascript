@@ -7,11 +7,11 @@ import Text.Parsec.String (Parser)
 
 data AstIdent
     = AstIdent AstIdentPart [AstIdentPart]
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 data AstIdentPart
     = AstIdentPart Char String
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 -- Parse / unparse ident
 parser :: Parser AstIdent
