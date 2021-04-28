@@ -2,11 +2,12 @@ module Ast where
 
 import Control.Monad ( liftM2, void )
 import Data.Char ( ord, isControl, isPrint )
+import Data.Ident (Ident(Ident) )
 import Data.List ( intercalate )
 import Data.Nat ( len, unlen, Nat(..) )
 import Numeric ( readHex, showHex )
 import Text.Parsec
-import Text.Parsec.String (Parser)
+import Text.Parsec.String ( Parser )
 
 data Ast
     = Ast String [AstExpr]
@@ -32,10 +33,6 @@ data ExprVal
     | AstIdent Ident
     | AstSymb Nat Ident
     | AstList ListKind String [AstExpr]
-    deriving (Show, Eq, Ord)
-
-newtype Ident
-    = Ident [String]
     deriving (Show, Eq, Ord)
 
 data ListKind

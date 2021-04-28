@@ -6,9 +6,11 @@ import qualified Data.Map as M
 import Control.Monad ( forM_ )
 import Data.ArgPass ( ArgPass(Quote, Eval) )
 import Data.Args ( Args, varargs )
+import Data.Ident ( Ident(Ident), ident )
 import Data.Maybe ( fromMaybe )
 import Data.Nat ( Nat(..) )
-import Data.Symb ( Symb(..), symb )
+import Data.Symb ( Symb(..), fromIdent )
+import Text.Parsec ( SourcePos )
 
 data PzVal
     = PzUnit
@@ -25,69 +27,78 @@ type Dict = M.Map PzVal PzVal
 type ImpureCtx = Maybe Symb
 
 data FuncBody
-    = BuiltIn String
+    = BuiltIn Ident
     | Custom [A.AstExpr]
     deriving (Show, Eq, Ord)
 
+identList :: Ident
+identList = ident "list"
+
+identDict :: Ident
+identDict = ident "dict"
+
+identFunc :: Ident
+identFunc = ident "func"
+
 ctx :: PzVal
 ctx = PzDict $ M.fromList
-    [(PzSymb $ symb "list", PzFunc Eval Nothing varargs $ BuiltIn "list")
-    , (PzSymb $ symb "dict", PzFunc Quote Nothing varargs $ BuiltIn "dict")
-    , (PzSymb $ symb "func", PzFunc Quote Nothing varargs $ BuiltIn "func")
+    [(PzSymb $ fromIdent identList, PzFunc Eval Nothing varargs $ BuiltIn identList)
+    , (PzSymb $ fromIdent identDict, PzFunc Quote Nothing varargs $ BuiltIn identDict)
+    , (PzSymb $ fromIdent identFunc, PzFunc Quote Nothing varargs $ BuiltIn identFunc)
     ]
 
-evalAst :: A.Ast -> IO ()
-evalAst (A.Ast _ es) = do
+eval :: [A.AstExpr] -> IO ()
+eval es = do
     forM_ es $ \e -> do
-        print $ eval e
+        print $ evalExpr e
 
-eval :: A.AstExpr -> PzVal
-eval (A.AstExpr _ _ v) =
+evalExpr :: A.AstExpr -> PzVal
+evalExpr (A.AstExpr p _ v) =
     case v of
         A.AstNum n -> PzNum n
         A.AstStr s -> PzStr s
-        A.AstIdent i -> evalIdent i
+        A.AstIdent i -> evalIdent p i
         A.AstSymb n i -> PzSymb $ Symb n i
-        A.AstList k _ l -> evalList k l
+        A.AstList k _ l -> evalList p k l
 
-evalIdent :: A.Ident -> PzVal
-evalIdent ident =
-    let k = PzSymb $ Symb Z ident
+evalIdent :: SourcePos -> Ident -> PzVal
+evalIdent p ident =
+    let k = PzSymb $ fromIdent ident
     in case dictGet k ctx of
-        PzUnit -> PzStr $ "undefined identifier: " ++ show ident
+        PzUnit -> PzStr $ "undefined identifier: " ++ show ident ++ ", at: " ++ show p
         val -> val
 
-evalList :: A.ListKind -> [A.AstExpr] -> PzVal
-evalList k es =
+evalList :: SourcePos -> A.ListKind -> [A.AstExpr] -> PzVal
+evalList p k es =
+    let toExpr ident = A.AstExpr p "" $ A.AstIdent ident in
     case k of
-        A.KindList -> PzList $ map eval es
-        A.KindDict -> PzDict $ M.fromList $ map evalDictEntry es
+        A.KindList -> evalForm $ toExpr identList : es
+        A.KindDict -> evalForm $ toExpr identDict : es
         A.KindForm -> evalForm es
+
+evalForm :: [A.AstExpr] -> PzVal
+evalForm [] = PzUnit
+evalForm (f:as) =
+    case evalExpr f of
+        PzFunc _ _ _ (BuiltIn ident) -> invokeFunc ident as
+        _ -> PzUnit
+
+invokeFunc :: Ident -> [A.AstExpr] -> PzVal
+invokeFunc (Ident ps) args =
+    case ps of
+        ["list"] -> list $ map evalExpr args
+        ["dict"] -> dict $ map evalDictEntry args
+        ["func"] -> PzUnit
+        _ -> PzUnit
 
 evalDictEntry :: A.AstExpr -> (PzVal, PzVal)
 evalDictEntry (A.AstExpr _ _ v) =
     case v of
         (A.AstList A.KindForm _ [k, v]) ->
-            (eval k, eval v)
+            (evalExpr k, evalExpr v)
 
         -- malformed dictionary entry
         _ -> (PzUnit, PzUnit)
-
-evalForm :: [A.AstExpr] -> PzVal
-evalForm [] = PzUnit
-evalForm (f:as) =
-    case eval f of
-        PzFunc _ _ _ (BuiltIn s) -> evalFunc s as
-        _ -> PzUnit
-
-evalFunc :: String -> [A.AstExpr] -> PzVal
-evalFunc name args =
-    case name of
-        "list" -> list $ map eval args
-        "dict" -> dict $ map evalDictEntry args
-        "func" -> PzUnit
-        _ -> PzUnit
-
 
 -- Built-ins
 

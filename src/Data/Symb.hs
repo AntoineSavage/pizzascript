@@ -1,14 +1,17 @@
 module Data.Symb where
 
-import Ast (Ident(Ident))
-import Data.Nat (Nat(Z))
+import Data.Ident ( Ident (Ident), ident )
+import Data.Nat ( Nat(Z) )
 
 data Symb
     = Symb Nat Ident
     deriving (Show, Eq, Ord)
 
+fromIdent :: Ident -> Symb
+fromIdent = Symb Z
+
 symb :: String -> Symb
-symb = Symb Z . Ident . (:[])
+symb = fromIdent . ident
 
 symbTrue :: Symb
 symbTrue = symb "true"
