@@ -1,8 +1,9 @@
 module Ast where
 
+import BuiltIns
 import Control.Monad ( liftM2, void )
 import Data.Char ( ord, isControl, isPrint )
-import Data.Ident (Ident(Ident) )
+import Data.Ident (Ident(Ident), ident )
 import Data.List ( intercalate )
 import Data.Nat ( len, unlen, Nat(..) )
 import Numeric ( readHex, showHex )
@@ -209,16 +210,18 @@ unparseExpr (AstExpr _ d v) =
         AstSymb n i -> unparseSymb n i
         AstList k d l -> unparseList k d unparseExpr l
 
+toForm :: SourcePos -> ListKind -> [AstExpr] -> [AstExpr]
+toForm p k =
+    let identToExpr ident = AstExpr p "" $ AstIdent ident
+    in case k of
+        KindList -> (identToExpr identList:)
+        KindDict -> (identToExpr identDict:)
+        KindForm -> id
+
 -- Quoting
 quote :: AstExpr -> AstExpr
 quote e@(AstExpr p d v) =
-    let toExpr = AstExpr p d
-        identToExpr s = AstExpr p "" $ AstIdent $ Ident [s]
-        toForm k = case k of
-            KindList -> (identToExpr "list":)
-            KindDict -> (identToExpr "dict":)
-            KindForm -> id
-    in
+    let toExpr = AstExpr p d in
     case v of
         -- Numbers and strings quote as themselves
         AstNum _ -> e
@@ -236,7 +239,7 @@ quote e@(AstExpr p d v) =
         -- Dicts quote as forms prepended with dict
         -- Forms quote as list with elements quoted recursively
         AstList k d es ->
-            toExpr $ AstList KindList d $ map quote $ toForm k es
+            toExpr $ AstList KindList d $ map quote $ toForm p k es
 
 unquote :: AstExpr -> Either String AstExpr
 unquote e@(AstExpr p d v) =

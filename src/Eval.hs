@@ -3,6 +3,9 @@ module Eval where
 import qualified Ast as A
 import qualified Data.Map as M
 
+-- TODO: Test Ast.toForm
+--   needs to fix path issues?
+import BuiltIns
 import Control.Monad ( forM_ )
 import Data.ArgPass ( ArgPass(Quote, Eval) )
 import Data.Args ( Args, varargs )
@@ -30,15 +33,6 @@ data FuncBody
     = BuiltIn Ident
     | Custom [A.AstExpr]
     deriving (Show, Eq, Ord)
-
-identList :: Ident
-identList = ident "list"
-
-identDict :: Ident
-identDict = ident "dict"
-
-identFunc :: Ident
-identFunc = ident "func"
 
 ctx :: PzVal
 ctx = PzDict $ M.fromList
@@ -71,10 +65,7 @@ evalIdent p ident =
 evalList :: SourcePos -> A.ListKind -> [A.AstExpr] -> PzVal
 evalList p k es =
     let toExpr ident = A.AstExpr p "" $ A.AstIdent ident in
-    case k of
-        A.KindList -> evalForm $ toExpr identList : es
-        A.KindDict -> evalForm $ toExpr identDict : es
-        A.KindForm -> evalForm es
+    evalForm $ A.toForm p k es
 
 evalForm :: [A.AstExpr] -> PzVal
 evalForm [] = PzUnit
