@@ -97,42 +97,12 @@ evalDictEntry (A.AstExpr _ _ v) =
 
         _ -> (PzUnit, PzUnit) -- Error: malformed dictionary entry
 
--- Built-ins
-
--- numbers
-numAdd :: PzVal -> PzVal -> PzVal
-numAdd (PzNum n) (PzNum m) = PzNum $ n + m
-numAdd _         _         = PzUnit -- Error: invalid type
-
--- strings
--- TODO
-
--- symbols
--- TODO
-
--- lists
 list :: [PzVal] -> PzVal
 list = PzList
 
-listHead :: PzVal -> PzVal
-listHead (PzList (h:_)) = h
-listHead _              = PzUnit -- Error: invalid type or empty
-
-listTail :: PzVal -> PzVal
-listTail (PzList (_:t)) = PzList t
-listTail _              = PzUnit -- Error: invalid type or empty
-
--- dictionaries
 dict :: [(PzVal, PzVal)] -> PzVal
 dict es = PzDict $ M.fromList es
 
 dictGet :: PzVal -> PzVal -> PzVal
 dictGet k (PzDict m) = fromMaybe PzUnit $ M.lookup k m
 dictGet _ _          = PzUnit -- Error: invalid type
-
-dictPut :: PzVal -> PzVal -> PzVal -> PzVal
-dictPut k v (PzDict m) = PzDict $ M.insert k v m
-dictPut _ _ _          = PzUnit -- Error: invalid type
-
--- functions
--- TODO
