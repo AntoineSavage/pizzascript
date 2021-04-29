@@ -10,45 +10,43 @@ import Data.Nat ( Nat(..) )
 import Types
 
 data Acc
-    = Acc PzVal Dict Stack
+    = Acc (Maybe PzVal) Dict [StackFrame]
     deriving (Show, Eq)
 
-data Stack
-    = Block [AstExpr] (Maybe Stack)
-    | Form AstPos [AstExpr] Stack
-    | Invoc AstPos Func [PzVal] [AstExpr] Stack
+data StackFrame
+    = Block [AstExpr]
+    | Form AstPos [AstExpr]
+    | Invoc AstPos Func [PzVal] [AstExpr]
     deriving (Show, Eq)
 
 evalAst :: Ast -> IO ()
-evalAst (Ast _ es) = go $ Acc PzUnit M.empty $ Block es Nothing
+evalAst (Ast _ es) = go $ Acc Nothing M.empty [Block es]
 
 go :: Acc -> IO ()
-go (Acc last ctx stack) =
-    case stack of
-        Block [] Nothing ->
-            -- empty stack: halt
-            return ()
+go (Acc result ctx []) = return () -- halt
+go (Acc result ctx (f:fs)) =
+    case f of
+        Block [] ->
+            -- block finished: pop stack
+            go $ Acc result ctx fs
         
-        Block [] (Just s) ->
-            -- return from block
-
-        Block (e:es) s ->
+        Block (e:es) ->
             -- evaluate expression
-            case evalExpr last ctx e $ Block es s of
+            case evalExpr ctx e $ Block es:fs of
                 Left s -> putStrLn s
                 Right acc -> go acc
 
-        Form _ [] s ->
+        Form _ [] ->
             -- empty form -> unit type
-            reduce $ Acc PzUnit ctx s
+            go $ Acc (Just PzUnit) ctx fs
         
-        Form p (f:as) s -> putStrLn "TODO: Go Form"
+        Form p (f:as) -> putStrLn "TODO: Go Form"
 
         _ -> putStrLn "TODO: Go _"
 
-evalExpr :: PzVal -> Dict -> AstExpr -> Stack -> Either String Acc
-evalExpr last ctx (AstExpr p _ v) stack = 
-    let set next = return $ Acc next ctx stack in
+evalExpr :: Dict -> AstExpr -> [StackFrame] -> Either String Acc
+evalExpr ctx (AstExpr p _ v) fs = 
+    let set result = return $ Acc (Just result) ctx fs in
     case v of
         -- num, str and symb evaluate to themselves
         AstNum n -> set $ PzNum n
@@ -62,7 +60,7 @@ evalExpr last ctx (AstExpr p _ v) stack =
                 val -> set val
 
         -- push form on stack
-        AstList k _ elems -> return $ Acc last ctx $ Form p (toForm p k elems) stack
+        AstList k _ elems -> return $ Acc Nothing ctx $ Form p (toForm p k elems) : fs
 
 invokeFunc :: Ident -> [AstExpr] -> IO PzVal
 invokeFunc (Ident ps) args =
