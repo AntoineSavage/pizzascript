@@ -106,4 +106,4 @@ dict es = return $ PzDict $ M.fromList es
 
 dictGet :: PzVal -> PzVal -> IO PzVal
 dictGet k (PzDict m) = return $ fromMaybe PzUnit $ M.lookup k m
-dictGet _ _          = return $ PzUnit -- Error: invalid type
+dictGet _ _          = return PzUnit -- Error: invalid type
