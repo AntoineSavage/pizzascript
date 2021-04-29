@@ -25,76 +25,112 @@ evalAst (Ast _ es) = go $ Acc Nothing M.empty [Block es]
 go :: Acc -> IO ()
 go (Acc result ctx []) = return () -- halt
 go (Acc result ctx (frame:frames)) =
-    case (frame, result) of
-        (Block [], _) ->
-            -- block finished: pop stack
-            go $ Acc result ctx fs
+    case frame of
+        Block [] ->
+            -- block finished: pop stack frame
+            go $ Acc result ctx frames
         
-        (Block (e:es), _) ->
+        Block (e:es) ->
             -- evaluate expression
-            case evalExpr ctx e $ Block es:fs of
+            case evalExpr ctx e $ Block es : frames of
                 Left s -> putStrLn s
                 Right acc -> go acc
 
-        (Form _ [], Nothing) ->
-            -- empty form -> unit type
-            go $ Acc (Just PzUnit) ctx fs
-        
-        (Form p (f:as), Nothing) ->
-            -- evaluate first form elem (i.e. the function)
-            case evalExpr ctx f $ Form p as of
-                Left s -> putStrLn $ s ++ "\n at: " ++ show p
+        Form p es ->
+            -- evaluate form
+            case evalForm result ctx p es frames of
+                Left s -> putStrLn s
                 Right acc -> go acc
         
-        (Form p as, Just f) ->
-            case f of
-            case evalExpr ctx f [] of
-                Left s -> putStrLn $ s ++ "\n at: " ++ show p
-                Right acc@(Acc mresult ) -> go acc
+        Invoc p f as es ->
+            -- evaluate function invocation
+            case evalInvoc result ctx p f as es frames of
+                Left s -> putStrLn s
+                Right acc -> go acc
 
-        _ -> putStrLn "TODO: Go _"
-
--- Returns Left if error
--- Sets Just result if not form
--- Sets Nothing and push form otherwise
 evalExpr :: Dict -> AstExpr -> [StackFrame] -> Either String Acc
 evalExpr ctx (AstExpr p _ v) frames = 
-    let set result = return $ Acc (Just result) ctx frames in
+    let setResult result = return $ Acc (Just result) ctx frames in
     case v of
-        -- num, str and symb evaluate to themselves
-        AstNum n -> set $ PzNum n
-        AstStr s -> set $ PzStr s
-        AstSymb symb -> set $  PzSymb symb
+        -- nums, strs and symbs return themselves
+        AstNum n -> setResult $ PzNum n
+        AstStr s -> setResult $ PzStr s
+        AstSymb symb -> setResult $  PzSymb symb
 
-        -- replace identifier with corresponding value from ctx
+        -- identifiers return the corresponding value in ctx
         AstIdent ident ->
             case dictGet (PzSymb $ fromIdent ident) ctx of
                 PzUnit -> Left $ "Error: Undefined identifier: " ++ show ident ++ "\n at: " ++ show p
-                val -> set val
+                val -> setResult val
 
-        -- push form on stack
+        -- lists push form on stack
         AstList k _ elems -> return $ Acc Nothing ctx $ Form p (toForm p k elems) : frames
 
-invokeFunc :: Ident -> [AstExpr] -> IO PzVal
-invokeFunc (Ident ps) args =
-    case ps of
-        ["list"] -> mapM evalExpr args >>= list
-        ["dict"] -> mapM evalDictEntry args >>= dict
-        ["func"] -> return PzUnit
-        _ -> return PzUnit -- Error: undefined identifier
+evalForm :: Maybe PzVal -> Dict -> AstPos -> [AstExpr] -> [StackFrame] -> Either String Acc
+evalForm result ctx p elems frames =
+    case result of
+        Nothing ->
+            case elems of
+                [] ->
+                    -- empty form -> return unit type
+                    return $ Acc (Just PzUnit) ctx frames
+        
+                e:es ->
+                    -- evaluate first form element (should be func)
+                    case evalExpr ctx e $ Form p es : frames of
+                        Left s -> Left $ s ++ "\n at: " ++ show p
+                        Right acc -> return acc
+        
+        Just f ->
+            -- first form element evaluated (should be func)
+            case f of
+                -- replace with invocation
+                PzFunc func -> return $ Acc Nothing ctx $ Invoc p func [] elems : frames
+                _ -> Left $ "Error: Malformed function invocation (first form element must be a function)\n at: " ++ show p
 
-evalDictEntry :: AstExpr -> IO (PzVal, PzVal)
-evalDictEntry (AstExpr _ _ v) =
-    case v of
-        (AstList KindForm _ [k, v]) -> liftM2 (,) (evalExpr k) (evalExpr v)
+evalInvoc :: Maybe PzVal -> Dict -> AstPos -> Func -> [PzVal] -> [AstExpr] -> [StackFrame] -> Either String Acc
+evalInvoc result ctx p f as es frames =
+    case result of
+        Nothing -> 
+            case es of
+                [] -> 
+                    -- all args evaluated: invoke function
+                    -- TODO take impure context symbol into account
+                    -- TODO take arg symbols into account
+                    Left "TODO: EvalInvoc"
 
-        _ -> return (PzUnit, PzUnit) -- Error: malformed dictionary entry
+                (e:es) ->
+                    -- evaluate function argument
+                    -- TODO take ArgPass into account
+                    case evalExpr ctx e $ Invoc p f as es : frames of
+                        Left s -> Left $ s ++ "\n at: " ++ show p
+                        Right acc -> return acc
+        
+        Just f ->
+            -- invocation finished: pop stack frame
+            return $ Acc result ctx frames
 
-list :: [PzVal] -> PzVal
-list = PzList
+-- 
+-- invokeFunc :: Ident -> [AstExpr] -> IO PzVal
+-- invokeFunc (Ident ps) args =
+--     case ps of
+--         ["list"] -> mapM evalExpr args >>= list
+--         ["dict"] -> mapM evalDictEntry args >>= dict
+--         ["func"] -> return PzUnit
+--         _ -> return PzUnit -- Error: undefined identifier
+-- 
+-- evalDictEntry :: AstExpr -> IO (PzVal, PzVal)
+-- evalDictEntry (AstExpr _ _ v) =
+--     case v of
+--         (AstList KindForm _ [k, v]) -> liftM2 (,) (evalExpr k) (evalExpr v)
+-- 
+--         _ -> return (PzUnit, PzUnit) -- Error: malformed dictionary entry
 
-dict :: Dict -> PzVal
-dict = PzDict
+-- list :: [PzVal] -> PzVal
+-- list = PzList
+-- 
+-- dict :: Dict -> PzVal
+-- dict = PzDict
 
 dictGet :: PzVal -> Dict -> PzVal
 dictGet k m = fromMaybe PzUnit $ M.lookup k m
