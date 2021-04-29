@@ -1,7 +1,7 @@
 module Main where
 
 import Ast ( parseAst )
-import Eval ( evalMany )
+import Eval ( exec, newAcc )
 import Text.Parsec.String ( parseFromFile )
 import Types ( Ast(Ast) )
 
@@ -10,4 +10,4 @@ main = do
     mast <- parseFromFile parseAst "example/main.pz"
     case mast of
         Left err -> print err
-        Right (Ast _ es) -> evalMany es
+        Right ast -> exec $ newAcc ast

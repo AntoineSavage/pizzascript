@@ -9,26 +9,22 @@ import Data.Maybe ( fromMaybe )
 import Data.Nat ( Nat(..) )
 import Types
 
+newtype Acc
+    = Acc PzDict
+    deriving (Show, Eq)
+
+newAcc :: Ast -> Acc
+newAcc (Ast _ es) = Acc M.empty 
+
+exec :: Acc -> IO ()
+exec (Acc ctx) = return ()
+
 ctx :: PzVal
 ctx = PzDict $ M.fromList
     [(PzSymb $ fromIdent identList, PzFunc Eval Nothing argsVariadic $ BuiltIn identList)
     , (PzSymb $ fromIdent identDict, PzFunc Quote Nothing argsVariadic $ BuiltIn identDict)
     , (PzSymb $ fromIdent identFunc, PzFunc Quote Nothing argsVariadic $ BuiltIn identFunc)
     ]
-
-evalMany :: [AstExpr] -> IO ()
-evalMany es = do
-    let ctx = M.empty
-    (ctx', v) <- evalRec ctx PzUnit es
-    print $ "Last ctx: " ++ show ctx'
-    return ()
-
-evalRec :: PzDict -> PzVal -> [AstExpr] -> IO (PzDict, PzVal)
-evalRec ctx v []     = return (ctx, v)
-evalRec ctx v (e:es) = do
-    v' <- evalExpr e
-    print v'
-    evalRec ctx v' es
 
 evalExpr :: AstExpr -> IO PzVal
 evalExpr (AstExpr p _ v) =
