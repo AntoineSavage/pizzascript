@@ -10,27 +10,9 @@ import Data.Args ( Args, varargs )
 import Data.Ident ( Ident(Ident), ident )
 import Data.Maybe ( fromMaybe )
 import Data.Nat ( Nat(..) )
+import Data.PzVal ( FuncBody(..), Dict, PzVal(..) )
 import Data.Symb ( Symb(..), fromIdent )
 import Text.Parsec ( SourcePos )
-
-data PzVal
-    = PzUnit
-    | PzNum Double
-    | PzStr String
-    | PzSymb Symb
-    | PzList [PzVal]
-    | PzDict Dict
-    | PzFunc ArgPass ImpureCtx Args FuncBody
-    deriving (Show, Eq, Ord)
-
-type Dict = M.Map PzVal PzVal
-
-type ImpureCtx = Maybe Symb
-
-data FuncBody
-    = BuiltIn Ident
-    | Custom [A.AstExpr]
-    deriving (Show, Eq, Ord)
 
 ctx :: PzVal
 ctx = PzDict $ M.fromList
