@@ -9,63 +9,60 @@ import Data.Maybe ( fromMaybe )
 import Data.Nat ( Nat(..) )
 import Types
 
-newtype Acc
-    = Acc Dict
+data Acc
+    = Acc PzVal Dict Stack
     deriving (Show, Eq)
 
-data StackFrame
-    = StackFrame PzVal (Maybe CurrentForm) [AstExpr]
-    deriving (Show, Eq)
-
-data CurrentForm
-    = CurrentForm Func [PzVal] [AstExpr]
+data Stack
+    = Block [AstExpr] (Maybe Stack)
+    | Form AstPos [AstExpr] Stack
+    | Invoc AstPos Func [PzVal] [AstExpr] Stack
     deriving (Show, Eq)
 
 evalAst :: Ast -> IO ()
-evalAst (Ast _ es) = return ()
+evalAst (Ast _ es) = go $ Acc PzUnit M.empty $ Block es Nothing
 
-newAcc :: Ast -> Acc
-newAcc (Ast _ es) = Acc M.empty 
+go :: Acc -> IO ()
+go (Acc last ctx stack) =
+    case stack of
+        Block [] Nothing ->
+            -- empty stack: halt
+            return ()
+        
+        Block [] (Just s) ->
+            -- return from block
 
-exec :: Acc -> IO ()
-exec (Acc ctx) = return ()
+        Block (e:es) s ->
+            -- evaluate expression
+            case evalExpr last ctx e $ Block es s of
+                Left s -> putStrLn s
+                Right acc -> go acc
 
-ctx :: PzVal
-ctx = PzDict $ M.fromList
-    [(PzSymb $ fromIdent identList, PzFunc $ Func Eval Nothing argsVariadic $ BodyBuiltIn identList)
-    , (PzSymb $ fromIdent identDict, PzFunc $ Func Quote Nothing argsVariadic $ BodyBuiltIn identDict)
-    , (PzSymb $ fromIdent identFunc, PzFunc $ Func Quote Nothing argsVariadic $ BodyBuiltIn identFunc)
-    ]
+        Form _ [] s ->
+            -- empty form -> unit type
+            reduce $ Acc PzUnit ctx s
+        
+        Form p (f:as) s -> putStrLn "TODO: Go Form"
 
-evalExpr :: AstExpr -> IO PzVal
-evalExpr (AstExpr p _ v) =
+        _ -> putStrLn "TODO: Go _"
+
+evalExpr :: PzVal -> Dict -> AstExpr -> Stack -> Either String Acc
+evalExpr last ctx (AstExpr p _ v) stack = 
+    let set next = return $ Acc next ctx stack in
     case v of
-        AstNum n -> return $ PzNum n
-        AstStr s -> return $ PzStr s
-        AstIdent i -> evalIdent p i
-        AstSymb n i -> return $ PzSymb $ Symb n i
-        AstList k _ l -> evalList p k l
+        -- num, str and symb evaluate to themselves
+        AstNum n -> set $ PzNum n
+        AstStr s -> set $ PzStr s
+        AstSymb symb -> set $  PzSymb symb
 
-evalIdent :: AstPos -> Ident -> IO PzVal
-evalIdent p ident = do
-    let k = PzSymb $ fromIdent ident
-    v <- dictGet k ctx
-    return $ case v of
-        PzUnit -> PzStr $ "undefined identifier: " ++ show ident ++ ", at: " ++ show p -- Error: undefined identifier
-        val -> val
+        -- replace identifier with corresponding value from ctx
+        AstIdent ident ->
+            case dictGet (PzSymb $ fromIdent ident) ctx of
+                PzUnit -> Left $ "Error: Undefined identifier: " ++ show ident ++ ", at: " ++ show p
+                val -> set val
 
-evalList :: AstPos -> AstListKind -> [AstExpr] -> IO PzVal
-evalList p k es =
-    evalForm $ toForm p k es
-
-evalForm :: [AstExpr] -> IO PzVal
-evalForm [] = return PzUnit
-evalForm (f:as) = do
-    PzFunc func <- evalExpr f
-    case func of
-        Func _ _ _ (BodyBuiltIn ident) -> invokeFunc ident as
-        -- TODO: Invoke custom function
-        _ -> return PzUnit -- Malformed function invocation
+        -- push form on stack
+        AstList k _ elems -> return $ Acc last ctx $ Form p (toForm p k elems) stack
 
 invokeFunc :: Ident -> [AstExpr] -> IO PzVal
 invokeFunc (Ident ps) args =
@@ -82,12 +79,11 @@ evalDictEntry (AstExpr _ _ v) =
 
         _ -> return (PzUnit, PzUnit) -- Error: malformed dictionary entry
 
-list :: [PzVal] -> IO PzVal
-list = return . PzList
+list :: [PzVal] -> PzVal
+list = PzList
 
-dict :: [(PzVal, PzVal)] -> IO PzVal
-dict es = return $ PzDict $ M.fromList es
+dict :: Dict -> PzVal
+dict = PzDict
 
-dictGet :: PzVal -> PzVal -> IO PzVal
-dictGet k (PzDict m) = return $ fromMaybe PzUnit $ M.lookup k m
-dictGet _ _          = return PzUnit -- Error: invalid type
+dictGet :: PzVal -> Dict -> PzVal
+dictGet k m = fromMaybe PzUnit $ M.lookup k m

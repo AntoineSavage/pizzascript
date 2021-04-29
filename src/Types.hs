@@ -41,7 +41,7 @@ data AstVal
     = AstNum Double
     | AstStr String
     | AstIdent Ident
-    | AstSymb Nat Ident
+    | AstSymb Symb
     | AstList AstListKind AstDoc [AstExpr]
     deriving (Show, Eq, Ord)
 

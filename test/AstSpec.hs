@@ -587,8 +587,8 @@ parseSymbVsUnparseSymbSpec = describe "parseSymb vs unparseSymb" $ do
     it "composes parseSymb and unparseSymb into id" $ do
         property $ \n ident -> do
             let s = "'" ++ unlen n '\'' ++ unparseIdent ident
-            parse parseSymb "tests" s `shouldBe` Right (n, ident)
-            uncurry unparseSymb <$> parse parseSymb "tests" s `shouldBe` Right s
+            parse parseSymb "tests" s `shouldBe` Right (Symb n ident)
+            unparseSymb <$> parse parseSymb "tests" s `shouldBe` Right s
 
 parseSymbSpec :: Spec
 parseSymbSpec = describe "parseSymb" $ do
@@ -598,22 +598,22 @@ parseSymbSpec = describe "parseSymb" $ do
     it "parses one quote followed by ident" $ do
         property $ \ident -> do
             let s = '\'' : unparseIdent ident
-            parse parseSymb "tests" s `shouldBe` Right (Z, ident)
+            parse parseSymb "tests" s `shouldBe` Right (Symb Z ident)
 
     it "parses n+1 quotes followed by ident" $ do
         property $ \n ident -> do
             let s = "'" ++ unlen n '\'' ++ unparseIdent ident
-            parse parseSymb "tests" s `shouldBe` Right (n, ident)
+            parse parseSymb "tests" s `shouldBe` Right (Symb n ident)
 
 unparseSymbSpec :: Spec
 unparseSymbSpec = describe "unparseSymb" $ do
     it "unparses one quote followed by ident" $ do
         property $ \ident -> do
-            unparseSymb Z ident `shouldBe` "'" ++ unparseIdent ident
+            unparseSymb (Symb Z ident) `shouldBe` "'" ++ unparseIdent ident
     
     it "unparses n+1 quotes followed by ident" $ do
         property $ \n ident -> do
-            unparseSymb n ident `shouldBe` "'" ++ unlen n '\'' ++ unparseIdent ident
+            unparseSymb (Symb n ident) `shouldBe` "'" ++ unlen n '\'' ++ unparseIdent ident
 
 -- Lists
 parseListVsUnparseListSpec :: Spec
@@ -770,7 +770,7 @@ parseExprSpec = describe "parseExpr" $ do
 
     it "parses symb" $ do
         property $ \(D d) n ident -> do
-            parse (parseExpr doc d) "tests" (unparseSymb n ident) `shouldBe` Right (AstExpr pos d $ AstSymb n ident)
+            parse (parseExpr doc d) "tests" (unparseSymb $ Symb n ident) `shouldBe` Right (AstExpr pos d $ AstSymb $ Symb n ident)
 
     it "parses list" $ do
         property $ \(D d1) (D d2) (Few es) -> do
@@ -793,7 +793,7 @@ unparseExprSpec = describe "unparseExpr" $ do
 
     it "unparses symb" $ do
         property $ \(D d) n ident -> do
-            unparseExpr (AstExpr pos d $ AstSymb n ident) `shouldBe` d ++ unparseSymb n ident
+            unparseExpr (AstExpr pos d $ AstSymb $ Symb n ident) `shouldBe` d ++ unparseSymb (Symb n ident)
 
     it "unparses list" $ do
         property $ \(D d1) (D d2) (Few es) -> do
@@ -822,11 +822,11 @@ quoteSpec = describe "quote" $ do
 
     it "converts identifiers into single-quoted symbols" $ do
         property $ \(D d) i -> do
-            quote (AstExpr pos d $ AstIdent i) `shouldBe` AstExpr pos d (AstSymb Z i)
+            quote (AstExpr pos d $ AstIdent i) `shouldBe` AstExpr pos d (AstSymb $ Symb Z i)
 
     it "converts symbols into one-more-quoted symbols" $ do
         property $ \(D d) n ident -> do
-            quote (AstExpr pos d $ AstSymb n ident) `shouldBe` AstExpr pos d (AstSymb (S n) ident)
+            quote (AstExpr pos d $ AstSymb $ Symb n ident) `shouldBe` AstExpr pos d (AstSymb $ Symb (S n) ident)
 
     it "converts lists into 'list-prefixed lists" $ do
         property $ \(D d1) (D d2) (Few es) -> do
@@ -862,11 +862,11 @@ unquoteSpec = describe "unquote" $ do
 
     it "converts single-quoted symbols into identifiers" $ do
         property $ \(D d) i -> do
-            unquote (AstExpr pos d $ AstSymb Z i) `shouldBe` Right (AstExpr pos d $ AstIdent i)
+            unquote (AstExpr pos d $ AstSymb $ Symb Z i) `shouldBe` Right (AstExpr pos d $ AstIdent i)
 
     it "converts two-or-more-quoted symbols into one-less-quoted symbol" $ do
         property $ \(D d) n i -> do
-            unquote (AstExpr pos d $ AstSymb (S n) i) `shouldBe` Right (AstExpr pos d $ AstSymb n i)
+            unquote (AstExpr pos d $ AstSymb $ Symb (S n) i) `shouldBe` Right (AstExpr pos d $ AstSymb $ Symb n i)
 
     it "converts lists into forms" $ do
         property $ \(D d1) (D d2) (UnquoteValids es) -> do

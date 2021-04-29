@@ -1,7 +1,6 @@
 module Ast where
 
-import BuiltIns ( toForm )
-import Types ( Ast(..), AstExpr(..), AstListKind(..), AstVal(..), Ident(..) )
+import BuiltIns ( fromIdent, toForm )
 import Control.Monad ( liftM2, void )
 import Data.Char ( ord, isControl, isPrint )
 import Data.List ( intercalate )
@@ -9,6 +8,7 @@ import Data.Nat ( len, unlen, Nat(..) )
 import Numeric ( readHex, showHex )
 import Text.Parsec
 import Text.Parsec.String ( Parser )
+import Types ( Ast(..), AstExpr(..), AstListKind(..), AstVal(..), Ident(..), Symb(..) )
 
 -- AST
 parseAst :: Parser Ast
@@ -116,11 +116,11 @@ unparseIdentPart :: String -> String
 unparseIdentPart p = p
 
 -- Symbols
-parseSymb :: Parser (Nat, Ident)
-parseSymb = liftM2 (,) (char '\'' >> len <$> many (char '\'')) parseIdent
+parseSymb :: Parser Symb
+parseSymb = liftM2 Symb (char '\'' >> len <$> many (char '\'')) parseIdent
 
-unparseSymb :: Nat -> Ident -> String
-unparseSymb n ident = "'" ++ unlen n '\'' ++ unparseIdent ident
+unparseSymb :: Symb -> String
+unparseSymb (Symb n ident) = "'" ++ unlen n '\'' ++ unparseIdent ident
 
 -- Lists
 parseList :: AstListKind -> Parser String -> (String -> Parser a) -> Parser ([a], String)
@@ -164,7 +164,7 @@ parseExpr doc d = liftM2 (`AstExpr` d) getPosition $
             AstNum <$> (parseNum <?> "number")
         <|> AstStr <$> (parseStr <?> "string")
         <|> AstIdent <$> (parseIdent <?> "identifier")
-        <|> uncurry AstSymb <$> (parseSymb <?> "symbol")
+        <|> AstSymb <$> (parseSymb <?> "symbol")
         <|> uncurry (flip $ AstList KindList) <$> (parseList KindList doc (parseExpr doc) <?> "list")
         <|> uncurry (flip $ AstList KindDict) <$> (parseList KindDict doc (parseExpr doc) <?> "dictionary")
         <|> uncurry (flip $ AstList KindForm) <$> (parseList KindForm doc (parseExpr doc) <?> "form")
@@ -175,7 +175,7 @@ unparseExpr (AstExpr _ d v) =
         AstNum n -> unparseNum n
         AstStr s -> unparseStr s
         AstIdent i -> unparseIdent i
-        AstSymb n i -> unparseSymb n i
+        AstSymb s -> unparseSymb s
         AstList k d l -> unparseList k d unparseExpr l
 
 -- Quoting
@@ -189,11 +189,11 @@ quote e@(AstExpr p d v) =
 
         -- Identifiers quote as symbols
         AstIdent ident ->
-            toExpr $ AstSymb Z ident 
+            toExpr $ AstSymb $ fromIdent ident 
 
         -- Symbols quote as themselves with one more quote
-        AstSymb n ident ->
-            toExpr $ AstSymb (S n) ident
+        AstSymb (Symb n ident) ->
+            toExpr $ AstSymb $ Symb (S n) ident
 
         -- Lists quote as forms prepended with list
         -- Dicts quote as forms prepended with dict
@@ -215,10 +215,10 @@ unquote e@(AstExpr p d v) =
 
         -- Symbols with one quote unquote to identifiers
         -- Symbols with two or more quotes unquote to symbols with one less quote
-        AstSymb n ident ->
+        AstSymb (Symb n ident) ->
             return $ toExpr $ case n of
                 Z -> AstIdent ident
-                (S n) -> AstSymb n ident
+                (S n) -> AstSymb $ Symb n ident
 
         -- Lists unquote to forms with elements unquoted recursively
         -- Dicts and forms cannot be unquoted

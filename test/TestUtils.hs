@@ -81,7 +81,7 @@ arbitraryExprOf depth = do
         0 -> AstNum <$> arbitrary
         1 -> AstStr <$> arbitrary
         2 -> AstIdent <$> arbitrary
-        3 -> liftM2 AstSymb arbitrary arbitrary
+        3 -> AstSymb <$> liftM2 Symb arbitrary arbitrary
         4 -> liftM3 AstList arbK arbD (arbMany 0 3 $ arbitraryExprOf $ depth-1)
 
 newtype UnquoteValid
@@ -105,5 +105,5 @@ arbitraryUnquoteValidOf depth = do
     AstExpr pos d <$> case choice of
         0 -> AstNum <$> arbitrary
         1 -> AstStr <$> arbitrary
-        2 -> liftM2 AstSymb arbitrary arbitrary
+        2 -> AstSymb <$> liftM2 Symb arbitrary arbitrary
         3 -> liftM2 (AstList KindList) arbD $ arbMany 0 3 $ arbitraryUnquoteValidOf $ depth-1
