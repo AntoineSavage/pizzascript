@@ -66,12 +66,11 @@ evalIdent :: SourcePos -> Ident -> PzVal
 evalIdent p ident =
     let k = PzSymb $ fromIdent ident
     in case dictGet k ctx of
-        PzUnit -> PzStr $ "undefined identifier: " ++ show ident ++ ", at: " ++ show p
+        PzUnit -> PzStr $ "undefined identifier: " ++ show ident ++ ", at: " ++ show p -- Error: undefined identifier
         val -> val
 
 evalList :: SourcePos -> A.ListKind -> [A.AstExpr] -> PzVal
 evalList p k es =
-    let toExpr ident = A.AstExpr p "" $ A.AstIdent ident in
     evalForm $ A.toForm p k es
 
 evalForm :: [A.AstExpr] -> PzVal
@@ -79,7 +78,8 @@ evalForm [] = PzUnit
 evalForm (f:as) =
     case evalExpr f of
         PzFunc _ _ _ (BuiltIn ident) -> invokeFunc ident as
-        _ -> PzUnit
+        -- TODO: Invoke custom function
+        _ -> PzUnit -- Malformed function invocation
 
 invokeFunc :: Ident -> [A.AstExpr] -> PzVal
 invokeFunc (Ident ps) args =
@@ -87,7 +87,7 @@ invokeFunc (Ident ps) args =
         ["list"] -> list $ map evalExpr args
         ["dict"] -> dict $ map evalDictEntry args
         ["func"] -> PzUnit
-        _ -> PzUnit
+        _ -> PzUnit -- Error: undefined identifier
 
 evalDictEntry :: A.AstExpr -> (PzVal, PzVal)
 evalDictEntry (A.AstExpr _ _ v) =
@@ -95,15 +95,14 @@ evalDictEntry (A.AstExpr _ _ v) =
         (A.AstList A.KindForm _ [k, v]) ->
             (evalExpr k, evalExpr v)
 
-        -- malformed dictionary entry
-        _ -> (PzUnit, PzUnit)
+        _ -> (PzUnit, PzUnit) -- Error: malformed dictionary entry
 
 -- Built-ins
 
 -- numbers
 numAdd :: PzVal -> PzVal -> PzVal
 numAdd (PzNum n) (PzNum m) = PzNum $ n + m
-numAdd _         _         = PzUnit
+numAdd _         _         = PzUnit -- Error: invalid type
 
 -- strings
 -- TODO
@@ -117,11 +116,11 @@ list = PzList
 
 listHead :: PzVal -> PzVal
 listHead (PzList (h:_)) = h
-listHead _              = PzUnit -- invalid type or empty
+listHead _              = PzUnit -- Error: invalid type or empty
 
 listTail :: PzVal -> PzVal
 listTail (PzList (_:t)) = PzList t
-listTail _              = PzUnit -- invalid type or empty
+listTail _              = PzUnit -- Error: invalid type or empty
 
 -- dictionaries
 dict :: [(PzVal, PzVal)] -> PzVal
@@ -129,11 +128,11 @@ dict es = PzDict $ M.fromList es
 
 dictGet :: PzVal -> PzVal -> PzVal
 dictGet k (PzDict m) = fromMaybe PzUnit $ M.lookup k m
-dictGet _ _          = PzUnit -- Invalid type
+dictGet _ _          = PzUnit -- Error: invalid type
 
 dictPut :: PzVal -> PzVal -> PzVal -> PzVal
 dictPut k v (PzDict m) = PzDict $ M.insert k v m
-dictPut _ _ _          = PzUnit -- Invalid type
+dictPut _ _ _          = PzUnit -- Error: invalid type
 
 -- functions
 -- TODO
