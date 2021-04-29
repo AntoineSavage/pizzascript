@@ -24,29 +24,42 @@ evalAst (Ast _ es) = go $ Acc Nothing M.empty [Block es]
 
 go :: Acc -> IO ()
 go (Acc result ctx []) = return () -- halt
-go (Acc result ctx (f:fs)) =
-    case f of
-        Block [] ->
+go (Acc result ctx (frame:frames)) =
+    case (frame, result) of
+        (Block [], _) ->
             -- block finished: pop stack
             go $ Acc result ctx fs
         
-        Block (e:es) ->
+        (Block (e:es), _) ->
             -- evaluate expression
             case evalExpr ctx e $ Block es:fs of
                 Left s -> putStrLn s
                 Right acc -> go acc
 
-        Form _ [] ->
+        (Form _ [], Nothing) ->
             -- empty form -> unit type
             go $ Acc (Just PzUnit) ctx fs
         
-        Form p (f:as) -> putStrLn "TODO: Go Form"
+        (Form p (f:as), Nothing) ->
+            -- evaluate first form elem (i.e. the function)
+            case evalExpr ctx f $ Form p as of
+                Left s -> putStrLn $ s ++ "\n at: " ++ show p
+                Right acc -> go acc
+        
+        (Form p as, Just f) ->
+            case f of
+            case evalExpr ctx f [] of
+                Left s -> putStrLn $ s ++ "\n at: " ++ show p
+                Right acc@(Acc mresult ) -> go acc
 
         _ -> putStrLn "TODO: Go _"
 
+-- Returns Left if error
+-- Sets Just result if not form
+-- Sets Nothing and push form otherwise
 evalExpr :: Dict -> AstExpr -> [StackFrame] -> Either String Acc
-evalExpr ctx (AstExpr p _ v) fs = 
-    let set result = return $ Acc (Just result) ctx fs in
+evalExpr ctx (AstExpr p _ v) frames = 
+    let set result = return $ Acc (Just result) ctx frames in
     case v of
         -- num, str and symb evaluate to themselves
         AstNum n -> set $ PzNum n
@@ -56,11 +69,11 @@ evalExpr ctx (AstExpr p _ v) fs =
         -- replace identifier with corresponding value from ctx
         AstIdent ident ->
             case dictGet (PzSymb $ fromIdent ident) ctx of
-                PzUnit -> Left $ "Error: Undefined identifier: " ++ show ident ++ ", at: " ++ show p
+                PzUnit -> Left $ "Error: Undefined identifier: " ++ show ident ++ "\n at: " ++ show p
                 val -> set val
 
         -- push form on stack
-        AstList k _ elems -> return $ Acc Nothing ctx $ Form p (toForm p k elems) : fs
+        AstList k _ elems -> return $ Acc Nothing ctx $ Form p (toForm p k elems) : frames
 
 invokeFunc :: Ident -> [AstExpr] -> IO PzVal
 invokeFunc (Ident ps) args =
