@@ -12,15 +12,15 @@ data ArgPass
     deriving (Show, Eq, Ord)
 
 
-argPassToSymb :: ArgPass -> Symb
-argPassToSymb Eval        = symbEval
-argPassToSymb Quote       = symbQuote
-argPassToSymb Unquote     = symbUnquote
-argPassToSymb DeepQuote   = symbDeepQuote
-argPassToSymb DeepUnquote = symbDeepUnquote
+toSymb :: ArgPass -> Symb
+toSymb Eval        = symbEval
+toSymb Quote       = symbQuote
+toSymb Unquote     = symbUnquote
+toSymb DeepQuote   = symbDeepQuote
+toSymb DeepUnquote = symbDeepUnquote
 
-symbToArgPass :: Symb -> Maybe ArgPass
-symbToArgPass symb =
+fromSymb :: Symb -> Maybe ArgPass
+fromSymb symb =
     let m = M.fromList
             [ (symbEval, Eval)
             , (symbQuote, Quote)
@@ -29,3 +29,18 @@ symbToArgPass symb =
             , (symbDeepUnquote, DeepUnquote)
             ]
     in  M.lookup symb m
+
+symbEval :: Symb
+symbEval = symb "eval"
+
+symbQuote :: Symb
+symbQuote = symb "quote"
+
+symbUnquote :: Symb
+symbUnquote = symb "unquote"
+
+symbDeepQuote :: Symb
+symbDeepQuote = symb "deep_quote"
+
+symbDeepUnquote :: Symb
+symbDeepUnquote = symb "deep_unquote"
