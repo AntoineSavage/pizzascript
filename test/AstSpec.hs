@@ -4,8 +4,10 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Ast
+import BuiltIns
 import Control.Monad
 import Data.Either
+import Data.Ident
 import Data.List
 import Data.Nat
 import Data.NatSpec
@@ -66,6 +68,9 @@ spec = do
     quoteVsUnquoteSpec
     quoteSpec
     unquoteSpec
+
+    -- Misc
+    toFormSpec
 
 -- AST
 docSpec :: Spec
@@ -851,12 +856,12 @@ quoteSpec = describe "quote" $ do
     it "converts lists into 'list-prefixed lists" $ do
         property $ \(D d1) (D d2) (Few es) -> do
             quote (AstExpr pos d1 $ AstList KindList d2 es) `shouldBe`
-                AstExpr pos d1 (AstList KindList d2 $ map quote $ identList : es)
+                AstExpr pos d1 (AstList KindList d2 $ map quote $ toForm pos KindList es)
 
     it "converts dicts into 'dict-prefixed lists" $ do
         property $ \(D d1) (D d2) (Few es) -> do
             quote (AstExpr pos d1 $ AstList KindDict d2 es) `shouldBe`
-                AstExpr pos d1 (AstList KindList d2 $ map quote $ identDict : es)
+                AstExpr pos d1 (AstList KindList d2 $ map quote $ toForm pos KindDict es)
 
     it "converts forms into lists" $ do
         property $ \(D d1) (D d2) (Few es) -> do
@@ -907,8 +912,19 @@ unquoteSpec = describe "unquote" $ do
             unquote (AstExpr pos d1 form) `shouldBe`
                 Left ("Unquote: unexpected form: " ++ unparseList KindForm d2 unparseExpr es)
 
-identList = AstExpr pos "" $ AstIdent $ Ident ["list"]
-identDict = AstExpr pos "" $ AstIdent $ Ident ["dict"]
+-- Misc
+toFormSpec :: Spec
+toFormSpec = describe "toForm" $ do
+    it "converts empty list" $ do
+        toForm pos KindList [] `shouldBe` [AstExpr pos "" $ AstIdent $ identList]
+        toForm pos KindDict [] `shouldBe` [AstExpr pos "" $ AstIdent $ identDict]
+        toForm pos KindForm [] `shouldBe` []
+
+    it "converts list" $ do
+        property $ \es -> do
+            toForm pos KindList es `shouldBe` (AstExpr pos "" $ AstIdent $ identList) : es
+            toForm pos KindDict es `shouldBe` (AstExpr pos "" $ AstIdent $ identDict) : es
+            toForm pos KindForm es `shouldBe` es
 
 -- Utils
 digits :: [Char]

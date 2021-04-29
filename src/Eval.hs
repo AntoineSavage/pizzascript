@@ -3,9 +3,7 @@ module Eval where
 import qualified Ast as A
 import qualified Data.Map as M
 
--- TODO: Test Ast.toForm
---   needs to fix path issues?
-import BuiltIns
+import BuiltIns ( identList, identDict, identFunc )
 import Control.Monad ( forM_ )
 import Data.ArgPass ( ArgPass(Quote, Eval) )
 import Data.Args ( Args, varargs )

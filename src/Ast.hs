@@ -210,14 +210,6 @@ unparseExpr (AstExpr _ d v) =
         AstSymb n i -> unparseSymb n i
         AstList k d l -> unparseList k d unparseExpr l
 
-toForm :: SourcePos -> ListKind -> [AstExpr] -> [AstExpr]
-toForm p k =
-    let identToExpr ident = AstExpr p "" $ AstIdent ident
-    in case k of
-        KindList -> (identToExpr identList:)
-        KindDict -> (identToExpr identDict:)
-        KindForm -> id
-
 -- Quoting
 quote :: AstExpr -> AstExpr
 quote e@(AstExpr p d v) =
@@ -267,3 +259,12 @@ unquote e@(AstExpr p d v) =
                 KindList -> toExpr . AstList KindForm d <$> mapM unquote es
                 KindDict -> Left $ "Unquote: unexpected dictionary: " ++ unparseList KindDict d unparseExpr es
                 KindForm -> Left $ "Unquote: unexpected form: " ++ unparseList KindForm d unparseExpr es
+
+-- Misc
+toForm :: SourcePos -> ListKind -> [AstExpr] -> [AstExpr]
+toForm p k =
+    let identToExpr ident = AstExpr p "" $ AstIdent ident
+    in case k of
+        KindList -> (identToExpr identList:)
+        KindDict -> (identToExpr identDict:)
+        KindForm -> id
