@@ -1,46 +1,14 @@
 module Ast where
 
-import BuiltIns
+import BuiltIns ( toForm )
+import Types ( Ast(..), AstExpr(..), AstVal(..), Ident(..), ListKind(..) )
 import Control.Monad ( liftM2, void )
 import Data.Char ( ord, isControl, isPrint )
-import Data.Ident (Ident(Ident), ident )
 import Data.List ( intercalate )
 import Data.Nat ( len, unlen, Nat(..) )
 import Numeric ( readHex, showHex )
 import Text.Parsec
 import Text.Parsec.String ( Parser )
-
-data Ast
-    = Ast String [AstExpr]
-    deriving (Show, Eq)
-
-data AstExpr
-    = AstExpr SourcePos String ExprVal
-    deriving (Show)
-
--- Ignore position in Eq and Ord
-instance Eq AstExpr where 
-    (==) (AstExpr _ d1 v1) (AstExpr _ d2 v2) = d1 == d2 && v1 == v2
-
-instance Ord AstExpr where 
-    compare (AstExpr _ d1 v1) (AstExpr _ d2 v2) =
-        let dCmp = compare d1 d2
-            vCmp = compare v1 v2
-        in if dCmp /= EQ then dCmp else vCmp 
-
-data ExprVal
-    = AstNum Double
-    | AstStr String
-    | AstIdent Ident
-    | AstSymb Nat Ident
-    | AstList ListKind String [AstExpr]
-    deriving (Show, Eq, Ord)
-
-data ListKind
-    = KindList
-    | KindDict
-    | KindForm
-    deriving (Show, Eq, Ord)
 
 -- AST
 parseAst :: Parser Ast
@@ -259,12 +227,3 @@ unquote e@(AstExpr p d v) =
                 KindList -> toExpr . AstList KindForm d <$> mapM unquote es
                 KindDict -> Left $ "Unquote: unexpected dictionary: " ++ unparseList KindDict d unparseExpr es
                 KindForm -> Left $ "Unquote: unexpected form: " ++ unparseList KindForm d unparseExpr es
-
--- Misc
-toForm :: SourcePos -> ListKind -> [AstExpr] -> [AstExpr]
-toForm p k =
-    let identToExpr ident = AstExpr p "" $ AstIdent ident
-    in case k of
-        KindList -> (identToExpr identList:)
-        KindDict -> (identToExpr identDict:)
-        KindForm -> id

@@ -7,13 +7,12 @@ import Ast
 import BuiltIns
 import Control.Monad
 import Data.Either
-import Data.Ident
 import Data.List
 import Data.Nat
 import Data.NatSpec
+import TestUtils
 import Text.Parsec
-import Text.Parsec.String
-import Text.Parsec.Pos
+import Types
 
 spec :: Spec
 spec = do
@@ -68,9 +67,6 @@ spec = do
     quoteVsUnquoteSpec
     quoteSpec
     unquoteSpec
-
-    -- Misc
-    toFormSpec
 
 -- AST
 docSpec :: Spec
@@ -585,15 +581,6 @@ unparseIdentPartSpec = describe "unparseIdentPart" $ do
         property $ \s -> do
             unparseIdentPart s `shouldBe` s
 
-validFirsts :: [Char]
-validFirsts = underscore : lettersUpper ++ lettersLower ++ accentChars
-
-invalidFirsts :: [Char]
-invalidFirsts = digits ++ symbols ++ escapees
-
-validNexts :: [Char]
-validNexts = underscore : digits ++ lettersUpper ++ lettersLower ++ accentChars
-
 -- Symbols
 parseSymbVsUnparseSymbSpec :: Spec
 parseSymbVsUnparseSymbSpec = describe "parseSymb vs unparseSymb" $ do
@@ -758,16 +745,7 @@ unparseManySpec = describe "unparseMany" $ do
         property $ \(D d) (Few es) -> do
             unparseMany' d es `shouldBe` concatMap unparseElem es ++ d
 
-parseList' k = parse (parseList k doc parseElem) "tests"
-unparseList' k d = unparseList k d unparseElem
-
-parseMany' = parse (parseMany (many space) parseElem $ void $ char '$') "tests"
-unparseMany' d es = unparseMany d unparseElem es
-
-kinds = [ KindList, KindDict, KindForm ]
- 
 -- Expressions
-
 parseExprVsUnparseExprSpec :: Spec
 parseExprVsUnparseExprSpec = describe "parseExpr vs unparseExpr" $ do
     it "composes parseExpr and unparseExpr into id" $ do
@@ -822,10 +800,7 @@ unparseExprSpec = describe "unparseExpr" $ do
             forM_ kinds $ \k -> do
                 unparseExpr (AstExpr pos d1 $ AstList k d2 es) `shouldBe` d1 ++ unparseList k d2 unparseExpr es
 
-pos = newPos "" 0 0
-
 -- Quoting
-
 quoteVsUnquoteSpec :: Spec
 quoteVsUnquoteSpec = describe "quote vs unquote" $ do
     it "composes quote and unquote into id" $ do
@@ -912,125 +887,8 @@ unquoteSpec = describe "unquote" $ do
             unquote (AstExpr pos d1 form) `shouldBe`
                 Left ("Unquote: unexpected form: " ++ unparseList KindForm d2 unparseExpr es)
 
--- Misc
-toFormSpec :: Spec
-toFormSpec = describe "toForm" $ do
-    it "converts empty list" $ do
-        toForm pos KindList [] `shouldBe` [AstExpr pos "" $ AstIdent $ identList]
-        toForm pos KindDict [] `shouldBe` [AstExpr pos "" $ AstIdent $ identDict]
-        toForm pos KindForm [] `shouldBe` []
+parseList' k = parse (parseList k doc parseElem) "tests"
+unparseList' k d = unparseList k d unparseElem
 
-    it "converts list" $ do
-        property $ \es -> do
-            toForm pos KindList es `shouldBe` (AstExpr pos "" $ AstIdent $ identList) : es
-            toForm pos KindDict es `shouldBe` (AstExpr pos "" $ AstIdent $ identDict) : es
-            toForm pos KindForm es `shouldBe` es
-
--- Utils
-digits :: [Char]
-digits = ['0'..'9']
-
-lettersUpper :: [Char]
-lettersUpper = ['A'..'Z']
-
-lettersLower :: [Char]
-lettersLower = ['a'..'z']
-
-symbols :: [Char]
-symbols = " !#$%&'()*+,-.:;<=>?@[]^`{|}~"
-
-noEscapeChars :: [Char]
-noEscapeChars = digits ++ lettersUpper ++ lettersLower ++ symbols
-
-accentChars :: String
-accentChars = "àâäĉèéêëĝĥîïĵôöŝùûüŵŷÿ"
-
-escapees :: [Char]
-escapees = "\"\\\b\f\n\r\t"
-
-doubleQuoteChar :: Char
-doubleQuoteChar = '"'
-
-backslashChar :: Char
-backslashChar = '\\'
-
-solidusChar :: Char
-solidusChar = '/'
-
-underscore :: Char
-underscore = '_'
-
-instance Arbitrary Ident where
-    arbitrary = Ident <$> arbMany 1 5 (do IdentPart p <- arbitrary; return p)
-
-newtype IdentPart = IdentPart String deriving (Show, Eq)
-instance Arbitrary IdentPart where
-    arbitrary = IdentPart <$> liftM2 (:) (elements validFirsts) (chooseInt (0, 5) >>= flip vectorOf (elements validNexts))
-
-newtype D = D String deriving (Show, Eq)
-instance Arbitrary D where arbitrary = D <$> elements [" ", "\n", "\t", "\r\n", "\v"]
-arbD = do D d <- arbitrary; return d
-
-arbK :: Gen ListKind
-arbK = elements kinds
-
-arbMany :: Int -> Int -> Gen a -> Gen [a]
-arbMany min max me = chooseInt (min, max) >>= flip vectorOf me
-
-newtype Few a = Few [a] deriving (Show, Eq)
-instance Arbitrary a => Arbitrary (Few a) where
-    arbitrary = Few <$> arbMany 0 5 arbitrary
-
-data Elem
-    = Elem String Int
-    deriving (Show, Eq)
-
-instance Arbitrary Elem where
-    arbitrary = do
-        D d <- arbitrary
-        Positive x <- arbitrary
-        return $ Elem d x
-
-parseElem :: String -> Parser Elem
-parseElem s = Elem s . (read :: String -> Int) <$> many1 digit
-
-unparseElem :: Elem -> String
-unparseElem (Elem s x) = s ++ show x
-
-instance Arbitrary AstExpr where
-    arbitrary = chooseInt (0, 3) >>= arbitraryExprOf
-
-arbitraryExprOf depth = do
-    -- Num: 0, Str: 1, Ident: 2, Symb: 3, List: 4
-    D d <- arbitrary
-    choice <- chooseInt (0, if depth <= 0 then 3 else 4)
-    AstExpr pos d <$> case choice of
-        0 -> AstNum <$> arbitrary
-        1 -> AstStr <$> arbitrary
-        2 -> AstIdent <$> arbitrary
-        3 -> liftM2 AstSymb arbitrary arbitrary
-        4 -> liftM3 AstList arbK arbD (arbMany 0 3 $ arbitraryExprOf $ depth-1)
-
-newtype UnquoteValid
-    = UnquoteValid AstExpr
-    deriving (Show, Eq)
-
-newtype UnquoteValids
-    = UnquoteValids [AstExpr]
-    deriving (Show, Eq)
-
-instance Arbitrary UnquoteValid where
-    arbitrary = UnquoteValid <$> (chooseInt (0, 3) >>= arbitraryUnquoteValidOf)
-
-instance Arbitrary UnquoteValids where
-    arbitrary = UnquoteValids <$> arbMany 0 3 (do UnquoteValid e <- arbitrary; return e)
-
-arbitraryUnquoteValidOf depth = do
-    -- Num: 0, Str: 1, Symb: 2, List: 3
-    D d <- arbitrary
-    choice <- chooseInt (0, if depth <= 0 then 2 else 3)
-    AstExpr pos d <$> case choice of
-        0 -> AstNum <$> arbitrary
-        1 -> AstStr <$> arbitrary
-        2 -> liftM2 AstSymb arbitrary arbitrary
-        3 -> liftM2 (AstList KindList) arbD $ arbMany 0 3 $ arbitraryUnquoteValidOf $ depth-1
+parseMany' = parse (parseMany (many space) parseElem $ void $ char '$') "tests"
+unparseMany' d es = unparseMany d unparseElem es
