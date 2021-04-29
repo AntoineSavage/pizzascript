@@ -4,7 +4,7 @@ import qualified Ast as A
 import qualified Data.Map as M
 
 import BuiltIns ( identList, identDict, identFunc )
-import Control.Monad ( forM_ )
+import Control.Monad ( forM_, liftM2 )
 import Data.ArgPass ( ArgPass(Quote, Eval) )
 import Data.Args ( Args, varargs )
 import Data.Ident ( Ident(Ident), ident )
@@ -49,60 +49,61 @@ evalMany es = do
 evalRec :: Dict -> PzVal -> [A.AstExpr] -> IO (Dict, PzVal)
 evalRec ctx v []     = return (ctx, v)
 evalRec ctx v (e:es) = do
-    let v' = evalExpr e
+    v' <- evalExpr e
     print v'
     evalRec ctx v' es
 
-evalExpr :: A.AstExpr -> PzVal
+evalExpr :: A.AstExpr -> IO PzVal
 evalExpr (A.AstExpr p _ v) =
     case v of
-        A.AstNum n -> PzNum n
-        A.AstStr s -> PzStr s
+        A.AstNum n -> return $ PzNum n
+        A.AstStr s -> return $ PzStr s
         A.AstIdent i -> evalIdent p i
-        A.AstSymb n i -> PzSymb $ Symb n i
+        A.AstSymb n i -> return $ PzSymb $ Symb n i
         A.AstList k _ l -> evalList p k l
 
-evalIdent :: SourcePos -> Ident -> PzVal
-evalIdent p ident =
+evalIdent :: SourcePos -> Ident -> IO PzVal
+evalIdent p ident = do
     let k = PzSymb $ fromIdent ident
-    in case dictGet k ctx of
+    v <- dictGet k ctx
+    return $ case v of
         PzUnit -> PzStr $ "undefined identifier: " ++ show ident ++ ", at: " ++ show p -- Error: undefined identifier
         val -> val
 
-evalList :: SourcePos -> A.ListKind -> [A.AstExpr] -> PzVal
+evalList :: SourcePos -> A.ListKind -> [A.AstExpr] -> IO PzVal
 evalList p k es =
     evalForm $ A.toForm p k es
 
-evalForm :: [A.AstExpr] -> PzVal
-evalForm [] = PzUnit
-evalForm (f:as) =
-    case evalExpr f of
+evalForm :: [A.AstExpr] -> IO PzVal
+evalForm [] = return PzUnit
+evalForm (f:as) = do
+    f' <- evalExpr f
+    case f' of
         PzFunc _ _ _ (BuiltIn ident) -> invokeFunc ident as
         -- TODO: Invoke custom function
-        _ -> PzUnit -- Malformed function invocation
+        _ -> return PzUnit -- Malformed function invocation
 
-invokeFunc :: Ident -> [A.AstExpr] -> PzVal
+invokeFunc :: Ident -> [A.AstExpr] -> IO PzVal
 invokeFunc (Ident ps) args =
     case ps of
-        ["list"] -> list $ map evalExpr args
-        ["dict"] -> dict $ map evalDictEntry args
-        ["func"] -> PzUnit
-        _ -> PzUnit -- Error: undefined identifier
+        ["list"] -> mapM evalExpr args >>= list
+        ["dict"] -> mapM evalDictEntry args >>= dict
+        ["func"] -> return PzUnit
+        _ -> return PzUnit -- Error: undefined identifier
 
-evalDictEntry :: A.AstExpr -> (PzVal, PzVal)
+evalDictEntry :: A.AstExpr -> IO (PzVal, PzVal)
 evalDictEntry (A.AstExpr _ _ v) =
     case v of
-        (A.AstList A.KindForm _ [k, v]) ->
-            (evalExpr k, evalExpr v)
+        (A.AstList A.KindForm _ [k, v]) -> liftM2 (,) (evalExpr k) (evalExpr v)
 
-        _ -> (PzUnit, PzUnit) -- Error: malformed dictionary entry
+        _ -> return (PzUnit, PzUnit) -- Error: malformed dictionary entry
 
-list :: [PzVal] -> PzVal
-list = PzList
+list :: [PzVal] -> IO PzVal
+list = return . PzList
 
-dict :: [(PzVal, PzVal)] -> PzVal
-dict es = PzDict $ M.fromList es
+dict :: [(PzVal, PzVal)] -> IO PzVal
+dict es = return $ PzDict $ M.fromList es
 
-dictGet :: PzVal -> PzVal -> PzVal
-dictGet k (PzDict m) = fromMaybe PzUnit $ M.lookup k m
-dictGet _ _          = PzUnit -- Error: invalid type
+dictGet :: PzVal -> PzVal -> IO PzVal
+dictGet k (PzDict m) = return $ fromMaybe PzUnit $ M.lookup k m
+dictGet _ _          = return $ PzUnit -- Error: invalid type
