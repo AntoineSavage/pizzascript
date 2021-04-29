@@ -39,10 +39,19 @@ ctx = PzDict $ M.fromList
     , (PzSymb $ fromIdent identFunc, PzFunc Quote Nothing varargs $ BuiltIn identFunc)
     ]
 
-eval :: [A.AstExpr] -> IO ()
-eval es = do
-    forM_ es $ \e -> do
-        print $ evalExpr e
+evalMany :: [A.AstExpr] -> IO ()
+evalMany es = do
+    let ctx = M.empty
+    (ctx', v) <- evalRec ctx PzUnit es
+    print $ "Last ctx: " ++ show ctx'
+    return ()
+
+evalRec :: Dict -> PzVal -> [A.AstExpr] -> IO (Dict, PzVal)
+evalRec ctx v []     = return (ctx, v)
+evalRec ctx v (e:es) = do
+    let v' = evalExpr e
+    print v'
+    evalRec ctx v' es
 
 evalExpr :: A.AstExpr -> PzVal
 evalExpr (A.AstExpr p _ v) =
