@@ -14,14 +14,14 @@ symb = fromIdent . ident
 fromIdent :: Ident -> Symb
 fromIdent = Symb Z
 
-toSymb :: PzArgPass -> Symb
+toSymb :: FuncArgPass -> Symb
 toSymb Eval        = symbEval
 toSymb Quote       = symbQuote
 toSymb Unquote     = symbUnquote
 toSymb DeepQuote   = symbDeepQuote
 toSymb DeepUnquote = symbDeepUnquote
 
-fromSymb :: Symb -> Maybe PzArgPass
+fromSymb :: Symb -> Maybe FuncArgPass
 fromSymb symb =
     let m = M.fromList
             [ (symbEval, Eval)
@@ -32,7 +32,7 @@ fromSymb symb =
             ]
     in  M.lookup symb m
 
-toForm :: AstPos -> ListKind -> [AstExpr] -> [AstExpr]
+toForm :: AstPos -> AstListKind -> [AstExpr] -> [AstExpr]
 toForm p k =
     let identToExpr ident = AstExpr p "" $ AstIdent ident
     in case k of
@@ -73,5 +73,5 @@ symbDeepQuote = symb "deep_quote"
 symbDeepUnquote :: Symb
 symbDeepUnquote = symb "deep_unquote"
 
-argsVariadic :: PzArgs
-argsVariadic = Variadic symbArgs
+argsVariadic :: FuncArgs
+argsVariadic = ArgsVaria symbArgs

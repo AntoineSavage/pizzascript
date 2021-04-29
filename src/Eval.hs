@@ -10,8 +10,19 @@ import Data.Nat ( Nat(..) )
 import Types
 
 newtype Acc
-    = Acc PzDict
+    = Acc Dict
     deriving (Show, Eq)
+
+data StackFrame
+    = StackFrame PzVal (Maybe CurrentForm) [AstExpr]
+    deriving (Show, Eq)
+
+data CurrentForm
+    = CurrentForm Func [PzVal] [AstExpr]
+    deriving (Show, Eq)
+
+evalAst :: Ast -> IO ()
+evalAst (Ast _ es) = return ()
 
 newAcc :: Ast -> Acc
 newAcc (Ast _ es) = Acc M.empty 
@@ -21,9 +32,9 @@ exec (Acc ctx) = return ()
 
 ctx :: PzVal
 ctx = PzDict $ M.fromList
-    [(PzSymb $ fromIdent identList, PzFunc Eval Nothing argsVariadic $ BuiltIn identList)
-    , (PzSymb $ fromIdent identDict, PzFunc Quote Nothing argsVariadic $ BuiltIn identDict)
-    , (PzSymb $ fromIdent identFunc, PzFunc Quote Nothing argsVariadic $ BuiltIn identFunc)
+    [(PzSymb $ fromIdent identList, PzFunc $ Func Eval Nothing argsVariadic $ BodyBuiltIn identList)
+    , (PzSymb $ fromIdent identDict, PzFunc $ Func Quote Nothing argsVariadic $ BodyBuiltIn identDict)
+    , (PzSymb $ fromIdent identFunc, PzFunc $ Func Quote Nothing argsVariadic $ BodyBuiltIn identFunc)
     ]
 
 evalExpr :: AstExpr -> IO PzVal
@@ -43,16 +54,16 @@ evalIdent p ident = do
         PzUnit -> PzStr $ "undefined identifier: " ++ show ident ++ ", at: " ++ show p -- Error: undefined identifier
         val -> val
 
-evalList :: AstPos -> ListKind -> [AstExpr] -> IO PzVal
+evalList :: AstPos -> AstListKind -> [AstExpr] -> IO PzVal
 evalList p k es =
     evalForm $ toForm p k es
 
 evalForm :: [AstExpr] -> IO PzVal
 evalForm [] = return PzUnit
 evalForm (f:as) = do
-    f' <- evalExpr f
-    case f' of
-        PzFunc _ _ _ (BuiltIn ident) -> invokeFunc ident as
+    PzFunc func <- evalExpr f
+    case func of
+        Func _ _ _ (BodyBuiltIn ident) -> invokeFunc ident as
         -- TODO: Invoke custom function
         _ -> return PzUnit -- Malformed function invocation
 

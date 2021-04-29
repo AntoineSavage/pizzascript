@@ -1,7 +1,7 @@
 module Ast where
 
 import BuiltIns ( toForm )
-import Types ( Ast(..), AstExpr(..), AstVal(..), Ident(..), ListKind(..) )
+import Types ( Ast(..), AstExpr(..), AstListKind(..), AstVal(..), Ident(..) )
 import Control.Monad ( liftM2, void )
 import Data.Char ( ord, isControl, isPrint )
 import Data.List ( intercalate )
@@ -123,20 +123,20 @@ unparseSymb :: Nat -> Ident -> String
 unparseSymb n ident = "'" ++ unlen n '\'' ++ unparseIdent ident
 
 -- Lists
-parseList :: ListKind -> Parser String -> (String -> Parser a) -> Parser ([a], String)
+parseList :: AstListKind -> Parser String -> (String -> Parser a) -> Parser ([a], String)
 parseList k doc p =
     char (getListStart k) >>
         parseMany doc p (void $ char $ getListEnd k)
 
-unparseList :: ListKind -> String -> (a -> String) -> [a] -> String
+unparseList :: AstListKind -> String -> (a -> String) -> [a] -> String
 unparseList k d f es = [getListStart k] ++ unparseMany d f es ++ [getListEnd k]
 
-getListStart :: ListKind -> Char
+getListStart :: AstListKind -> Char
 getListStart KindList = '['
 getListStart KindDict = '{'
 getListStart KindForm = '('
 
-getListEnd :: ListKind -> Char
+getListEnd :: AstListKind -> Char
 getListEnd KindList = ']'
 getListEnd KindDict = '}'
 getListEnd KindForm = ')'

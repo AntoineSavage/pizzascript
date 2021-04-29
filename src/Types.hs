@@ -5,6 +5,7 @@ import qualified Data.Map as M
 import Data.Nat ( Nat )
 import Text.Parsec ( SourcePos )
 
+-- Shared types
 newtype Ident
     = Ident [String]
     deriving (Show, Eq, Ord)
@@ -13,6 +14,7 @@ data Symb
     = Symb Nat Ident
     deriving (Show, Eq, Ord)
 
+-- AST (non-evaluated) types
 type AstPos = SourcePos
 type AstDoc = String
 
@@ -40,16 +42,32 @@ data AstVal
     | AstStr String
     | AstIdent Ident
     | AstSymb Nat Ident
-    | AstList ListKind AstDoc [AstExpr]
+    | AstList AstListKind AstDoc [AstExpr]
     deriving (Show, Eq, Ord)
 
-data ListKind
+data AstListKind
     = KindList
     | KindDict
     | KindForm
     deriving (Show, Eq, Ord)
 
-data PzArgPass
+-- Evaluated types
+data PzVal
+    = PzUnit
+    | PzNum Double
+    | PzStr String
+    | PzSymb Symb
+    | PzList [PzVal]
+    | PzDict Dict
+    | PzFunc Func
+    deriving (Show, Eq, Ord)
+
+type Dict = M.Map PzVal PzVal
+data Func
+    = Func FuncArgPass FuncImpCtx FuncArgs FuncBody
+    deriving (Show, Eq, Ord)
+
+data FuncArgPass
     = Eval
     | Quote
     | Unquote
@@ -57,25 +75,14 @@ data PzArgPass
     | DeepUnquote
     deriving (Show, Eq, Ord)
 
-data PzArgs
-    = Variadic Symb
-    | Arity [Symb]
+type FuncImpCtx = Maybe Symb
+
+data FuncArgs
+    = ArgsVaria Symb
+    | ArgsArity [Symb]
     deriving (Show, Eq, Ord)
 
-type PzDict = M.Map PzVal PzVal
-type PzImpCtx = Maybe Symb
-
-data PzVal
-    = PzUnit
-    | PzNum Double
-    | PzStr String
-    | PzSymb Symb
-    | PzList [PzVal]
-    | PzDict PzDict
-    | PzFunc PzArgPass PzImpCtx PzArgs PzFuncBody
-    deriving (Show, Eq, Ord)
-
-data PzFuncBody
-    = BuiltIn Ident
-    | Custom [AstExpr]
+data FuncBody
+    = BodyBuiltIn Ident
+    | BodyCustom [AstExpr]
     deriving (Show, Eq, Ord)
