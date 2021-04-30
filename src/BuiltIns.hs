@@ -18,6 +18,7 @@ builtInCtx :: Dict
 builtInCtx = M.fromList
     [ (pzFalse, pzFalse)
     , (pzTrue, pzTrue)
+    , (PzSymb $ symb $ ident "not", pzNot)
     ]
 
 -- values
@@ -26,6 +27,9 @@ pzFalse = PzSymb $ symb identFalse
 
 pzTrue :: PzVal
 pzTrue = PzSymb $ symb identTrue
+
+pzNot :: PzVal
+pzNot = PzFunc $ Func Eval Nothing (ArgsArity [ident "x"]) $ BodyBuiltIn "_not"
 
 -- functions
 type FuncSig = Dict -> [PzVal] -> FuncReturn
