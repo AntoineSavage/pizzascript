@@ -1,5 +1,7 @@
 module TestUtils where
 
+import qualified Data.Map as M
+
 import BuiltIns
 import Control.Monad
 import Data.NatSpec
@@ -29,6 +31,7 @@ validNexts = underscore : digits ++ lettersUpper ++ lettersLower ++ accentChars
 
 kinds = [ KindList, KindDict, KindForm ]
 argPassSymbs = [ symbEval, symbQuote, symbUnquote, symbDeepQuote, symbDeepUnquote ]
+argPasses = [ Eval, Quote, Unquote, DeepQuote, DeepUnquote ]
 
 -- Functions
 parseElem :: String -> Parser Elem
@@ -45,9 +48,8 @@ newtype IdentPart = IdentPart String deriving (Show, Eq)
 instance Arbitrary IdentPart where
     arbitrary = IdentPart <$> liftM2 (:) (elements validFirsts) (chooseInt (0, 5) >>= flip vectorOf (elements validNexts))
 
-newtype ArgPassSymb = ArgPassSymb Symb deriving (Show, Eq)
-instance Arbitrary ArgPassSymb where
-    arbitrary = ArgPassSymb <$> elements argPassSymbs
+instance Arbitrary Symb where
+    arbitrary = liftM2 Symb arbitrary arbitrary
 
 newtype D = D String deriving (Show, Eq)
 instance Arbitrary D where arbitrary = D <$> elements [" ", "\n", "\t", "\r\n", "\v"]
@@ -73,15 +75,17 @@ arbK = elements kinds
 arbMany min max me = chooseInt (min, max) >>= flip vectorOf me
 
 arbitraryExprOf depth = do
-    -- Num: 0, Str: 1, Ident: 2, Symb: 3, List: 4
     D d <- arbitrary
-    choice <- chooseInt (0, if depth <= 0 then 3 else 4)
-    AstExpr pos d <$> case choice of
-        0 -> AstNum <$> arbitrary
-        1 -> AstStr <$> arbitrary
-        2 -> AstIdent <$> arbitrary
-        3 -> AstSymb <$> liftM2 Symb arbitrary arbitrary
-        4 -> liftM3 AstList arbK arbD (arbMany 0 3 $ arbitraryExprOf $ depth-1)
+    fmap (AstExpr pos d) $ oneof $
+        [ AstNum <$> arbitrary
+        , AstStr <$> arbitrary
+        , AstIdent <$> arbitrary
+        , AstSymb <$> liftM2 Symb arbitrary arbitrary
+        ] ++
+        (if depth <= 0 then [] else
+            [ liftM3 AstList arbK arbD (arbMany 0 3 $ arbitraryExprOf $ depth-1)
+            ]
+        )
 
 newtype UnquoteValid
     = UnquoteValid AstExpr
@@ -98,11 +102,41 @@ instance Arbitrary UnquoteValids where
     arbitrary = UnquoteValids <$> arbMany 0 3 (do UnquoteValid e <- arbitrary; return e)
 
 arbitraryUnquoteValidOf depth = do
-    -- Num: 0, Str: 1, Symb: 2, List: 3
     D d <- arbitrary
-    choice <- chooseInt (0, if depth <= 0 then 2 else 3)
-    AstExpr pos d <$> case choice of
-        0 -> AstNum <$> arbitrary
-        1 -> AstStr <$> arbitrary
-        2 -> AstSymb <$> liftM2 Symb arbitrary arbitrary
-        3 -> liftM2 (AstList KindList) arbD $ arbMany 0 3 $ arbitraryUnquoteValidOf $ depth-1
+    fmap (AstExpr pos d) $ oneof $ 
+        [ AstNum <$> arbitrary
+        , AstStr <$> arbitrary
+        , AstSymb <$> liftM2 Symb arbitrary arbitrary
+        ] ++
+        ( if depth <= 0 then [] else
+            [ liftM2 (AstList KindList) arbD $ arbMany 0 3 $ arbitraryUnquoteValidOf $ depth-1
+            ]
+        )
+
+instance Arbitrary PzVal where
+    arbitrary = chooseInt (0, 3) >>= arbitraryValOf
+
+arbitraryValOf depth = oneof $
+        [ return PzUnit
+        , PzNum <$> arbitrary
+        , PzStr <$> arbitrary
+        , PzSymb <$> liftM2 Symb arbitrary arbitrary
+        ] ++
+        (if depth <= 0 then [] else
+            [ PzList <$> arbMany 0 3 (arbitraryValOf $ depth-1)
+            , PzDict . M.fromList <$> arbMany 0 3 (liftM2 (,) (arbitraryValOf $ depth-1) $ arbitraryValOf $ depth-1)
+            , PzFunc <$> liftM4 Func (elements argPasses) arbitrary arbitrary arbitrary
+            ]
+        )
+
+instance Arbitrary FuncArgs where
+    arbitrary = oneof
+        [ ArgsVaria <$> arbitrary
+        , ArgsArity <$> arbitrary
+        ]
+
+instance Arbitrary FuncBody where
+    arbitrary = oneof
+        [ BodyBuiltIn <$> arbitrary
+        , BodyCustom <$> arbitrary
+        ]

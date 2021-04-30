@@ -75,14 +75,14 @@ data FuncArgPass
     | DeepUnquote
     deriving (Show, Eq, Ord)
 
-type FuncImpCtx = Maybe Symb
+type FuncImpCtx = Maybe Ident
 
 data FuncArgs
-    = ArgsVaria Symb
-    | ArgsArity [Symb]
+    = ArgsVaria Ident
+    | ArgsArity [Ident]
     deriving (Show, Eq, Ord)
 
 data FuncBody
-    = BodyBuiltIn Ident
+    = BodyBuiltIn String
     | BodyCustom [AstExpr]
     deriving (Show, Eq, Ord)

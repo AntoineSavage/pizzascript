@@ -5,28 +5,30 @@ import qualified Data.Map as M
 import Types
 import Utils
 
--- constants
-false :: PzVal
-false = PzSymb $ symb identFalse
-
-true :: PzVal
-true = PzSymb $ symb identTrue
-
--- functions
--- TODO
-
 {- TODO for base:
     - not, or, and
-    - empty, size (list / dict)
+    - is_empty, size (list / dict)
     - cons, head, tail
     - keys, get, put, del
     - def
     - func
 -}
-
 -- Built-in context
 builtInCtx :: Dict
 builtInCtx = M.fromList
-    [ (false, false)
-    , (true, true)
+    [ (pzFalse, pzFalse)
+    , (pzTrue, pzTrue)
     ]
+
+-- values
+pzFalse :: PzVal
+pzFalse = PzSymb $ symb identFalse
+
+pzTrue :: PzVal
+pzTrue = PzSymb $ symb identTrue
+
+-- functions
+type FuncSig = Dict -> [PzVal] -> FuncReturn
+
+_not :: FuncSig
+_not ctx args = f1 args $ \x -> return $ (,) ctx $ if boolish x then pzFalse else pzTrue

@@ -248,20 +248,20 @@ All lists have type `'list`, which corresponds to the previously mentioned `list
 
 The following functions are used to manipulate lists:
 ```
-(list_is_empty [])      # -> 'true
-(list_is_empty [1 2 3]) # -> 'false
+(is_empty [])      # -> 'true
+(is_empty [1 2 3]) # -> 'false
 
-(list_get_size [])      # -> 0
-(list_get_size [1 2 3]) # -> 3
+(size [])      # -> 0
+(size [1 2 3]) # -> 3
 
-(list_head [])      # -> error
-(list_head [1 2 3]) # -> 1
+(head [])      # -> error
+(head [1 2 3]) # -> 1
 
-(list_tail [])      # -> error
-(list_tail [1 2 3]) # -> [2 3]
+(tail [])      # -> error
+(tail [1 2 3]) # -> [2 3]
 
-(list_const 1 [])    # -> [1]
-(list_const 1 [2 3]) # -> [1 2 3]
+(cons 1 [])    # -> [1]
+(cons 1 [2 3]) # -> [1 2 3]
 ```
 
 # Dictionaries
@@ -326,24 +326,24 @@ my_dict.my_field # -> "my_value"
 
 The following functions are used to manipulate dictionaries (regardless of key type):
 ```
-(dict_is_empty {})                      # -> 'true
-(dict_is_empty {("my_key" 'my_value)})  # -> 'false
+(is_empty {})                      # -> 'true
+(is_empty {("my_key" 'my_value)})  # -> 'false
 
-(dict_get_size {})                      # -> 0
-(dict_get_size {("my_key" 'my_value)})  # -> 1
+(size {})                      # -> 0
+(size {("my_key" 'my_value)})  # -> 1
 
-(dict_get_keys {})                      # -> []
-(dict_get_keys {("my_key" 'my_value)})  # -> ["my_key"]
+(keys {})                      # -> []
+(keys {("my_key" 'my_value)})  # -> ["my_key"]
 
-(dict_get "my_key" {})                      # -> (), i.e. absent
-(dict_get "my_key" {("my_key" 'my_value)})  # -> 'my_value, i.e. present
+(get "my_key" {})                      # -> (), i.e. absent
+(get "my_key" {("my_key" 'my_value)})  # -> 'my_value, i.e. present
 
-(dict_put "my_key" 'my_value {})                      # -> {("my_key" 'my_value)}, i.e. adds key/value pair
-(dict_put "my_key" 'my_value {("my_key" 123)})        # -> {("my_key" 'my_value)}, i.e. replaces key/value pair
-(dict_put "my_key" 'my_value {("my_key" 'my_value)})  # -> {("my_key" 'my_value)}, i.e. no change
+(put "my_key" 'my_value {})                      # -> {("my_key" 'my_value)}, i.e. adds key/value pair
+(put "my_key" 'my_value {("my_key" 123)})        # -> {("my_key" 'my_value)}, i.e. replaces key/value pair
+(put "my_key" 'my_value {("my_key" 'my_value)})  # -> {("my_key" 'my_value)}, i.e. no change
 
-(dict_del "my_key" {})                # -> {}, i.e. no change
-(dict_del "my_key" {("my_key" 123)})  # -> {}, i.e. removes key/value pair
+(del "my_key" {})                # -> {}, i.e. no change
+(del "my_key" {("my_key" 123)})  # -> {}, i.e. removes key/value pair
 ```
 
 # Functions

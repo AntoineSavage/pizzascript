@@ -20,6 +20,33 @@ toForm p k =
         KindDict -> (identToExpr identDict:)
         KindForm -> id
 
+boolish :: PzVal -> Bool
+boolish PzUnit = False
+boolish (PzNum 0) = False
+boolish (PzStr "") = False
+boolish (PzSymb (Symb Z ident)) = ident /= identFalse
+boolish (PzList []) = False
+boolish (PzDict d) = not $ M.null d
+boolish _ = True
+
+type FuncReturn = Either String (Dict, PzVal)
+
+invalidArityMsg :: Int -> [a] -> String
+invalidArityMsg n args = "Invalid number of arguments. Expected " ++ show n ++ ", got: " ++ show (length args)
+
+f0 :: [PzVal] -> (() -> FuncReturn) -> FuncReturn
+f0 args f = case args of [] -> f (); _ -> Left $ invalidArityMsg 0 args
+
+f1 :: [PzVal] -> (PzVal -> FuncReturn) -> FuncReturn
+f1 args f = case args of [x] -> f x; _ -> Left $ invalidArityMsg 1 args
+
+f2 :: [PzVal] -> (PzVal -> PzVal -> FuncReturn) -> FuncReturn
+f2 args f = case args of [x, y] -> f x y; _ -> Left $ invalidArityMsg 2 args
+
+f3 :: [PzVal] -> (PzVal -> PzVal -> PzVal -> FuncReturn) -> FuncReturn
+f3 args f = case args of [x, y, z] -> f x y z; _ -> Left $ invalidArityMsg 3 args
+
+-- misc
 pos :: AstPos
 pos = newPos "<built-ins>" 0 0
 
