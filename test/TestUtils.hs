@@ -8,6 +8,7 @@ import Text.Parsec
 import Text.Parsec.String
 import Text.Parsec.Pos
 import Types
+import Utils
 
 -- Constants
 digits = ['0'..'9']

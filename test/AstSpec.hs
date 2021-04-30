@@ -4,15 +4,14 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Ast
-import BuiltIns
 import Control.Monad
 import Data.Either
 import Data.List
 import Data.Nat
-import Data.NatSpec
 import TestUtils
 import Text.Parsec
 import Types
+import Utils
 
 spec :: Spec
 spec = do

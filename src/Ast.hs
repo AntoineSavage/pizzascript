@@ -1,6 +1,6 @@
 module Ast where
 
-import BuiltIns ( toForm, symb )
+import BuiltIns
 import Control.Monad ( liftM2, void )
 import Data.Char ( ord, isControl, isPrint )
 import Data.List ( intercalate )
@@ -9,6 +9,7 @@ import Numeric ( readHex, showHex )
 import Text.Parsec
 import Text.Parsec.String ( Parser )
 import Types ( Ast(..), AstExpr(..), AstListKind(..), AstVal(..), Ident(..), Symb(..) )
+import Utils ( toForm, symb )
 
 -- AST
 parseAst :: Parser Ast

@@ -3,11 +3,12 @@ module Eval where
 import qualified Ast as A
 import qualified Data.Map as M
 
-import BuiltIns ( symb, toForm, builtInCtx )
+import BuiltIns ( builtInCtx )
 import Control.Monad ( forM_, liftM2 )
 import Data.Maybe ( fromMaybe )
 import Data.Nat ( Nat(..) )
 import Types
+import Utils ( symb, toForm )
 
 type Result = Maybe PzVal
 data Acc
