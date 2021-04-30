@@ -77,16 +77,14 @@ evalForm result ctx p elems frames =
         
                 e:es ->
                     -- evaluate first form element (should be func)
-                    case evalExpr ctx e $ Form p es : frames of
-                        Left s -> Left $ s ++ "\n at: " ++ show p
-                        Right acc -> return acc
+                    evalExpr ctx e $ Form p es : frames
         
         Just f ->
             -- first form element evaluated (should be func)
+            -- replace with invocation
             case f of
-                -- replace with invocation
                 PzFunc func -> return $ Acc Nothing ctx $ Invoc p func [] elems : frames
-                _ -> Left $ "Error: Malformed function invocation (first form element must be a function)\n at: " ++ show p
+                _ -> Left $ "Error: Malformed function invocation (first form element must be a function): " ++ show f ++ "\n at: " ++ show p
 
 evalInvoc :: Maybe PzVal -> Dict -> AstPos -> Func -> [PzVal] -> [AstExpr] -> [StackFrame] -> Either String Acc
 evalInvoc result ctx p f as es frames =

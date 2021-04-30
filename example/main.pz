@@ -1,20 +1,80 @@
 # main.pz
 
-# number stuff
-0 1 2 3 4 5
--1 -2 -3 -4
-0.1 1.2 2.3
--0.1 -1.2 -2.3
-1.23e2 -1.23E-2
+# unit type
+()
 
-(add 1 2)
-(sub 2 3)
-(mult 3 4)
-(div 4 5)
-(exp 2 5)
-(log 2 32)
+# ints
+0 1 2 3 4 5 10 123
+-1 -2 -3 -4 -5 -10 -123
 
-(num 123)
-(num 3.141592)
-(num "123")
-(num "3.141592")
+# floats
+0.1 1.1 2.2 10.01 123.123
+-1.1 -2.2 -3.3 -10.01 -123.123
+-1.23e-10
+
+# strings
+""                  # empty string
+"abc123ACB_ !@#$%?" # ASCII printable characters
+"àéèïîôöù"          # Unicode printable characters
+"\"\\\/\b\f\n\r\t\u{0}\u{10ffff}" # Escape chars
+
+# symbols
+'a ''b ''c
+'abc
+'_foo ''BAR99 '''B4Z
+'true 'false
+
+'Module.function
+''Package.Module.function
+'''Package.Module.SubModule
+''''my_dict.my_key1.my_key2
+
+# lists
+[]
+[0 1 2 3 4 5]
+["hello" "world" "!"]
+['a 'b 'c 'd 'e]
+[ [] [1 2 3] ["hello" 'world "!" ] ]
+
+(list)
+(list 0 1 2 3 4 5)
+(list "hello" "world" "!")
+(list 'a 'b 'c 'd 'e)
+(list (list) (list 1 2 3) (list "hello" 'world "!" ) )
+
+# dictionaries
+{}
+{
+    (() 0)
+    (0 "")
+    ("" 'dict)
+    ('dict [])
+    ([] {})
+    ({} (func () ()))
+    ((func () ()) ())
+}
+
+(dict)
+(dict
+    (() 0)
+    (0 "")
+    ("" 'dict)
+    ('dict [])
+    ([] {})
+    ({} (func () ()))
+    ((func () ()) ())
+)
+
+# functions
+(func () ())            # nullary, returns ()
+(func (x) x)            # unary, returns its arg
+(func (n m) (add n m))  # binary, sums its args
+# etc
+(func args args)        # variadic, returns its args
+
+# impure functions
+(func ctx 'evaled        (x) [ctx x])
+(func ctx 'quoted        (x) [ctx x])
+(func ctx 'unquoted      (x) [ctx x])
+(func ctx 'deep_quoted   (x) [ctx x])
+(func ctx 'deep_unquoted (x) [ctx x])
