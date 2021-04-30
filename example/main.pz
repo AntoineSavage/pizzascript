@@ -6,6 +6,8 @@
 # booleans
 false
 true
+(not false)
+(not true)
 
 # ints
 0 1 2 3 4 5 10 123

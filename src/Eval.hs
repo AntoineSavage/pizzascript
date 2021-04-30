@@ -9,44 +9,45 @@ import Data.Maybe ( fromMaybe )
 import Data.Nat ( Nat(..) )
 import Types
 
+type Result = Maybe PzVal
 data Acc
-    = Acc (Maybe PzVal) Dict [StackFrame]
+    = Acc Result Dict [StackFrame]
     deriving (Show, Eq)
 
 data StackFrame
     = Block [AstExpr]
     | Form AstPos [AstExpr]
-    | Invoc AstPos Func [PzVal] [AstExpr]
+    | Invoc AstPos Func [PzVal] (Maybe [AstExpr])
     deriving (Show, Eq)
 
 evalAst :: Ast -> IO ()
 evalAst (Ast _ es) = go $ Acc Nothing builtInCtx [Block es]
 
 go :: Acc -> IO ()
-go (Acc result ctx []) = return () -- halt
-go (Acc result ctx (frame:frames)) =
-    case frame of
-        Block [] ->
-            -- block finished: pop stack frame
-            go $ Acc result ctx frames
-        
-        Block (e:es) ->
-            -- evaluate expression
-            case evalExpr ctx e $ Block es : frames of
-                Left s -> putStrLn s
-                Right acc -> go acc
+go (Acc result ctx []) = return () -- no more frames: halt
+go (Acc result ctx (frame:frames)) = do
+    let macc = evalFrame result ctx frame frames
+    case macc of
+        Left s -> putStrLn s
+        Right acc -> go acc
 
-        Form p es ->
-            -- evaluate form
-            case evalForm result ctx p es frames of
-                Left s -> putStrLn s
-                Right acc -> go acc
+evalFrame :: Result -> Dict -> StackFrame -> [StackFrame] -> Either String Acc
+evalFrame result ctx frame frames =
+    case frame of
+        Block es -> evalBlock result ctx es frames
+        Form p es -> evalForm result ctx p es frames
+        Invoc p f as es -> evalInvoc result ctx p f as es frames
+
+evalBlock :: Result -> Dict -> [AstExpr] -> [StackFrame] -> Either String Acc
+evalBlock result ctx es frames =
+    case es of
+        [] ->
+            -- block finished: pop frame
+            return $ Acc result ctx frames
         
-        Invoc p f as es ->
-            -- evaluate function invocation
-            case evalInvoc result ctx p f as es frames of
-                Left s -> putStrLn s
-                Right acc -> go acc
+        e:es ->
+            -- evaluate expression
+            evalExpr ctx e $ Block es : frames
 
 evalExpr :: Dict -> AstExpr -> [StackFrame] -> Either String Acc
 evalExpr ctx (AstExpr p _ v) frames = 
@@ -69,13 +70,14 @@ evalExpr ctx (AstExpr p _ v) frames =
         -- lists push form on stack
         AstList k _ elems -> return $ Acc Nothing ctx $ Form p (toForm p k elems) : frames
 
-evalForm :: Maybe PzVal -> Dict -> AstPos -> [AstExpr] -> [StackFrame] -> Either String Acc
+evalForm :: Result -> Dict -> AstPos -> [AstExpr] -> [StackFrame] -> Either String Acc
 evalForm result ctx p elems frames =
     case result of
         Nothing ->
+            -- no result to process yet
             case elems of
                 [] ->
-                    -- empty form -> return unit type
+                    -- empty form -> return unit type (and pop frame)
                     return $ Acc (Just PzUnit) ctx frames
         
                 e:es ->
@@ -83,36 +85,50 @@ evalForm result ctx p elems frames =
                     evalExpr ctx e $ Form p es : frames
         
         Just f ->
-            -- first form element evaluated (should be func)
-            -- replace with invocation
+            -- process result (first form elem, should be func)
             case f of
-                PzFunc func -> return $ Acc Nothing ctx $ Invoc p func [] elems : frames
-                _ -> Left $ "Error: Malformed function invocation (first form element must be a function): " ++ show f
+                PzFunc func ->
+                    -- replace form with function invocation
+                    return $ Acc Nothing ctx $ Invoc p func [] (Just elems) : frames
+
+                _ -> Left $ "Error: Malformed function invocation "
+                    ++ "(first form element must be a function): "
+                    ++ show f
                     ++ "\n at: " ++ show p
 
-evalInvoc :: Maybe PzVal -> Dict -> AstPos -> Func -> [PzVal] -> [AstExpr] -> [StackFrame] -> Either String Acc
-evalInvoc result ctx p f as es frames =
+evalInvoc :: Result -> Dict -> AstPos -> Func -> [PzVal] -> Maybe [AstExpr] -> [StackFrame] -> Either String Acc
+evalInvoc result ctx p func as melems frames =
     case result of
-        Nothing -> 
-            case es of
-                [] -> 
-                    -- all args evaluated: invoke function
+        Nothing ->
+            -- no result to process yet 
+            case melems of
+                Nothing -> 
+                    -- marked for invocation: invoke function
                     -- TODO take impure context symbol into account
                     -- TODO take arg symbols into account
-                    Left $ "TODO: Eval: " ++ show f
+                    Left $ "TODO: EvalInvoc: " ++ show func
 
-                (e:es) ->
+                Just [] -> 
+                    -- all args evaluated: mark for invocation
+                    return $ Acc result ctx $ Invoc p func as Nothing : frames
+
+                Just (e:es) ->
                     -- evaluate function argument
                     -- TODO take ArgPass into account
-                    case evalExpr ctx e $ Invoc p f as es : frames of
-                        Left s -> Left $ s
-                            ++ "\n at: " ++ show p
-
+                    case evalExpr ctx e $ Invoc p func as (Just es) : frames of
+                        Left s -> Left $ s ++ "\n at: " ++ show p
                         Right acc -> return acc
         
-        Just f ->
-            -- invocation finished: pop stack frame
-            return $ Acc result ctx frames
+        Just r ->
+            -- process result
+            case melems of
+                Nothing ->
+                    -- function invocation result (pop frame)
+                    return $ Acc (Just r) ctx frames
+
+                Just es -> 
+                    -- argument evaluation result
+                    return $ Acc Nothing ctx $ Invoc p func (r:as) (Just es) : frames
 
 -- 
 -- invokeFunc :: Ident -> [AstExpr] -> IO PzVal
