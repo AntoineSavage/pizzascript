@@ -6,11 +6,10 @@ import Types
 import Utils
 
 {- TODO for base:
+    - func
     - is_empty, size (list / dict)
     - cons, head, tail
     - keys, get, put, del
-    - def
-    - func
 -}
 -- Built-in context
 builtInCtx :: Dict

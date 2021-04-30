@@ -399,6 +399,9 @@ The following functions are used to manipulate dictionaries (regardless of key t
 (keys {})                      # -> []
 (keys {("my_key" 'my_value)})  # -> ["my_key"]
 
+(contains "my_key" {})                      # -> 'false
+(contains "my_key" {("my_key" 'my_value)})  # -> 'true
+
 (get "my_key" {})                      # -> (), i.e. absent
 (get "my_key" {("my_key" 'my_value)})  # -> 'my_value, i.e. present
 
