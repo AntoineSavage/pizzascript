@@ -3,6 +3,10 @@
 # unit type
 ()
 
+# booleans
+false
+true
+
 # ints
 0 1 2 3 4 5 10 123
 -1 -2 -3 -4 -5 -10 -123
