@@ -8,6 +8,14 @@ false
 true
 (not false)
 (not true)
+(or false false)
+(or false true)
+(or true false)
+(or true true)
+(and false false)
+(and false true)
+(and true false)
+(and true true)
 
 # ints
 0 1 2 3 4 5 10 123
