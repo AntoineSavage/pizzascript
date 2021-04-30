@@ -64,7 +64,7 @@ data PzVal
 
 type Dict = M.Map PzVal PzVal
 data Func
-    = Func FuncArgPass FuncImpCtx FuncArgs FuncBody
+    = Func FuncDefCtx FuncArgPass FuncImpCtx FuncArgs FuncBody
     deriving (Show, Eq, Ord)
 
 data FuncArgPass
@@ -75,6 +75,7 @@ data FuncArgPass
     | DeepUnquote
     deriving (Show, Eq, Ord)
 
+type FuncDefCtx = Dict
 type FuncImpCtx = Maybe Ident
 
 data FuncArgs

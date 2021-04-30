@@ -27,9 +27,8 @@ evalAst (Ast _ es) = go $ Acc Nothing builtInCtx [Block es]
 
 go :: Acc -> IO ()
 go (Acc result ctx []) = return () -- no more frames: halt
-go (Acc result ctx (frame:frames)) = do
-    let macc = evalFrame result ctx frame frames
-    case macc of
+go (Acc result ctx (frame:frames)) =
+    case evalFrame result ctx frame frames of
         Left s -> putStrLn s
         Right acc -> go acc
 
@@ -48,7 +47,7 @@ evalBlock result ctx es frames =
             return $ Acc result ctx frames
         
         e:es ->
-            -- evaluate expression
+            -- evaluate next block expression
             evalExpr ctx e $ Block es : frames
 
 evalExpr :: Dict -> AstExpr -> [StackFrame] -> EvalResult
@@ -106,13 +105,13 @@ evalInvoc result ctx p func as melems frames =
             case melems of
                 Nothing -> 
                     -- marked for invocation: invoke function
-                    case invokeFunc ctx func as frames of
+                    case invokeFunc ctx func (reverse as) frames of
                         Left s -> Left $ s ++ "\n at: " ++ show p
                         Right acc -> return acc
 
                 Just [] -> 
                     -- all args evaluated: mark for invocation
-                    return $ Acc result ctx $ Invoc p func as Nothing : frames
+                    return $ Acc Nothing ctx $ Invoc p func as Nothing : frames
 
                 Just (e:es) ->
                     -- evaluate function argument
@@ -132,10 +131,11 @@ evalInvoc result ctx p func as melems frames =
                     -- argument evaluation result
                     return $ Acc Nothing ctx $ Invoc p func (r:as) (Just es) : frames
 
--- TODO take impure context symbol into account
--- TODO take arg symbols into account
+-- TODO take definition context into account
+-- TODO take impure context ident into account
+-- TODO take arg idents into account
 invokeFunc :: Dict -> Func -> [PzVal] -> [StackFrame] -> EvalResult
-invokeFunc ctx (Func _ _ _ body) args frames =
+invokeFunc ctx (Func _ _ _ _ body) args frames =
     case body of
         BodyBuiltIn ident -> invokeFuncBuiltIn ctx args ident frames
         BodyCustom es -> Left $ "TODO: Invoke custom function: " ++ show es
