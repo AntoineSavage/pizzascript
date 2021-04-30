@@ -3,14 +3,15 @@ module Eval where
 import qualified Ast as A
 import qualified Data.Map as M
 
-import BuiltIns ( builtInCtx )
+import BuiltIns
 import Control.Monad ( forM_, liftM2 )
-import Data.Maybe ( fromMaybe )
 import Data.Nat ( Nat(..) )
 import Types
-import Utils ( symb, toForm )
+import Utils ( dictGet, symb, toForm, FuncReturn )
 
 type Result = Maybe PzVal
+type EvalResult = Either String Acc
+
 data Acc
     = Acc Result Dict [StackFrame]
     deriving (Show, Eq)
@@ -32,14 +33,14 @@ go (Acc result ctx (frame:frames)) = do
         Left s -> putStrLn s
         Right acc -> go acc
 
-evalFrame :: Result -> Dict -> StackFrame -> [StackFrame] -> Either String Acc
+evalFrame :: Result -> Dict -> StackFrame -> [StackFrame] -> EvalResult
 evalFrame result ctx frame frames =
     case frame of
         Block es -> evalBlock result ctx es frames
         Form p es -> evalForm result ctx p es frames
         Invoc p f as es -> evalInvoc result ctx p f as es frames
 
-evalBlock :: Result -> Dict -> [AstExpr] -> [StackFrame] -> Either String Acc
+evalBlock :: Result -> Dict -> [AstExpr] -> [StackFrame] -> EvalResult
 evalBlock result ctx es frames =
     case es of
         [] ->
@@ -50,7 +51,7 @@ evalBlock result ctx es frames =
             -- evaluate expression
             evalExpr ctx e $ Block es : frames
 
-evalExpr :: Dict -> AstExpr -> [StackFrame] -> Either String Acc
+evalExpr :: Dict -> AstExpr -> [StackFrame] -> EvalResult
 evalExpr ctx (AstExpr p _ v) frames = 
     let setResult result = return $ Acc (Just result) ctx frames in
     case v of
@@ -71,7 +72,7 @@ evalExpr ctx (AstExpr p _ v) frames =
         -- lists push form on stack
         AstList k _ elems -> return $ Acc Nothing ctx $ Form p (toForm p k elems) : frames
 
-evalForm :: Result -> Dict -> AstPos -> [AstExpr] -> [StackFrame] -> Either String Acc
+evalForm :: Result -> Dict -> AstPos -> [AstExpr] -> [StackFrame] -> EvalResult
 evalForm result ctx p elems frames =
     case result of
         Nothing ->
@@ -97,7 +98,7 @@ evalForm result ctx p elems frames =
                     ++ show f
                     ++ "\n at: " ++ show p
 
-evalInvoc :: Result -> Dict -> AstPos -> Func -> [PzVal] -> Maybe [AstExpr] -> [StackFrame] -> Either String Acc
+evalInvoc :: Result -> Dict -> AstPos -> Func -> [PzVal] -> Maybe [AstExpr] -> [StackFrame] -> EvalResult
 evalInvoc result ctx p func as melems frames =
     case result of
         Nothing ->
@@ -105,9 +106,9 @@ evalInvoc result ctx p func as melems frames =
             case melems of
                 Nothing -> 
                     -- marked for invocation: invoke function
-                    -- TODO take impure context symbol into account
-                    -- TODO take arg symbols into account
-                    Left $ "TODO: EvalInvoc: " ++ show func
+                    case invokeFunc ctx func as frames of
+                        Left s -> Left $ s ++ "\n at: " ++ show p
+                        Right acc -> return acc
 
                 Just [] -> 
                     -- all args evaluated: mark for invocation
@@ -131,27 +132,22 @@ evalInvoc result ctx p func as melems frames =
                     -- argument evaluation result
                     return $ Acc Nothing ctx $ Invoc p func (r:as) (Just es) : frames
 
--- 
--- invokeFunc :: Ident -> [AstExpr] -> IO PzVal
--- invokeFunc (Ident ps) args =
---     case ps of
---         ["list"] -> mapM evalExpr args >>= list
---         ["dict"] -> mapM evalDictEntry args >>= dict
---         ["func"] -> return PzUnit
---         _ -> return PzUnit -- Error: undefined identifier
--- 
--- evalDictEntry :: AstExpr -> IO (PzVal, PzVal)
--- evalDictEntry (AstExpr _ _ v) =
---     case v of
---         (AstList KindForm _ [k, v]) -> liftM2 (,) (evalExpr k) (evalExpr v)
--- 
---         _ -> return (PzUnit, PzUnit) -- Error: malformed dictionary entry
+-- TODO take impure context symbol into account
+-- TODO take arg symbols into account
+invokeFunc :: Dict -> Func -> [PzVal] -> [StackFrame] -> EvalResult
+invokeFunc ctx (Func _ _ _ body) args frames =
+    case body of
+        BodyBuiltIn name -> invokeFuncBuiltIn ctx args name frames
+        BodyCustom es -> Left $ "TODO: Invoke custom function: " ++ show es
 
--- list :: [PzVal] -> PzVal
--- list = PzList
--- 
--- dict :: Dict -> PzVal
--- dict = PzDict
+invokeFuncBuiltIn :: Dict -> [PzVal] -> String -> [StackFrame] -> EvalResult
+invokeFuncBuiltIn ctx args name frames =
+    case name of
+        "_not" -> returnFrom frames $ _not ctx args
+        _ -> Left $ "TODO: Invoke built-in function: " ++ name
 
-dictGet :: PzVal -> Dict -> PzVal
-dictGet k m = fromMaybe PzUnit $ M.lookup k m
+returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
+returnFrom frames x =
+    case x of
+        Left s -> Left s
+        Right (ctx, r) -> Right $ Acc (Just r) ctx frames

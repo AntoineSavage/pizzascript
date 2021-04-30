@@ -32,7 +32,5 @@ pzNot :: PzVal
 pzNot = PzFunc $ Func Eval Nothing (ArgsArity [ident "x"]) $ BodyBuiltIn "_not"
 
 -- functions
-type FuncSig = Dict -> [PzVal] -> FuncReturn
-
-_not :: FuncSig
+_not :: Dict -> [PzVal] -> FuncReturn
 _not ctx args = f1 args $ \x -> return $ (,) ctx $ if boolish x then pzFalse else pzTrue

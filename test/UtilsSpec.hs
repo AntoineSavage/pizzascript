@@ -19,6 +19,7 @@ spec = do
     f1Spec
     f2Spec
     f3Spec
+    dictGetSpec
 
 toFormSpec :: Spec
 toFormSpec = describe "toForm" $ do
@@ -107,3 +108,15 @@ f3Spec = describe "f3" $ do
             f3 [v1] undefined `shouldBe` Left (invalidArityMsg 3 [v1])
             f3 [v1,v2] undefined `shouldBe` Left (invalidArityMsg 3 [v1,v2])
             f3 xs undefined `shouldBe` Left (invalidArityMsg 3 xs)
+
+dictGetSpec :: Spec
+dictGetSpec = describe "dictGet" $ do
+    it "returns the unit if not found" $ do
+        property $ \k m_ -> do
+            let m = M.delete k m_
+            dictGet k m `shouldBe` PzUnit
+
+    it "returns the value if found" $ do
+        property $ \k v m_ -> do
+            let m = M.insert k v m_
+            dictGet k m `shouldBe` v
