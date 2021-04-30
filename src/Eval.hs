@@ -143,10 +143,33 @@ invokeFunc ctx (Func _ _ _ _ body) args frames =
 invokeFuncBuiltIn :: Dict -> [PzVal] -> Ident -> [StackFrame] -> EvalResult
 invokeFuncBuiltIn ctx args (Ident ps) frames =
     case ps of
+        -- numbers
+        -- TODO
+
+        -- strings
+        -- TODO
+
+        -- symbols
+        -- TODO
+
+        -- booleans
         ["not"] -> returnFrom frames $ _not ctx args
         ["or"] -> returnFrom frames $ _or ctx args
         ["and"] -> returnFrom frames $ _and ctx args
-        _ -> Left $ "TODO: Invoke built-in function: " ++ show ps
+
+        -- lists
+        -- TODO
+
+        -- dictionaries
+        -- TODO
+
+        -- functions
+        ["func"] -> returnFrom frames $ _func ctx args
+
+        -- miscellaneous
+        -- TODO
+
+        _ -> Left $ "TODO: Implement built-in function: " ++ show ps
 
 returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
 returnFrom frames x =

@@ -7,6 +7,9 @@ import Data.Nat ( Nat(..) )
 import Types
 import Text.Parsec.Pos ( newPos )
 
+pos :: AstPos
+pos = newPos "<built-in>" 0 0
+
 ident :: String -> Ident
 ident = Ident . (:[])
 
@@ -41,25 +44,87 @@ f3 args f = case args of [x, y, z] -> f x y z; _ -> Left $ invalidArityMsg 3 arg
 dictGet :: PzVal -> Dict -> PzVal
 dictGet k m = fromMaybe PzUnit $ M.lookup k m
 
--- misc
-pos :: AstPos
-pos = newPos "<built-ins>" 0 0
+-----------------
+-- Identifiers
+-----------------
 
-identList :: Ident
-identList = ident "list"
+-- numbers
+-- TODO
 
-identDict :: Ident
-identDict = ident "dict"
+-- strings
+-- TODO
 
-identFunc :: Ident
-identFunc = ident "func"
+-- symbols
+-- TODO
 
+-- booleans
 identFalse :: Ident
 identFalse = ident "false"
 
 identTrue :: Ident
 identTrue = ident "true"
 
+identNot :: Ident
+identNot = ident "not"
+
+identOr :: Ident
+identOr = ident "or"
+
+identAnd :: Ident
+identAnd = ident "and"
+
+-- lists
+identList :: Ident
+identList = ident "list"
+
+-- dictionaries
+identDict :: Ident
+identDict = ident "dict"
+
+-- functions
+identFunc :: Ident
+identFunc = ident "func"
+
+-- miscellaneous
+identCtx :: Ident
+identCtx = ident "ctx"
+
+identArgs :: Ident
+identArgs = ident "args"
+
+identX :: Ident
+identX = ident "x"
+
+identY :: Ident
+identY = ident "y"
+
+-------------
+-- Symbols
+-------------
+
+-- numbers
+-- TODO
+
+-- strings
+-- TODO
+
+-- symbols
+-- TODO
+
+-- booleans
+symbFalse :: Symb
+symbFalse = symb identFalse
+
+symbTrue :: Symb
+symbTrue = symb identTrue
+
+-- lists
+-- TODO
+
+-- dictionaries
+-- TODO
+
+-- functions
 symbEval :: Symb
 symbEval = symb $ ident "eval"
 
@@ -74,3 +139,6 @@ symbDeepQuote = symb $ ident "deep_quote"
 
 symbDeepUnquote :: Symb
 symbDeepUnquote = symb $ ident "deep_unquote"
+
+-- miscellaneous
+-- TODO
