@@ -66,7 +66,6 @@ evalExpr ctx (AstExpr p _ v) frames =
                 PzUnit -> Left $ "Error: Undefined identifier: " ++ show ident
                     ++ "\n at: " ++ show p
                     ++ "\n ctx keys: " ++ show (M.keys ctx)
-
                 val -> setResult val
 
         -- lists push form on stack
@@ -144,6 +143,8 @@ invokeFuncBuiltIn :: Dict -> [PzVal] -> String -> [StackFrame] -> EvalResult
 invokeFuncBuiltIn ctx args name frames =
     case name of
         "_not" -> returnFrom frames $ _not ctx args
+        "_or" -> returnFrom frames $ _or ctx args
+        "_and" -> returnFrom frames $ _and ctx args
         _ -> Left $ "TODO: Invoke built-in function: " ++ name
 
 returnFrom :: [StackFrame] -> FuncReturn -> EvalResult

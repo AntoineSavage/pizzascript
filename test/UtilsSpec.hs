@@ -13,7 +13,6 @@ import Utils
 spec :: Spec
 spec = do
     toFormSpec
-    boolishSpec
     invalidArityMsgSpec
     f0Spec
     f1Spec
@@ -33,24 +32,6 @@ toFormSpec = describe "toForm" $ do
             toForm pos KindList es `shouldBe` (AstExpr pos "" $ AstIdent $ identList) : es
             toForm pos KindDict es `shouldBe` (AstExpr pos "" $ AstIdent $ identDict) : es
             toForm pos KindForm es `shouldBe` es
-
-boolishSpec :: Spec
-boolishSpec = describe "boolish" $ do
-    it "returns false for falsish values" $ do
-        boolish PzUnit `shouldBe` False
-        boolish (PzNum 0) `shouldBe` False
-        boolish (PzStr "") `shouldBe` False
-        boolish (PzSymb $ symb $ ident "false") `shouldBe` False
-        boolish (PzList []) `shouldBe` False
-        boolish (PzDict M.empty) `shouldBe` False
-    
-    it "returns true for truish values" $ do
-        boolish (PzNum 1) `shouldBe` True
-        boolish (PzStr "abc") `shouldBe` True
-        boolish (PzSymb $ symb $ ident "abc") `shouldBe` True
-        boolish (PzList [PzUnit]) `shouldBe` True
-        boolish (PzDict $ M.fromList [(PzUnit, PzUnit)]) `shouldBe` True
-        boolish (PzFunc $ Func Eval Nothing (ArgsArity []) (BodyBuiltIn "func")) `shouldBe` True
 
 invalidArityMsgSpec :: Spec
 invalidArityMsgSpec = describe "invalidArityMsg" $ do

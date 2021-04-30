@@ -21,15 +21,6 @@ toForm p k =
         KindDict -> (identToExpr identDict:)
         KindForm -> id
 
-boolish :: PzVal -> Bool
-boolish PzUnit = False
-boolish (PzNum 0) = False
-boolish (PzStr "") = False
-boolish (PzSymb (Symb Z ident)) = ident /= identFalse
-boolish (PzList []) = False
-boolish (PzDict d) = not $ M.null d
-boolish _ = True
-
 type FuncReturn = Either String (Dict, PzVal)
 
 invalidArityMsg :: Int -> [a] -> String
