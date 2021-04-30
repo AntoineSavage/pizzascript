@@ -4,6 +4,7 @@ import qualified Data.Map as M
 
 import Data.Nat ( Nat(..) )
 import Types
+import Text.Parsec.Pos ( newPos )
 
 ident :: String -> Ident
 ident = Ident . (:[])
@@ -40,8 +41,17 @@ toForm p k =
         KindDict -> (identToExpr identDict:)
         KindForm -> id
 
+pos :: AstPos
+pos = newPos "<built-ins>" 0 0
+
+identArgs :: Ident
+identArgs = ident "args"
+
 identList :: Ident
 identList = ident "list"
+
+list :: Func
+list = Func Eval Nothing argsVariadic $ BodyCustom [AstExpr pos "" $ AstIdent identArgs]
 
 identDict :: Ident
 identDict = ident "dict"
@@ -54,9 +64,6 @@ symbTrue = symb "true"
 
 symbFalse :: Symb
 symbFalse = symb "false"
-
-symbArgs :: Symb
-symbArgs = symb "args"
 
 symbEval :: Symb
 symbEval = symb "eval"
@@ -74,4 +81,4 @@ symbDeepUnquote :: Symb
 symbDeepUnquote = symb "deep_unquote"
 
 argsVariadic :: FuncArgs
-argsVariadic = ArgsVaria symbArgs
+argsVariadic = ArgsVaria $ fromIdent identArgs

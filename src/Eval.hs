@@ -20,7 +20,10 @@ data StackFrame
     deriving (Show, Eq)
 
 evalAst :: Ast -> IO ()
-evalAst (Ast _ es) = go $ Acc Nothing M.empty [Block es]
+evalAst (Ast _ es) = go $ Acc Nothing ctx [Block es] where
+    ctx = M.fromList
+        [ (PzSymb $ fromIdent identList, PzFunc list)
+        ]
 
 go :: Acc -> IO ()
 go (Acc result ctx []) = return () -- halt
@@ -60,7 +63,10 @@ evalExpr ctx (AstExpr p _ v) frames =
         -- identifiers return the corresponding value in ctx
         AstIdent ident ->
             case dictGet (PzSymb $ fromIdent ident) ctx of
-                PzUnit -> Left $ "Error: Undefined identifier: " ++ show ident ++ "\n at: " ++ show p
+                PzUnit -> Left $ "Error: Undefined identifier: " ++ show ident
+                    ++ "\n at: " ++ show p
+                    ++ "\n ctx keys: " ++ show (M.keys ctx)
+
                 val -> setResult val
 
         -- lists push form on stack
@@ -84,7 +90,8 @@ evalForm result ctx p elems frames =
             -- replace with invocation
             case f of
                 PzFunc func -> return $ Acc Nothing ctx $ Invoc p func [] elems : frames
-                _ -> Left $ "Error: Malformed function invocation (first form element must be a function): " ++ show f ++ "\n at: " ++ show p
+                _ -> Left $ "Error: Malformed function invocation (first form element must be a function): " ++ show f
+                    ++ "\n at: " ++ show p
 
 evalInvoc :: Maybe PzVal -> Dict -> AstPos -> Func -> [PzVal] -> [AstExpr] -> [StackFrame] -> Either String Acc
 evalInvoc result ctx p f as es frames =
@@ -95,13 +102,15 @@ evalInvoc result ctx p f as es frames =
                     -- all args evaluated: invoke function
                     -- TODO take impure context symbol into account
                     -- TODO take arg symbols into account
-                    Left "TODO: EvalInvoc"
+                    Left $ "TODO: Eval: " ++ show f
 
                 (e:es) ->
                     -- evaluate function argument
                     -- TODO take ArgPass into account
                     case evalExpr ctx e $ Invoc p f as es : frames of
-                        Left s -> Left $ s ++ "\n at: " ++ show p
+                        Left s -> Left $ s
+                            ++ "\n at: " ++ show p
+
                         Right acc -> return acc
         
         Just f ->
