@@ -3,6 +3,7 @@ module Eval where
 import qualified Ast as A
 import qualified Data.Map as M
 
+import Ast ( quote, unquote )
 import BuiltIns
 import Control.Monad ( forM_, liftM2 )
 import Data.Nat ( Nat(..) )
@@ -48,28 +49,7 @@ evalBlock result ctx es frames =
         
         e:es ->
             -- evaluate next block expression
-            evalExpr ctx e $ Block es : frames
-
-evalExpr :: Dict -> AstExpr -> [StackFrame] -> EvalResult
-evalExpr ctx (AstExpr p _ v) frames = 
-    let setResult result = return $ Acc (Just result) ctx frames in
-    case v of
-        -- nums, strs and symbs return themselves
-        AstNum n -> setResult $ PzNum n
-        AstStr s -> setResult $ PzStr s
-        AstSymb symb -> setResult $  PzSymb symb
-
-        -- identifiers return the corresponding value in ctx
-        AstIdent ident ->
-            -- TODO: Handle qualified identifiers
-            case dictGet (PzSymb $ symb ident) ctx of
-                PzUnit -> Left $ "Error: Undefined identifier: " ++ show ident
-                    ++ "\n at: " ++ show p
-                    ++ "\n ctx keys: " ++ show (M.keys ctx)
-                val -> setResult val
-
-        -- lists push form on stack
-        AstList k _ elems -> return $ Acc Nothing ctx $ Form p (toForm p k elems) : frames
+            evalExpr ctx e Eval $ Block es : frames
 
 evalForm :: Result -> Dict -> AstPos -> [AstExpr] -> [StackFrame] -> EvalResult
 evalForm result ctx p elems frames =
@@ -83,7 +63,7 @@ evalForm result ctx p elems frames =
         
                 e:es ->
                     -- evaluate first form element (should be func)
-                    evalExpr ctx e $ Form p es : frames
+                    evalExpr ctx e Eval $ Form p es : frames
         
         Just f ->
             -- process result (first form elem, should be func)
@@ -115,11 +95,11 @@ evalInvoc result ctx p func as melems frames =
 
                 Just (e:es) ->
                     -- evaluate function argument
-                    -- TODO take ArgPass into account
-                    case evalExpr ctx e $ Invoc p func as (Just es) : frames of
+                    let Func _ argPass _ _ _ = func in
+                    case evalExpr ctx e argPass $ Invoc p func as (Just es) : frames of
                         Left s -> Left $ s ++ "\n at: " ++ show p
                         Right acc -> return acc
-        
+
         Just r ->
             -- process result
             case melems of
@@ -131,9 +111,31 @@ evalInvoc result ctx p func as melems frames =
                     -- argument evaluation result
                     return $ Acc Nothing ctx $ Invoc p func (r:as) (Just es) : frames
 
--- TODO take definition context into account
--- TODO take impure context ident into account
--- TODO take arg idents into account
+-- TODO handle arg pass
+evalExpr :: Dict -> AstExpr -> FuncArgPass -> [StackFrame] -> EvalResult
+evalExpr ctx (AstExpr p _ v) argPass frames = 
+    let setResult result = return $ Acc (Just result) ctx frames in
+    case v of
+        -- nums, strs and symbs return themselves
+        AstNum n -> setResult $ PzNum n
+        AstStr s -> setResult $ PzStr s
+        AstSymb symb -> setResult $  PzSymb symb
+
+        -- identifiers return the corresponding value in ctx
+        AstIdent ident ->
+            -- TODO: handle qualified identifiers
+            case dictGet (PzSymb $ symb ident) ctx of
+                PzUnit -> Left $ "Error: Undefined identifier: " ++ show ident
+                    ++ "\n at: " ++ show p
+                    ++ "\n ctx keys: " ++ show (M.keys ctx)
+                val -> setResult val
+
+        -- lists push form on stack
+        AstList k _ elems -> return $ Acc Nothing ctx $ Form p (toForm p k elems) : frames
+
+-- TODO handle definition context
+-- TODO handle impure context ident
+-- TODO handle arg idents
 invokeFunc :: Dict -> Func -> [PzVal] -> [StackFrame] -> EvalResult
 invokeFunc ctx (Func _ _ _ _ body) args frames =
     case body of
