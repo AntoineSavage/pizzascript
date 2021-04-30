@@ -220,6 +220,70 @@ Note that a symbol by itself is not required to correspond to a previously defin
 
 We will see later on in this document how to programmatically quote and unquote identifiers and symbols
 
+## Booleans
+
+Boolean values (`false` and `true`) are implemented using symbols like this:
+```
+(def false 'false)
+(def true 'true)
+```
+
+Which means that, when evaluated, boolean values return themselves
+
+Boolean operations (`not`, `or`, `and`) are actually applicable to all types. They operate on the *boolish* versions of their arguments, which can be obtained according to the following rules:
+
+- symbol `'false` is `'false`
+- symbol `'true` is `'true`
+
+- the following values are *falsish*:
+  - `()`: the unit type
+  - `0`: the number zero
+  - `""`: the empty string
+  - `[]`: the empty list
+  - `{}`: the empty dictionary
+
+- any other value is *truish*. For example:
+  - `1`: any non-zero number
+  - `"abc"`: any non-empty string
+  - `'xyz`: any non-`'true` or non-`'false` symbol
+  - `[0]`: any non-empty list, regardless of contents
+  - `{(0 0)}`: any non-empty dictionary, regardless of contents
+  - `(func (x) x)`: any function whatsoever
+
+The following truth table applies for the `not` operation:
+
+| x         | (not x)
+|-----------|---------
+| `'false`  | `'true`
+| *falsish* | `'true`
+| *truish*  | `'false`
+| `'true`   | `'false`
+
+The following truth table applies for the `or` operation:
+
+| x         | y        | (or x y)
+|-----------|----------|---------
+| `'true`   | *        | x
+| *truish*  | `true`   | y
+| *truish*  | *        | x
+| *falsish* | `'false` | x
+| *falsish* | *        | y
+| `'false`  | *        | y
+
+The following truth table applies for the `and` operation:
+
+| x         | y        | (and x y)
+|-----------|----------|---------
+| `'false`  | *        | x
+| *falsish* | `false`  | y
+| *falsish* | *        | x
+| *truish*  | `'true`  | x
+| *truish*  | *        | y
+| `'true`   | *        | y
+
+Note that boolean operations (`not`, `or`, `and`) will always evaluate both their arguments
+
+
 # Lists
 
 Lists are immutable and heterogenous value containers

@@ -4,7 +4,7 @@
 # quote: ast -> ast
 # unquote: ast -> ast
 
-eval: ast -> pz
+# eval: ast -> pz
 uneval: pz -> ast
 
 deep_quote: ast -> ast

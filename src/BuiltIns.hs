@@ -6,7 +6,6 @@ import Types
 import Utils
 
 {- TODO for base:
-    - or, and
     - is_empty, size (list / dict)
     - cons, head, tail
     - keys, get, put, del
