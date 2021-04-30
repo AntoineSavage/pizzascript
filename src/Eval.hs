@@ -3,7 +3,7 @@ module Eval where
 import qualified Ast as A
 import qualified Data.Map as M
 
-import BuiltIns
+import BuiltIns ( symb, toForm, builtInCtx )
 import Control.Monad ( forM_, liftM2 )
 import Data.Maybe ( fromMaybe )
 import Data.Nat ( Nat(..) )
@@ -20,10 +20,7 @@ data StackFrame
     deriving (Show, Eq)
 
 evalAst :: Ast -> IO ()
-evalAst (Ast _ es) = go $ Acc Nothing ctx [Block es] where
-    ctx = M.fromList
-        [ (PzSymb $ fromIdent identList, PzFunc list)
-        ]
+evalAst (Ast _ es) = go $ Acc Nothing builtInCtx [Block es]
 
 go :: Acc -> IO ()
 go (Acc result ctx []) = return () -- halt
@@ -62,7 +59,7 @@ evalExpr ctx (AstExpr p _ v) frames =
 
         -- identifiers return the corresponding value in ctx
         AstIdent ident ->
-            case dictGet (PzSymb $ fromIdent ident) ctx of
+            case dictGet (PzSymb $ symb ident) ctx of
                 PzUnit -> Left $ "Error: Undefined identifier: " ++ show ident
                     ++ "\n at: " ++ show p
                     ++ "\n ctx keys: " ++ show (M.keys ctx)

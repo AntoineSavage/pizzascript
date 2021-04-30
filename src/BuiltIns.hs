@@ -9,29 +9,8 @@ import Text.Parsec.Pos ( newPos )
 ident :: String -> Ident
 ident = Ident . (:[])
 
-symb :: String -> Symb
-symb = fromIdent . ident
-
-fromIdent :: Ident -> Symb
-fromIdent = Symb Z
-
-toSymb :: FuncArgPass -> Symb
-toSymb Eval        = symbEval
-toSymb Quote       = symbQuote
-toSymb Unquote     = symbUnquote
-toSymb DeepQuote   = symbDeepQuote
-toSymb DeepUnquote = symbDeepUnquote
-
-fromSymb :: Symb -> Maybe FuncArgPass
-fromSymb symb =
-    let m = M.fromList
-            [ (symbEval, Eval)
-            , (symbQuote, Quote)
-            , (symbUnquote, Unquote)
-            , (symbDeepQuote, DeepQuote)
-            , (symbDeepUnquote, DeepUnquote)
-            ]
-    in  M.lookup symb m
+symb :: Ident -> Symb
+symb = Symb Z
 
 toForm :: AstPos -> AstListKind -> [AstExpr] -> [AstExpr]
 toForm p k =
@@ -50,35 +29,55 @@ identArgs = ident "args"
 identList :: Ident
 identList = ident "list"
 
-list :: Func
-list = Func Eval Nothing argsVariadic $ BodyCustom [AstExpr pos "" $ AstIdent identArgs]
-
 identDict :: Ident
 identDict = ident "dict"
 
 identFunc :: Ident
 identFunc = ident "func"
 
-symbTrue :: Symb
-symbTrue = symb "true"
+identFalse :: Ident
+identFalse = ident "false"
 
-symbFalse :: Symb
-symbFalse = symb "false"
+identTrue :: Ident
+identTrue = ident "true"
 
 symbEval :: Symb
-symbEval = symb "eval"
+symbEval = symb $ ident "eval"
 
 symbQuote :: Symb
-symbQuote = symb "quote"
+symbQuote = symb $ ident "quote"
 
 symbUnquote :: Symb
-symbUnquote = symb "unquote"
+symbUnquote = symb $ ident "unquote"
 
 symbDeepQuote :: Symb
-symbDeepQuote = symb "deep_quote"
+symbDeepQuote = symb $ ident "deep_quote"
 
 symbDeepUnquote :: Symb
-symbDeepUnquote = symb "deep_unquote"
+symbDeepUnquote = symb $ ident "deep_unquote"
 
-argsVariadic :: FuncArgs
-argsVariadic = ArgsVaria $ fromIdent identArgs
+-- built-in constants
+false :: PzVal
+false = PzSymb $ symb identFalse
+
+true :: PzVal
+true = PzSymb $ symb identTrue
+
+-- built-in functions
+-- TODO
+
+{- TODO for base:
+    - not, or, and
+    - empty, size (list / dict)
+    - cons, head, tail
+    - keys, get, put, del
+    - def
+    - func
+-}
+
+-- Built-in context
+builtInCtx :: Dict
+builtInCtx = M.fromList
+    [ (false, false)
+    , (true, true)
+    ]

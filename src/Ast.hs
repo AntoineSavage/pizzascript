@@ -1,6 +1,6 @@
 module Ast where
 
-import BuiltIns ( fromIdent, toForm )
+import BuiltIns ( toForm, symb )
 import Control.Monad ( liftM2, void )
 import Data.Char ( ord, isControl, isPrint )
 import Data.List ( intercalate )
@@ -189,7 +189,7 @@ quote e@(AstExpr p d v) =
 
         -- Identifiers quote as symbols
         AstIdent ident ->
-            toExpr $ AstSymb $ fromIdent ident 
+            toExpr $ AstSymb $ symb ident 
 
         -- Symbols quote as themselves with one more quote
         AstSymb (Symb n ident) ->

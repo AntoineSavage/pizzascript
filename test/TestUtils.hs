@@ -10,8 +10,6 @@ import Text.Parsec.Pos
 import Types
 
 -- Constants
-pos = newPos "" 0 0
-
 digits = ['0'..'9']
 lettersUpper = ['A'..'Z']
 lettersLower = ['a'..'z']
