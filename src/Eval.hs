@@ -62,6 +62,7 @@ evalExpr ctx (AstExpr p _ v) frames =
 
         -- identifiers return the corresponding value in ctx
         AstIdent ident ->
+            -- TODO: Handle qualified identifiers
             case dictGet (PzSymb $ symb ident) ctx of
                 PzUnit -> Left $ "Error: Undefined identifier: " ++ show ident
                     ++ "\n at: " ++ show p
@@ -136,16 +137,16 @@ evalInvoc result ctx p func as melems frames =
 invokeFunc :: Dict -> Func -> [PzVal] -> [StackFrame] -> EvalResult
 invokeFunc ctx (Func _ _ _ body) args frames =
     case body of
-        BodyBuiltIn name -> invokeFuncBuiltIn ctx args name frames
+        BodyBuiltIn ident -> invokeFuncBuiltIn ctx args ident frames
         BodyCustom es -> Left $ "TODO: Invoke custom function: " ++ show es
 
-invokeFuncBuiltIn :: Dict -> [PzVal] -> String -> [StackFrame] -> EvalResult
-invokeFuncBuiltIn ctx args name frames =
-    case name of
-        "_not" -> returnFrom frames $ _not ctx args
-        "_or" -> returnFrom frames $ _or ctx args
-        "_and" -> returnFrom frames $ _and ctx args
-        _ -> Left $ "TODO: Invoke built-in function: " ++ name
+invokeFuncBuiltIn :: Dict -> [PzVal] -> Ident -> [StackFrame] -> EvalResult
+invokeFuncBuiltIn ctx args (Ident ps) frames =
+    case ps of
+        ["not"] -> returnFrom frames $ _not ctx args
+        ["or"] -> returnFrom frames $ _or ctx args
+        ["and"] -> returnFrom frames $ _and ctx args
+        _ -> Left $ "TODO: Invoke built-in function: " ++ show ps
 
 returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
 returnFrom frames x =

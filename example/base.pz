@@ -1,17 +1,17 @@
 # base.pz
 
-# add temporary 'def to current context
-# this will be replaced later on with validating version
-# in the meantime, we must manually ensure no duplicate definitions
-((func c1 'eval () [
+# define 'def manually
+# immediately invoke an anonymous function
+((func ctx 'eval () [
     (put 'def
-        (func c2 'quote (k v) [   
-            (put k ((func 'deep_unquote (x) x) v) c2)
-            ()
+        # This is the 'def definition
+        (func ctx 'quote (k v) [   
+            (put k ((func 'deep_unquote (x) x) v) ctx)
+            () # 'def returns nothing
         ])
-        c1
+        ctx
     )
-    () # return nothing
+    () # this anonymous function returns nothing
 ]))
 
 # useful functions
@@ -40,15 +40,6 @@
     # evaluate result
     (deep_unquote rq)
 ))
-
-# redefine 'def with validation
-(def def (func ctx 'quote (k v) [
-    (if (contains k ctx)
-        (put '__ABORT_EVAL_WITH__ (str "Identifier already defined: " k) ctx)
-        (put k (deep_unquote v) ctx)
-    )
-    () # return nothing
-]))
 
 # lists
 (def list (func args args))

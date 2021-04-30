@@ -29,13 +29,13 @@ pzTrue :: PzVal
 pzTrue = PzSymb $ symb identTrue
 
 pzNot :: PzVal
-pzNot = PzFunc $ Func Eval Nothing (ArgsArity [ident "x"]) $ BodyBuiltIn "_not"
+pzNot = PzFunc $ Func Eval Nothing (ArgsArity [ident "x"]) $ BodyBuiltIn $ ident "not"
 
 pzOr :: PzVal
-pzOr = PzFunc $ Func Eval Nothing (ArgsArity [ident "x", ident "y"]) $ BodyBuiltIn "_or"
+pzOr = PzFunc $ Func Eval Nothing (ArgsArity [ident "x", ident "y"]) $ BodyBuiltIn $ ident "or"
 
 pzAnd :: PzVal
-pzAnd = PzFunc $ Func Eval Nothing (ArgsArity [ident "x", ident "y"]) $ BodyBuiltIn "_and"
+pzAnd = PzFunc $ Func Eval Nothing (ArgsArity [ident "x", ident "y"]) $ BodyBuiltIn $ ident "and"
 
 -- built-in implementations
 _not :: Dict -> [PzVal] -> FuncReturn

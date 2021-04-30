@@ -83,6 +83,6 @@ data FuncArgs
     deriving (Show, Eq, Ord)
 
 data FuncBody
-    = BodyBuiltIn String
+    = BodyBuiltIn Ident
     | BodyCustom [AstExpr]
     deriving (Show, Eq, Ord)
