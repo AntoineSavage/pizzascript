@@ -188,15 +188,10 @@ invokeFuncBuiltIn ctx args (Ident ps) frames =
 
         _ -> Left $ "TODO: Implement built-in function: " ++ show ps
 
-evalFunc :: Dict -> [AstExpr] -> Either String Func
-evalFunc = undefined -- TODO
-
 returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
 returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) ctx frames
 
-------------
 -- Uneval
-------------
 uneval :: PzVal -> AstExpr
 uneval v = AstExpr pos "" $
     case v of
@@ -207,6 +202,10 @@ uneval v = AstExpr pos "" $
         PzList l -> AstList KindList "" $ map uneval l
         PzDict m -> AstList KindDict "" $ map (\(k, v) -> uneval $ PzList [k, v]) $ M.assocs m
         PzFunc f -> AstList KindForm "" $ unevalFunc f
+
+-- Func eval / uneval
+evalFunc :: Dict -> [AstExpr] -> Either String Func
+evalFunc = undefined -- TODO
 
 unevalFunc :: Func -> [AstExpr]
 unevalFunc = undefined -- TODO
