@@ -8,7 +8,7 @@ import BuiltIns
 import Control.Monad ( forM_, liftM2 )
 import Data.Nat ( Nat(..) )
 import Types
-import Utils ( dictGet, symb, toForm, FuncReturn )
+import Utils ( dictGet, pos, symb, toForm, FuncReturn )
 
 type Result = Maybe PzVal
 type EvalResult = Either String Acc
@@ -113,25 +113,38 @@ evalInvoc result ctx p func as melems frames =
 
 -- TODO handle arg pass
 evalExpr :: Dict -> AstExpr -> FuncArgPass -> [StackFrame] -> EvalResult
-evalExpr ctx (AstExpr p _ v) argPass frames = 
+evalExpr ctx e@(AstExpr p _ v) argPass frames = 
     let setResult result = return $ Acc (Just result) ctx frames in
-    case v of
-        -- nums, strs and symbs return themselves
-        AstNum n -> setResult $ PzNum n
-        AstStr s -> setResult $ PzStr s
-        AstSymb symb -> setResult $  PzSymb symb
+    case (v, argPass) of
+        -- numbers and strings
+        (AstNum n, _) -> setResult $ PzNum n
+        (AstStr s, _) -> setResult $ PzStr s
 
-        -- identifiers return the corresponding value in ctx
-        AstIdent ident ->
-            -- TODO: handle qualified identifiers
-            case dictGet (PzSymb $ symb ident) ctx of
-                PzUnit -> Left $ "Error: Undefined identifier: " ++ show ident
-                    ++ "\n at: " ++ show p
-                    ++ "\n ctx keys: " ++ show (M.keys ctx)
-                val -> setResult val
+        -- symbols
+        (AstSymb symb, Eval) -> setResult $ PzSymb symb
 
-        -- lists push form on stack
-        AstList k _ elems -> return $ Acc Nothing ctx $ Form p (toForm p k elems) : frames
+        -- identifiers
+        (AstIdent ident, Eval) -> evalIdent ctx p ident >>= setResult
+        (AstIdent ident, DeepQuote) -> evalIdent ctx p ident >>= \v -> evalExpr ctx (uneval v) Quote frames
+        (AstIdent ident, DeepUnquote) -> evalIdent ctx p ident >>= \v -> evalExpr ctx (uneval v) Unquote frames
+
+        -- lists
+        (AstList k _ elems, Eval) -> return $ Acc Nothing ctx $ Form p (toForm p k elems) : frames
+
+        -- quote and unquote
+        (_, Quote) -> evalExpr ctx (quote e) Eval frames
+        (_, Unquote) -> unquote e >>= \e' -> evalExpr ctx e' Eval frames
+        (_, DeepQuote) -> evalExpr ctx e Quote frames
+        (_, DeepUnquote) -> evalExpr ctx e Unquote frames
+
+evalIdent :: Dict -> AstPos -> Ident -> Either String PzVal
+evalIdent ctx p ident =
+    -- TODO: handle qualified identifiers
+    case dictGet (PzSymb $ symb ident) ctx of
+        PzUnit -> Left $ "Error: Undefined identifier: " ++ show ident
+            ++ "\n at: " ++ show p
+            ++ "\n ctx keys: " ++ show (M.keys ctx)
+        val -> Right val
 
 -- TODO handle definition context
 -- TODO handle impure context ident
@@ -174,7 +187,28 @@ invokeFuncBuiltIn ctx args (Ident ps) frames =
         _ -> Left $ "TODO: Implement built-in function: " ++ show ps
 
 returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
-returnFrom frames x =
-    case x of
-        Left s -> Left s
-        Right (ctx, r) -> Right $ Acc (Just r) ctx frames
+returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) ctx frames
+
+------------
+-- Uneval
+------------
+uneval :: PzVal -> AstExpr
+uneval v = AstExpr pos "" $
+    case v of
+        PzUnit -> AstList KindForm "" []
+        PzNum n -> AstNum n
+        PzStr s -> AstStr s
+        PzSymb s -> AstSymb s
+        PzList l -> AstList KindList "" $ unevalList l
+        PzDict m -> AstList KindDict "" $ unevalDict m
+        PzFunc f -> AstList KindForm "" $ unevalFunc f
+
+unevalList :: [PzVal] -> [AstExpr]
+unevalList = map uneval
+
+unevalDict :: Dict -> [AstExpr]
+unevalDict m = map (\(k, v) -> uneval $ PzList [k, v]) $ M.assocs m
+
+-- TODO
+unevalFunc :: Func -> [AstExpr]
+unevalFunc (Func _ _ _ _ _) = []

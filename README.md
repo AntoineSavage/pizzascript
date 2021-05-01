@@ -58,7 +58,7 @@ Used to represent the absence of any meaningful value. Has no meaningful functio
 
 # Numbers
 
-Numbers can be ints (arbitrary size) or floats (64-bit)
+Numbers can be ints (53-bit) or floats (64-bit)
 
 Integer literals (positive or negative):
 ```

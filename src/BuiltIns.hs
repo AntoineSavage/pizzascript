@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 module BuiltIns where
 
 import qualified Data.Map as M
@@ -95,14 +96,14 @@ pzFunc = PzFunc $ Func M.empty Quote (Just identCtx) (ArgsVaria identArgs) $ Bod
 
 -- booleans
 _not :: Dict -> [PzVal] -> FuncReturn
-_not ctx args = f1 args $ \x -> return $ (,) ctx $ case boolish x of
+_not ctx args = f1 args $ \x -> return $ (ctx,) $ case boolish x of
     FalseReal -> pzTrue
     Falsish -> pzTrue
     Truish -> pzFalse
     TrueReal -> pzFalse
 
 _or :: Dict -> [PzVal] -> FuncReturn
-_or ctx args = f2 args $ \x y -> return $ (,) ctx $
+_or ctx args = f2 args $ \x y -> return $ (ctx,) $
     case (boolish x, boolish y) of
         (TrueReal , _)            -> x
         (Truish   , TrueReal)     -> y
@@ -112,7 +113,7 @@ _or ctx args = f2 args $ \x y -> return $ (,) ctx $
         (FalseReal, _)            -> y
 
 _and :: Dict -> [PzVal] -> FuncReturn
-_and ctx args = f2 args $ \x y -> return $ (,) ctx $
+_and ctx args = f2 args $ \x y -> return $ (ctx,) $
     case (boolish x, boolish y) of
         (FalseReal, _)            -> x
         (Falsish  , FalseReal)    -> y
