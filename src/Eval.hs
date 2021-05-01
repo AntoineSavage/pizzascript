@@ -9,7 +9,7 @@ import BuiltIns
 import Control.Monad ( forM_, liftM2 )
 import Data.Nat ( Nat(..) )
 import Types
-import Utils ( dictGet, pos, symb, toForm, FuncReturn )
+import Utils ( pos, symb, toForm, FuncReturn )
 
 type Result = Maybe PzVal
 type EvalResult = Either String Acc
@@ -138,13 +138,22 @@ evalExpr ctx e@(AstExpr p _ v) eval frames =
         (_, DeepUnquote) -> evalExpr ctx e Unquote frames
 
 evalIdent :: Dict -> AstPos -> Ident -> Either String PzVal
-evalIdent ctx p ident =
-    -- TODO: handle qualified identifiers
-    case dictGet (PzSymb $ symb ident) ctx of
-        PzUnit -> Left $ "Error: Undefined identifier: " ++ show ident
-            ++ "\n at: " ++ show p
-            ++ "\n ctx keys: " ++ show (M.keys ctx)
-        val -> Right val
+evalIdent ctx p ident = inner (PzDict ctx) $ symbSplitImpl $ symb ident where
+    inner val symbs =
+        case symbs of
+            [] -> Right val
+            s:ss ->
+                case val of
+                    PzDict m ->
+                        case M.lookup (PzSymb s) m of
+                            Just v' -> inner v' ss
+                            Nothing -> Left $  "Error: Undefined identifier: " ++ show ident
+                                ++ "\n at: " ++ show p
+                                ++ "\n ctx keys: " ++ show (M.keys ctx)
+                    _ -> Left $  "Error: Non-dictionary field request: " ++ show s
+                                ++ "\n got: " ++ show val
+                                ++ "\n for qualified identifier: " ++ show ident
+                                ++ "\n at: " ++ show p
 
 -- TODO handle definition context
 -- TODO handle impure context ident

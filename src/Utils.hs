@@ -41,9 +41,6 @@ f2 args f = case args of [x, y] -> f x y; _ -> Left $ invalidArityMsg 2 args
 f3 :: [PzVal] -> (PzVal -> PzVal -> PzVal -> FuncReturn) -> FuncReturn
 f3 args f = case args of [x, y, z] -> f x y z; _ -> Left $ invalidArityMsg 3 args
 
-dictGet :: PzVal -> Dict -> PzVal
-dictGet k m = fromMaybe PzUnit $ M.lookup k m
-
 -----------------
 -- Identifiers
 -----------------

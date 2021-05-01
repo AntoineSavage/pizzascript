@@ -92,7 +92,8 @@ pzFunc = PzFunc $ Func M.empty (Just identCtx) Quote (ArgsVaria identArgs) $ Bod
 -- TODO
 
 -- symbols
--- TODO
+symbSplitImpl :: Symb -> [Symb]
+symbSplitImpl (Symb n (Ident ps)) = map (Symb n . Ident . (:[])) ps
 
 -- booleans
 _not :: Dict -> [PzVal] -> FuncReturn
