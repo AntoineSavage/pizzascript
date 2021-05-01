@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 module Eval where
 
 import qualified Ast as A
@@ -95,7 +96,7 @@ evalInvoc result ctx p func as melems frames =
 
                 Just (e:es) ->
                     -- evaluate function argument
-                    let Func _ argPass _ _ _ = func in
+                    let Func _ _ argPass _ _ = func in
                     case evalExpr ctx e argPass $ Invoc p func as (Just es) : frames of
                         Left s -> Left $ s ++ "\n at: " ++ show p
                         Right acc -> return acc
@@ -111,11 +112,10 @@ evalInvoc result ctx p func as melems frames =
                     -- argument evaluation result
                     return $ Acc Nothing ctx $ Invoc p func (r:as) (Just es) : frames
 
--- TODO handle arg pass
 evalExpr :: Dict -> AstExpr -> FuncArgPass -> [StackFrame] -> EvalResult
-evalExpr ctx e@(AstExpr p _ v) argPass frames = 
+evalExpr ctx e@(AstExpr p _ v) eval frames = 
     let setResult result = return $ Acc (Just result) ctx frames in
-    case (v, argPass) of
+    case (v, eval) of
         -- numbers and strings
         (AstNum n, _) -> setResult $ PzNum n
         (AstStr s, _) -> setResult $ PzStr s
@@ -179,12 +179,17 @@ invokeFuncBuiltIn ctx args (Ident ps) frames =
         -- TODO
 
         -- functions
-        ["func"] -> returnFrom frames $ _func ctx args
+        ["func"] -> do
+            es <- mapM (unquote.uneval) args
+            returnFrom frames $ (ctx,) . PzFunc <$> evalFunc ctx es
 
         -- miscellaneous
         -- TODO
 
         _ -> Left $ "TODO: Implement built-in function: " ++ show ps
+
+evalFunc :: Dict -> [AstExpr] -> Either String Func
+evalFunc = undefined -- TODO
 
 returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
 returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) ctx frames
@@ -199,16 +204,9 @@ uneval v = AstExpr pos "" $
         PzNum n -> AstNum n
         PzStr s -> AstStr s
         PzSymb s -> AstSymb s
-        PzList l -> AstList KindList "" $ unevalList l
-        PzDict m -> AstList KindDict "" $ unevalDict m
+        PzList l -> AstList KindList "" $ map uneval l
+        PzDict m -> AstList KindDict "" $ map (\(k, v) -> uneval $ PzList [k, v]) $ M.assocs m
         PzFunc f -> AstList KindForm "" $ unevalFunc f
 
-unevalList :: [PzVal] -> [AstExpr]
-unevalList = map uneval
-
-unevalDict :: Dict -> [AstExpr]
-unevalDict m = map (\(k, v) -> uneval $ PzList [k, v]) $ M.assocs m
-
--- TODO
 unevalFunc :: Func -> [AstExpr]
-unevalFunc (Func _ _ _ _ _) = []
+unevalFunc = undefined -- TODO

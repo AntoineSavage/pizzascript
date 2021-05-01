@@ -60,13 +60,13 @@ pzTrue :: PzVal
 pzTrue = PzSymb symbTrue
 
 pzNot :: PzVal
-pzNot = PzFunc $ Func M.empty Eval Nothing (ArgsArity [identX]) $ BodyBuiltIn identNot
+pzNot = PzFunc $ Func M.empty Nothing Eval (ArgsArity [identX]) $ BodyBuiltIn identNot
 
 pzOr :: PzVal
-pzOr = PzFunc $ Func M.empty Eval Nothing (ArgsArity [identX, identY]) $ BodyBuiltIn identOr
+pzOr = PzFunc $ Func M.empty Nothing Eval (ArgsArity [identX, identY]) $ BodyBuiltIn identOr
 
 pzAnd :: PzVal
-pzAnd = PzFunc $ Func M.empty Eval Nothing (ArgsArity [identX, identY]) $ BodyBuiltIn identAnd
+pzAnd = PzFunc $ Func M.empty Nothing Eval (ArgsArity [identX, identY]) $ BodyBuiltIn identAnd
 
 -- lists
 -- TODO
@@ -76,7 +76,7 @@ pzAnd = PzFunc $ Func M.empty Eval Nothing (ArgsArity [identX, identY]) $ BodyBu
 
 -- functions
 pzFunc :: PzVal
-pzFunc = PzFunc $ Func M.empty Quote (Just identCtx) (ArgsVaria identArgs) $ BodyBuiltIn identFunc
+pzFunc = PzFunc $ Func M.empty (Just identCtx) Quote (ArgsVaria identArgs) $ BodyBuiltIn identFunc
 
 -- miscellaneous
 -- TODO
@@ -129,8 +129,7 @@ _and ctx args = f2 args $ \x y -> return $ (ctx,) $
 -- TODO
 
 -- functions
-_func :: Dict -> [PzVal] -> FuncReturn
-_func ctx args = undefined
+-- TODO
 
 -- miscellaneous
 -- TODO
