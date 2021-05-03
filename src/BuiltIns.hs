@@ -3,10 +3,17 @@ module BuiltIns where
 
 import qualified Data.Map as M
 
+import Text.Parsec.Pos ( newPos )
 import Types
 import Utils
 
 -- Built-in context
+pos :: Pos
+pos = newPos "<built-in>" 0 0
+
+withPos :: a -> WithPos a
+withPos = WithPos pos
+
 builtInCtx :: Dict
 builtInCtx = M.fromList
     [

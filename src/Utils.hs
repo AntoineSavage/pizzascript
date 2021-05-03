@@ -21,6 +21,9 @@ toForm p k =
         KindDict -> (identToExpr identDict:)
         KindForm -> id
 
+mapBoth :: (a -> b -> (c, d)) -> [(a, b)] -> [(c, d)]
+mapBoth f = map $ uncurry f
+
 invalidArityMsg :: Int -> [a] -> String
 invalidArityMsg n args = "Invalid number of arguments. Expected " ++ show n ++ ", got: " ++ show (length args)
 

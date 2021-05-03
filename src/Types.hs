@@ -14,6 +14,15 @@ data Symb
     = Symb Nat Ident
     deriving (Show, Eq, Ord)
 
+type Pos = SourcePos
+data WithPos a
+    = WithPos Pos a
+    deriving (Show)
+
+-- Ignore position
+instance Eq a => Eq (WithPos a) where (==) (WithPos _ x) (WithPos _ y) = x == y
+instance Ord a => Ord (WithPos a) where compare (WithPos _ x) (WithPos _ y) = compare x y
+
 -- AST types
 type AstPos = SourcePos
 newtype Ast

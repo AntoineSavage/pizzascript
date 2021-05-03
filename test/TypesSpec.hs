@@ -9,8 +9,35 @@ import Types
 
 spec :: Spec
 spec = do
+    withPosEqSpec
+    withPosOrdSpec
     astExprEqSpec
     astExprOrdSpec
+
+withPosEqSpec :: Spec
+withPosEqSpec = describe "WithPos (eq)" $ do
+    forM_ [p1, p2] $ \p -> do
+        it "ignores position" $ do
+            property $ \n m -> do
+                let x = AstNum n
+                    x' = AstNum $ n + 1
+                    y = AstNum m
+                (AstExpr p1 x) == (AstExpr p x) `shouldBe` True
+                (AstExpr p1 x) == (AstExpr p x') `shouldBe` False
+                (AstExpr p1 x) == (AstExpr p y) `shouldBe` x == y
+
+withPosOrdSpec :: Spec
+withPosOrdSpec = describe "WithPos (ord)" $ do
+    forM_ [p1, p2] $ \p -> do
+        it "ignores position" $ do
+            property $ \n m -> do
+                let x = AstNum n
+                    x' = AstNum $ n + 1
+                    y = AstNum m
+                compare (AstExpr p1 x) (AstExpr p x) `shouldBe` EQ
+                compare (AstExpr p1 x) (AstExpr p x') `shouldBe` LT
+                compare (AstExpr p1 x') (AstExpr p x) `shouldBe` GT
+                compare (AstExpr p1 x) (AstExpr p y) `shouldBe` compare x y
 
 astExprEqSpec :: Spec
 astExprEqSpec = describe "AstExpr (eq)" $ do
