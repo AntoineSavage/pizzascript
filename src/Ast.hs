@@ -13,13 +13,13 @@ import Utils ( toForm, symb )
 
 -- AST
 parseAst :: Parser Ast
-parseAst = uncurry (flip Ast) <$> parseMany doc (parseExpr doc) eof
+parseAst = Ast <$> parseMany ignore (parseExpr ignore) eof
 
 unparseAst :: Ast -> String
-unparseAst (Ast d es) = unparseMany d unparseExpr es
+unparseAst (Ast es) = unparseMany unparseExpr es
 
-doc :: Parser String 
-doc = concat <$> many (comment <|> many1 space <|> many1 (satisfy isControl))
+ignore :: Parser () 
+ignore = void $ many (comment <|> many1 space <|> many1 (satisfy isControl))
 
 comment :: Parser String
 comment = char '#' >>= fmap reverse . go . (:[]) where
@@ -124,13 +124,13 @@ unparseSymb :: Symb -> String
 unparseSymb (Symb n ident) = "'" ++ unlen n '\'' ++ unparseIdent ident
 
 -- Lists
-parseList :: AstListKind -> Parser String -> (String -> Parser a) -> Parser ([a], String)
-parseList k doc p =
+parseList :: AstListKind -> Parser () -> Parser a -> Parser [a]
+parseList k ign p =
     char (getListStart k) >>
-        parseMany doc p (void $ char $ getListEnd k)
+        parseMany ign p (void $ char $ getListEnd k)
 
-unparseList :: AstListKind -> String -> (a -> String) -> [a] -> String
-unparseList k d f es = [getListStart k] ++ unparseMany d f es ++ [getListEnd k]
+unparseList :: AstListKind ->  (a -> String) -> [a] -> String
+unparseList k f es = [getListStart k] ++ unparseMany f es ++ [getListEnd k]
 
 getListStart :: AstListKind -> Char
 getListStart KindList = '['
@@ -142,47 +142,36 @@ getListEnd KindList = ']'
 getListEnd KindDict = '}'
 getListEnd KindForm = ')'
 
-parseMany :: Parser String -> (String -> Parser a) -> Parser () -> Parser ([a], String)
-parseMany doc elem end = do
-    startDoc <- doc
-    go [] startDoc
-    where
-        go acc d = do
-            mend <- optionMaybe end
-            case mend of
-                Just _ -> return (reverse acc, d)
-                Nothing -> do
-                    e <- elem d
-                    d' <- doc
-                    go (e : acc) d'
+parseMany :: Parser () -> Parser a -> Parser () -> Parser [a]
+parseMany ign elem end = flip manyTill end $ ign >> elem >>= \e -> ignore >> return e
 
-unparseMany :: String -> (a -> String) -> [a] -> String
-unparseMany d f es = concatMap f es ++ d
+unparseMany :: (a -> String) -> [a] -> String
+unparseMany f = unwords . map f
 
 -- Expressions
-parseExpr :: Parser String -> String -> Parser AstExpr
-parseExpr doc d = liftM2 (`AstExpr` d) getPosition $
+parseExpr :: Parser () -> Parser AstExpr
+parseExpr ign = liftM2 AstExpr getPosition $
             AstNum <$> (parseNum <?> "number")
         <|> AstStr <$> (parseStr <?> "string")
         <|> AstIdent <$> (parseIdent <?> "identifier")
         <|> AstSymb <$> (parseSymb <?> "symbol")
-        <|> uncurry (flip $ AstList KindList) <$> (parseList KindList doc (parseExpr doc) <?> "list")
-        <|> uncurry (flip $ AstList KindDict) <$> (parseList KindDict doc (parseExpr doc) <?> "dictionary")
-        <|> uncurry (flip $ AstList KindForm) <$> (parseList KindForm doc (parseExpr doc) <?> "form")
+        <|> AstList KindList <$> (parseList KindList ign (parseExpr ign) <?> "list")
+        <|> AstList KindDict <$> (parseList KindDict ign (parseExpr ign) <?> "dictionary")
+        <|> AstList KindForm <$> (parseList KindForm ign (parseExpr ign) <?> "form")
 
 unparseExpr :: AstExpr -> String
-unparseExpr (AstExpr _ d1 v) =
-    d1 ++ case v of
+unparseExpr (AstExpr _ v) =
+    case v of
         AstNum n -> unparseNum n
         AstStr s -> unparseStr s
         AstIdent i -> unparseIdent i
         AstSymb s -> unparseSymb s
-        AstList k d2 l -> unparseList k d2 unparseExpr l
+        AstList k l -> unparseList k unparseExpr l
 
 -- Quoting
 quote :: AstExpr -> AstExpr
-quote e@(AstExpr p d v) =
-    let toExpr = AstExpr p d in
+quote e@(AstExpr p v) =
+    let toExpr = AstExpr p in
     case v of
         -- Numbers and strings quote as themselves
         AstNum _ -> e
@@ -199,12 +188,12 @@ quote e@(AstExpr p d v) =
         -- Lists quote as forms prepended with list
         -- Dicts quote as forms prepended with dict
         -- Forms quote as list with elements quoted recursively
-        AstList k d es ->
-            toExpr $ AstList KindList d $ map quote $ toForm p k es
+        AstList k es ->
+            toExpr $ AstList KindList $ map quote $ toForm p k es
 
 unquote :: AstExpr -> Either String AstExpr
-unquote e@(AstExpr p d v) =
-    let toExpr = AstExpr p d in
+unquote e@(AstExpr p v) =
+    let toExpr = AstExpr p in
     case v of
         -- Numbers and strings unquote as themselves
         AstNum _ -> return e
@@ -223,8 +212,8 @@ unquote e@(AstExpr p d v) =
 
         -- Lists unquote to forms with elements unquoted recursively
         -- Dicts and forms cannot be unquoted
-        AstList k d es ->
+        AstList k es ->
             case k of
-                KindList -> toExpr . AstList KindForm d <$> mapM unquote es
-                KindDict -> Left $ "Unquote: unexpected dictionary: " ++ unparseList KindDict d unparseExpr es
-                KindForm -> Left $ "Unquote: unexpected form: " ++ unparseList KindForm d unparseExpr es
+                KindList -> toExpr . AstList KindForm <$> mapM unquote es
+                KindDict -> Left $ "Unquote: unexpected dictionary: " ++ unparseList KindDict unparseExpr es
+                KindForm -> Left $ "Unquote: unexpected form: " ++ unparseList KindForm unparseExpr es

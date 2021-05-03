@@ -16,29 +16,24 @@ data Symb
 
 -- AST types
 type AstPos = SourcePos
-type AstDoc = String
-
-data Ast
-    = Ast AstDoc [AstExpr]
+newtype Ast
+    = Ast [AstExpr]
     deriving (Show, Eq)
 
 data AstExpr
-    = AstExpr AstPos AstDoc AstVal
+    = AstExpr AstPos AstVal
     deriving (Show)
 
 -- Ignore position
-instance Eq AstExpr where (==) (AstExpr _ d1 v1) (AstExpr _ d2 v2) = d1 == d2 && v1 == v2
-instance Ord AstExpr where
-    compare (AstExpr _ d1 v1) (AstExpr _ d2 v2) =
-        let dCmp = compare d1 d2
-        in if dCmp /= EQ then dCmp else compare v1 v2
+instance Eq AstExpr where (==) (AstExpr _ v1) (AstExpr _ v2) = v1 == v2
+instance Ord AstExpr where compare (AstExpr _ v1) (AstExpr _ v2) = compare v1 v2
 
 data AstVal
     = AstNum Double
     | AstStr String
     | AstIdent Ident
     | AstSymb Symb
-    | AstList AstListKind AstDoc [AstExpr]
+    | AstList AstListKind [AstExpr]
     deriving (Show, Eq, Ord)
 
 data AstListKind

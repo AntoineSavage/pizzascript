@@ -25,7 +25,7 @@ data StackFrame
     deriving (Show, Eq)
 
 evalAst :: Ast -> IO ()
-evalAst (Ast _ es) = go $ Acc Nothing builtInCtx [Block es]
+evalAst (Ast es) = go $ Acc Nothing builtInCtx [Block es]
 
 go :: Acc -> IO ()
 go (Acc result ctx []) = return () -- no more frames: halt
@@ -113,7 +113,7 @@ evalInvoc result ctx p func as melems frames =
                     return $ Acc Nothing ctx $ Invoc p func (r:as) (Just es) : frames
 
 evalExpr :: Dict -> AstExpr -> FuncArgPass -> [StackFrame] -> EvalResult
-evalExpr ctx e@(AstExpr p _ v) eval frames = 
+evalExpr ctx e@(AstExpr p v) eval frames = 
     let setResult result = return $ Acc (Just result) ctx frames in
     case (v, eval) of
         -- numbers and strings
@@ -129,7 +129,7 @@ evalExpr ctx e@(AstExpr p _ v) eval frames =
         (AstIdent ident, DeepUnquote) -> evalIdent ctx p ident >>= \v -> evalExpr ctx (uneval v) Unquote frames
 
         -- lists
-        (AstList k _ elems, Eval) -> return $ Acc Nothing ctx $ Form p (toForm p k elems) : frames
+        (AstList k elems, Eval) -> return $ Acc Nothing ctx $ Form p (toForm p k elems) : frames
 
         -- quote and unquote
         (_, Quote) -> evalExpr ctx (quote e) Eval frames
@@ -202,15 +202,15 @@ returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) ctx frames
 
 -- Uneval
 uneval :: PzVal -> AstExpr
-uneval v = AstExpr undefined undefined $
+uneval v = AstExpr undefined $
     case v of
-        PzUnit -> AstList KindForm "" []
+        PzUnit -> AstList KindForm []
         PzNum n -> AstNum n
         PzStr s -> AstStr s
         PzSymb s -> AstSymb s
-        PzList l -> AstList KindList "" $ map uneval l
-        PzDict m -> AstList KindDict "" $ map (\(k, v) -> uneval $ PzList [k, v]) $ M.assocs m
-        PzFunc f -> AstList KindForm "" $ unevalFunc f
+        PzList l -> AstList KindList $ map uneval l
+        PzDict m -> AstList KindDict $ map (\(k, v) -> uneval $ PzList [k, v]) $ M.assocs m
+        PzFunc f -> AstList KindForm $ unevalFunc f
 
 -- Func eval / uneval
 evalFunc :: Dict -> [AstExpr] -> Either String Func

@@ -15,7 +15,7 @@ symb = Symb Z
 
 toForm :: AstPos -> AstListKind -> [AstExpr] -> [AstExpr]
 toForm p k =
-    let identToExpr ident = AstExpr p "" $ AstIdent ident
+    let identToExpr ident = AstExpr p $ AstIdent ident
     in case k of
         KindList -> (identToExpr identList:)
         KindDict -> (identToExpr identDict:)

@@ -34,11 +34,11 @@ argPassSymbs = [ symbEval, symbQuote, symbUnquote, symbDeepQuote, symbDeepUnquot
 argPasses = [ Eval, Quote, Unquote, DeepQuote, DeepUnquote ]
 
 -- Functions
-parseElem :: String -> Parser Elem
-parseElem s = Elem s . (read :: String -> Int) <$> many1 digit
+parseElem :: Parser Elem
+parseElem = Elem . (read :: String -> Int) <$> many1 digit
 
 unparseElem :: Elem -> String
-unparseElem (Elem s x) = s ++ show x
+unparseElem (Elem x) = show x
 
 -- Types and instances
 instance Arbitrary Ident where
@@ -51,25 +51,15 @@ instance Arbitrary IdentPart where
 instance Arbitrary Symb where
     arbitrary = liftM2 Symb arbitrary arbitrary
 
-newtype D = D String deriving (Show, Eq)
-instance Arbitrary D where arbitrary = D <$> elements [" ", "\n", "\t", "\r\n", "\v"]
-arbD = do D d <- arbitrary; return d
-
 instance Arbitrary SourcePos where arbitrary = liftM3 newPos arbitrary arbitrary arbitrary
+
+newtype Elem = Elem Int deriving (Show, Eq)
+instance Arbitrary Elem where arbitrary = do Positive x <- arbitrary; return $ Elem x
 
 newtype Few a = Few [a] deriving (Show, Eq)
 instance Arbitrary a => Arbitrary (Few a) where
     arbitrary = Few <$> arbMany 0 5 arbitrary
 
-data Elem
-    = Elem String Int
-    deriving (Show, Eq)
-
-instance Arbitrary Elem where
-    arbitrary = do
-        D d <- arbitrary
-        Positive x <- arbitrary
-        return $ Elem d x
 instance Arbitrary AstExpr where
     arbitrary = chooseInt (0, 3) >>= arbitraryExprOf
 
@@ -78,15 +68,14 @@ arbMany min max me = chooseInt (min, max) >>= flip vectorOf me
 
 arbitraryExprOf depth = do
     p <- arbitrary
-    (D d) <- arbitrary
-    fmap (AstExpr p d) $ oneof $
+    fmap (AstExpr p) $ oneof $
         [ AstNum <$> arbitrary
         , AstStr <$> arbitrary
         , AstIdent <$> arbitrary
         , AstSymb <$> liftM2 Symb arbitrary arbitrary
         ] ++
         (if depth <= 0 then [] else
-            [ liftM3 AstList arbK arbD (arbMany 0 3 $ arbitraryExprOf $ depth-1)
+            [ liftM2 AstList arbK $ arbMany 0 3 $ arbitraryExprOf $ depth-1
             ]
         )
 
@@ -106,14 +95,13 @@ instance Arbitrary UnquoteValids where
 
 arbitraryUnquoteValidOf depth = do
     p <- arbitrary
-    (D d) <- arbitrary
-    fmap (AstExpr p d) $ oneof $
+    fmap (AstExpr p) $ oneof $
         [ AstNum <$> arbitrary
         , AstStr <$> arbitrary
         , AstSymb <$> liftM2 Symb arbitrary arbitrary
         ] ++
         ( if depth <= 0 then [] else
-            [ liftM2 (AstList KindList) arbD $ arbMany 0 3 $ arbitraryUnquoteValidOf $ depth-1
+            [ AstList KindList <$> arbMany 0 3 (arbitraryUnquoteValidOf $ depth-1)
             ]
         )
 
