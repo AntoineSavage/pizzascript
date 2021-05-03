@@ -14,7 +14,7 @@ data Symb
     = Symb Nat Ident
     deriving (Show, Eq, Ord)
 
--- AST types (non-evaluated)
+-- AST types
 type AstPos = SourcePos
 type AstDoc = String
 data Meta
@@ -47,7 +47,7 @@ data AstListKind
     | KindForm
     deriving (Show, Eq, Ord)
 
--- Evaluated types
+-- Value types
 -- TODO: PzExpr with Meta
 -- TODO: getter for Func.argPass
 -- TODO: getter for Func.body
