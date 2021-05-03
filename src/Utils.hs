@@ -13,7 +13,7 @@ ident = Ident . (:[])
 symb :: Ident -> Symb
 symb = Symb Z
 
-toForm :: AstPos -> AstListKind -> [AstExpr] -> [AstExpr]
+toForm :: Pos -> AstListKind -> [AstExpr] -> [AstExpr]
 toForm p k =
     let identToExpr ident = AstExpr p $ AstIdent ident
     in case k of

@@ -20,8 +20,8 @@ data Acc
 
 data StackFrame
     = Block [AstExpr]
-    | Form AstPos [AstExpr]
-    | Invoc AstPos Func [PzVal] (Maybe [AstExpr])
+    | Form Pos [AstExpr]
+    | Invoc Pos Func [PzVal] (Maybe [AstExpr])
     deriving (Show, Eq)
 
 evalAst :: Ast -> IO ()
@@ -52,7 +52,7 @@ evalBlock result ctx es frames =
             -- evaluate next block expression
             evalExpr ctx e Eval $ Block es : frames
 
-evalForm :: Result -> Dict -> AstPos -> [AstExpr] -> [StackFrame] -> EvalResult
+evalForm :: Result -> Dict -> Pos -> [AstExpr] -> [StackFrame] -> EvalResult
 evalForm result ctx p elems frames =
     case result of
         Nothing ->
@@ -78,7 +78,7 @@ evalForm result ctx p elems frames =
                     ++ show f
                     ++ "\n at: " ++ show p
 
-evalInvoc :: Result -> Dict -> AstPos -> Func -> [PzVal] -> Maybe [AstExpr] -> [StackFrame] -> EvalResult
+evalInvoc :: Result -> Dict -> Pos -> Func -> [PzVal] -> Maybe [AstExpr] -> [StackFrame] -> EvalResult
 evalInvoc result ctx p func as melems frames =
     case result of
         Nothing ->
@@ -137,7 +137,7 @@ evalExpr ctx e@(AstExpr p v) eval frames =
         (_, DeepQuote) -> evalExpr ctx e Quote frames
         (_, DeepUnquote) -> evalExpr ctx e Unquote frames
 
-evalIdent :: Dict -> AstPos -> Ident -> Either String PzVal
+evalIdent :: Dict -> Pos -> Ident -> Either String PzVal
 evalIdent ctx p ident = inner (PzDict ctx) $ symbSplitImpl $ symb ident where
     inner val symbs =
         case symbs of
