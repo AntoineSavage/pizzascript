@@ -74,9 +74,9 @@ evalForm result ctx p elems frames =
                     return $ Acc Nothing ctx $ Invoc p func [] (Just elems) : frames
 
                 _ -> Left $ "Error: Malformed function invocation "
-                    ++ "(first form element must be a function): "
-                    ++ show f
+                    ++ "(first form element must be a function)"
                     ++ "\n at: " ++ show p
+                    ++ "\n" ++ show f
 
 evalInvoc :: Result -> Dict -> Pos -> Func -> [WithPos PzVal] -> Maybe [WithPos AstExpr] -> [StackFrame] -> EvalResult
 evalInvoc result ctx p func as melems frames =
@@ -86,13 +86,13 @@ evalInvoc result ctx p func as melems frames =
             case melems of
                 Nothing -> 
                     -- marked for invocation: invoke function
-                    case invokeFunc ctx p func (reverse as) frames of
+                    case invokeFunc ctx p func as frames of
                         Left s -> Left $ s ++ "\n at: " ++ show p
                         Right acc -> return acc
 
                 Just [] -> 
                     -- all args evaluated: mark for invocation
-                    return $ Acc Nothing ctx $ Invoc p func as Nothing : frames
+                    return $ Acc Nothing ctx $ Invoc p func (reverse as) Nothing : frames
 
                 Just (e:es) ->
                     -- evaluate function argument
@@ -152,12 +152,10 @@ evalIdent ctx p ident = inner (withPos $ PzDict ctx) $ symbSplitImpl $ symb iden
                             Nothing -> Left $  "Error: Undefined identifier: " ++ show i
                                 ++ "\n when evaluating (possibly qualified) identifier: " ++ show ident
                                 ++ "\n at: " ++ show p
-                                -- TODO Display only single-quoted, unqualified symbols, as identifiers
                                 ++ "\n context keys: " ++ show (M.keys m)
 
-                    _ -> Left $  "Error: Evaluating child identifier in non-dictionary context"
-                                ++ "\n child identifier: " ++ show i
-                                ++ "\n part of qualified identifier: " ++ show ident
+                    _ -> Left $  "Error: Non-dictionary context for identifier: " ++ show i
+                                ++ "\n when evaluating (possibly qualified) identifier: " ++ show ident
                                 ++ "\n at: " ++ show p
                                 ++ "\n non-dictionary context: " ++ show val_or_ctx
 
@@ -196,7 +194,9 @@ invokeFuncBuiltIn ctx p args (Ident ps) frames =
         -- functions
         ["func"] -> do
             es <- mapM (unquote.unevalExpr) args
-            returnFrom frames $ (ctx,) . WithPos p . PzFunc . fromFuncCustom ctx <$> evalFuncCustom es
+            fc <- evalFuncCustom es
+            let r = WithPos p $ PzFunc $ fromFuncCustom ctx fc
+            return $ Acc (Just r) ctx frames
 
         -- miscellaneous
         -- TODO
@@ -215,7 +215,8 @@ unevalExpr (WithPos p v) = WithPos p $
         PzStr s -> AstStr s
         PzSymb s -> AstSymb s
         PzList l -> AstList KindList $ map unevalExpr l
-        PzDict m -> AstList KindDict $ map (\(k, v) -> withPos $ AstList KindForm [unevalExpr k, unevalExpr v]) $ M.assocs m
+        PzDict m -> AstList KindDict $ flip map (M.assocs m) $
+            \(k, v) -> withPos $ AstList KindForm [unevalExpr k, unevalExpr v]
         PzFunc f ->
             case toFuncCustom f of
                 Left ident -> AstSymb $ symb ident
