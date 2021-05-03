@@ -8,16 +8,10 @@ import Data.Nat ( len, unlen, Nat(..) )
 import Numeric ( readHex, showHex )
 import Text.Parsec
 import Text.Parsec.String ( Parser )
-import Types ( Ast(..), AstExpr(..), AstListKind(..), AstVal(..), Ident(..), Symb(..) )
+import Types ( AstExpr(..), AstListKind(..), AstVal(..), Ident(..), Symb(..) )
 import Utils ( toForm, symb )
 
--- AST
-parseAst :: Parser Ast
-parseAst = Ast <$> parseMany ignore (parseExpr ignore) eof
-
-unparseAst :: Ast -> String
-unparseAst (Ast es) = unparseMany unparseExpr es
-
+-- Ignore
 ignore :: Parser () 
 ignore = void $ many (comment <|> many1 space <|> many1 (satisfy isControl))
 

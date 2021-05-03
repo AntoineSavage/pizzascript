@@ -24,8 +24,8 @@ data StackFrame
     | Invoc Pos Func [PzVal] (Maybe [AstExpr])
     deriving (Show, Eq)
 
-evalAst :: Ast -> IO ()
-evalAst (Ast es) = go $ Acc Nothing builtInCtx [Block es]
+eval :: [AstExpr] -> IO ()
+eval es = go $ Acc Nothing builtInCtx [Block es]
 
 go :: Acc -> IO ()
 go (Acc result ctx []) = return () -- no more frames: halt

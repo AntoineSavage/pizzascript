@@ -24,10 +24,6 @@ instance Eq a => Eq (WithPos a) where (==) (WithPos _ x) (WithPos _ y) = x == y
 instance Ord a => Ord (WithPos a) where compare (WithPos _ x) (WithPos _ y) = compare x y
 
 -- AST types
-newtype Ast
-    = Ast [AstExpr]
-    deriving (Show, Eq)
-
 data AstExpr
     = AstExpr Pos AstVal
     deriving (Show)

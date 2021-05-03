@@ -15,11 +15,8 @@ import Utils
 
 spec :: Spec
 spec = do
-    -- AST
+    -- Ignore
     ignoreSpec
-    parseAstVsUnparseAstSpec
-    parseAstSpec
-    unparseAstSpec
 
     -- Numbers
     parseNumVsUnparseNumSpec
@@ -126,57 +123,6 @@ ignoreSpec = describe "ignore" $ do
 
         parse ignore "tests" "(" `shouldBe` Right ()
         isLeft (parse (ignore >> eof) "tests" "(") `shouldBe` True
-
-parseAstVsUnparseAstSpec :: Spec
-parseAstVsUnparseAstSpec = describe "parseAst vs unparseAst" $ do
-    it "composes parseAst and unparseAst into id into id" $ do
-        property $ \(Few es) -> do
-            let ast = Ast es
-                s = unparseAst ast
-            parse parseAst "tests" s `shouldBe` Right ast
-            unparseAst <$> parse parseAst "tests" s `shouldBe` Right s
-
-parseAstSpec :: Spec
-parseAstSpec = describe "parseAst" $ do
-    it "parses empty string" $ do
-        parse parseAst "tests" "" `shouldBe` Right (Ast [])
-
-    it "parses single expression" $ do
-        property $ \e -> do
-            parse parseAst "tests" (unparseExpr e) `shouldBe` Right (Ast [e])
-
-    it "parses two expressions" $ do
-        property $ \e1 e2 -> do
-            parse parseAst "tests" (unparseExpr e1 ++ " " ++ unparseExpr e2) `shouldBe` Right (Ast [e1, e2])
-
-    it "parses three expressions" $ do
-        property $ \e1 e2 e3 -> do
-            parse parseAst "tests" (unparseExpr e1 ++ " " ++ unparseExpr e2 ++ " " ++ unparseExpr e3) `shouldBe` Right (Ast [e1, e2, e3])
-
-    it "parses n expressions" $ do
-        property $ \(Few es) -> do
-            parse parseAst "tests" (unwords $ map unparseExpr es) `shouldBe` Right (Ast es)
-
-unparseAstSpec :: Spec
-unparseAstSpec = describe "unparseAst" $ do
-    it "unparses no expressions" $ do
-        unparseAst (Ast []) `shouldBe` ""
-
-    it "unparses single expression" $ do
-        property $ \e -> do
-            unparseAst (Ast [e]) `shouldBe` unparseExpr e
-
-    it "unparses two expressions" $ do
-        property $ \e1 e2 -> do
-            unparseAst (Ast [e1, e2]) `shouldBe` unparseExpr e1 ++ " " ++ unparseExpr e2
-
-    it "unparses three expressions" $ do
-        property $ \e1 e2 e3 -> do
-            unparseAst (Ast [e1, e2, e3]) `shouldBe` unparseExpr e1 ++ " " ++ unparseExpr e2 ++ " " ++ unparseExpr e3
-
-    it "unparses n expressions" $ do
-        property $ \(Few es) -> do
-            unparseAst (Ast es) `shouldBe` unwords (map unparseExpr es)
 
 -- Numbers
 parseNumVsUnparseNumSpec :: Spec
