@@ -56,7 +56,7 @@ instance Arbitrary D where arbitrary = D <$> elements [" ", "\n", "\t", "\r\n", 
 arbD = do D d <- arbitrary; return d
 
 instance Arbitrary SourcePos where arbitrary = liftM3 newPos arbitrary arbitrary arbitrary
-instance Arbitrary Meta where arbitrary = liftM2 Meta arbitrary arbitrary
+instance Arbitrary Meta where arbitrary = liftM2 Meta arbitrary arbD
 
 newtype Few a = Few [a] deriving (Show, Eq)
 instance Arbitrary a => Arbitrary (Few a) where
@@ -78,8 +78,8 @@ arbK = elements kinds
 arbMany min max me = chooseInt (min, max) >>= flip vectorOf me
 
 arbitraryExprOf depth = do
-    D d <- arbitrary
-    fmap (AstExpr $ Meta pos d) $ oneof $
+    m <- arbitrary
+    fmap (AstExpr m) $ oneof $
         [ AstNum <$> arbitrary
         , AstStr <$> arbitrary
         , AstIdent <$> arbitrary
@@ -105,8 +105,8 @@ instance Arbitrary UnquoteValids where
     arbitrary = UnquoteValids <$> arbMany 0 3 (do UnquoteValid e <- arbitrary; return e)
 
 arbitraryUnquoteValidOf depth = do
-    D d <- arbitrary
-    fmap (AstExpr $ Meta pos d) $ oneof $ 
+    m <- arbitrary
+    fmap (AstExpr m) $ oneof $ 
         [ AstNum <$> arbitrary
         , AstStr <$> arbitrary
         , AstSymb <$> liftM2 Symb arbitrary arbitrary

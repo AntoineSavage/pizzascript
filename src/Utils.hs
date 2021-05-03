@@ -7,12 +7,6 @@ import Data.Nat ( Nat(..) )
 import Types
 import Text.Parsec.Pos ( newPos )
 
-pos :: AstPos
-pos = newPos "<built-in>" 0 0
-
-meta :: Meta
-meta = Meta pos ""
-
 ident :: String -> Ident
 ident = Ident . (:[])
 

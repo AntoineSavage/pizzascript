@@ -9,7 +9,7 @@ import BuiltIns
 import Control.Monad ( forM_, liftM2 )
 import Data.Nat ( Nat(..) )
 import Types
-import Utils ( meta, pos, symb, toForm, FuncReturn )
+import Utils ( symb, toForm, FuncReturn )
 
 type Result = Maybe PzVal
 type EvalResult = Either String Acc
@@ -202,7 +202,7 @@ returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) ctx frames
 
 -- Uneval
 uneval :: PzVal -> AstExpr
-uneval v = AstExpr meta $
+uneval v = AstExpr (Meta undefined undefined) $
     case v of
         PzUnit -> AstList KindForm "" []
         PzNum n -> AstNum n
