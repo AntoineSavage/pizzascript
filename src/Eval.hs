@@ -113,14 +113,16 @@ evalInvoc result ctx p func as melems frames =
 
 evalExpr :: Dict -> WithPos AstExpr -> FuncArgPass -> [StackFrame] -> EvalResult
 evalExpr ctx e@(WithPos p v) eval frames = 
-    let setResult result = return $ Acc (Just result) ctx frames in
+    let setResult result = return $ Acc (Just result) ctx frames
+        setResult' = setResult . WithPos p
+    in
     case (v, eval) of
         -- numbers and strings
-        (AstNum n, _) -> setResult $ WithPos p $ PzNum n
-        (AstStr s, _) -> setResult $ WithPos p $ PzStr s
+        (AstNum n, _) -> setResult' $ PzNum n
+        (AstStr s, _) -> setResult' $ PzStr s
 
         -- symbols
-        (AstSymb symb, Eval) -> setResult $ WithPos p $ PzSymb symb
+        (AstSymb symb, Eval) -> setResult' $ PzSymb symb
 
         -- identifiers
         (AstIdent ident, Eval) -> evalIdent ctx p ident >>= setResult
