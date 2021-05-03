@@ -49,6 +49,9 @@ data AstListKind
 
 -- Evaluated types
 -- TODO: PzExpr with Meta
+-- TODO: getter for Func.argPass
+-- TODO: getter for Func.body
+-- TODO: getter for Meta.p, meta.d
 data PzVal
     = PzUnit
     | PzNum Double
