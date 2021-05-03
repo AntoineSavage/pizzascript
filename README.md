@@ -48,6 +48,9 @@ Additionally, the following functions work on all types:
 (lt x y)  # -> 'true | 'false. Whether x is less than y
 # values of different types are ordered as such:
 # () < any_num < any_str < any_symb < any_list < any_dict < any_func
+
+(src_pos main) # -> "src/main, line 1, column 2"
+(src_doc main) # -> "# TODO: implement main"
 ```
 
 # The unit type `()`
