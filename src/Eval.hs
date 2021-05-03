@@ -238,7 +238,22 @@ fromFuncCustom ctx (FuncCustom explCtx argPass args es) =
     Func ctx explCtx argPass args $ BodyCustom es
 
 evalFuncCustom :: [WithPos AstExpr] -> Either String FuncCustom
-evalFuncCustom = undefined -- TODO
+evalFuncCustom es0 = do
+    (explCtx, argPass, es1) <- parseImpureArgs es0
+    (args, es2) <- parseArgs es1
+    return $ FuncCustom explCtx argPass args es2
 
 unevalFuncCustom :: FuncCustom -> [WithPos AstExpr]
-unevalFuncCustom = undefined -- TODO
+unevalFuncCustom (FuncCustom explCtx argPass args body) = unparseImpureArgs explCtx argPass ++ unparseArgs args ++ body
+
+parseImpureArgs :: [WithPos AstExpr] -> Either String (FuncExplCtx, FuncArgPass, [WithPos AstExpr])
+parseImpureArgs = undefined -- TODO
+
+unparseImpureArgs :: FuncExplCtx -> FuncArgPass -> [WithPos AstExpr]
+unparseImpureArgs = undefined -- TODO
+
+parseArgs :: [WithPos AstExpr] -> Either String (FuncArgs, [WithPos AstExpr])
+parseArgs = undefined -- TODO
+
+unparseArgs :: FuncArgs -> [WithPos AstExpr]
+unparseArgs = undefined -- TODO
