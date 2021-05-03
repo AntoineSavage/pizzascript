@@ -21,8 +21,6 @@ toForm p k =
         KindDict -> (identToExpr identDict:)
         KindForm -> id
 
-type FuncReturn = Either String (Dict, PzVal)
-
 invalidArityMsg :: Int -> [a] -> String
 invalidArityMsg n args = "Invalid number of arguments. Expected " ++ show n ++ ", got: " ++ show (length args)
 

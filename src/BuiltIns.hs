@@ -85,6 +85,8 @@ pzFunc = PzFunc $ Func M.empty (Just identCtx) Quote (ArgsVaria identArgs) $ Bod
 -- Implems
 -------------
 
+type FuncReturn = Either String (Dict, PzVal)
+
 -- numbers
 -- TODO
 

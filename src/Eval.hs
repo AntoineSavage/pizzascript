@@ -9,7 +9,7 @@ import BuiltIns
 import Control.Monad ( forM_, liftM2 )
 import Data.Nat ( Nat(..) )
 import Types
-import Utils ( symb, toForm, FuncReturn )
+import Utils ( symb, toForm )
 
 type Result = Maybe PzVal
 type EvalResult = Either String Acc
