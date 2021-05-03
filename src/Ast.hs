@@ -154,8 +154,8 @@ parseExpr ign = liftM2 WithPos getPosition $
         <|> AstList KindForm <$> (parseList KindForm ign (parseExpr ign) <?> "form")
 
 unparseExpr :: WithPos AstExpr -> String
-unparseExpr (WithPos _ v) =
-    case v of
+unparseExpr e =
+    case val e of
         AstNum n -> unparseNum n
         AstStr s -> unparseStr s
         AstIdent i -> unparseIdent i

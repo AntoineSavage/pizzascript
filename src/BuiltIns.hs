@@ -8,11 +8,11 @@ import Types
 import Utils
 
 -- Built-in context
-pos :: Pos
-pos = newPos "<built-in>" 0 0
+builtInPos :: Pos
+builtInPos = newPos "<built-in>" 0 0
 
 withPos :: a -> WithPos a
-withPos = WithPos pos
+withPos = WithPos builtInPos
 
 builtInCtx :: Dict
 builtInCtx = M.fromList
@@ -155,10 +155,10 @@ data Boolish
     deriving (Show, Eq)
 
 boolish :: WithPos PzVal -> Boolish
-boolish x@(WithPos _ v)
-  | x == pzFalse = FalseReal
-  | x == pzTrue = TrueReal
-  | otherwise = case v of
+boolish v
+  | v == pzFalse = FalseReal
+  | v == pzTrue = TrueReal
+  | otherwise = case val v of
     PzUnit -> Falsish
     PzNum 0 -> Falsish
     PzStr "" -> Falsish

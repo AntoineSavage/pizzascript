@@ -16,7 +16,7 @@ data Symb
 
 type Pos = SourcePos
 data WithPos a
-    = WithPos Pos a
+    = WithPos { pos :: Pos, val :: a }
     deriving (Show)
 
 -- Ignore position
@@ -39,9 +39,6 @@ data AstListKind
     deriving (Show, Eq, Ord)
 
 -- Value types
--- TODO: getter for Func.argPass
--- TODO: getter for Func.body
--- TODO: getter for Meta.p, meta.d
 data PzVal
     = PzUnit
     | PzNum Double
@@ -54,7 +51,7 @@ data PzVal
 
 type Dict = M.Map (WithPos PzVal) (WithPos PzVal)
 data Func
-    = Func FuncImplCtx FuncExplCtx FuncArgPass FuncArgs FuncBody
+    = Func { implCtx :: FuncImplCtx, explCtx :: FuncExplCtx, argPass :: FuncArgPass, args :: FuncArgs, body :: FuncBody }
     deriving (Show, Eq, Ord)
 
 type FuncImplCtx = Dict

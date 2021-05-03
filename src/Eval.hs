@@ -66,9 +66,9 @@ evalForm result ctx p elems frames =
                     -- evaluate first form element (should be func)
                     evalExpr ctx e Eval $ Form p es : frames
         
-        Just (WithPos _ f) ->
+        Just f ->
             -- process result (first form elem, should be func)
-            case f of
+            case val f of
                 PzFunc func ->
                     -- replace form with function invocation
                     return $ Acc Nothing ctx $ Invoc p func [] (Just elems) : frames
@@ -96,8 +96,7 @@ evalInvoc result ctx p func as melems frames =
 
                 Just (e:es) ->
                     -- evaluate function argument
-                    let Func _ _ argPass _ _ = func in
-                    case evalExpr ctx e argPass $ Invoc p func as (Just es) : frames of
+                    case evalExpr ctx e (argPass func) $ Invoc p func as (Just es) : frames of
                         Left s -> Left $ s ++ "\n at: " ++ show p
                         Right acc -> return acc
 
@@ -143,8 +142,8 @@ evalIdent ctx p ident = inner (withPos $ PzDict ctx) $ symbSplitImpl $ symb iden
         case symbs of
             [] -> Right val_or_ctx
             s@(Symb _ i):ss ->
-                case val_or_ctx of
-                    (WithPos _ (PzDict m)) ->
+                case val val_or_ctx of
+                    PzDict m ->
                         case M.lookup (withPos $ PzSymb s) m of
                             Just v' -> inner v' ss
 
@@ -164,8 +163,8 @@ evalIdent ctx p ident = inner (withPos $ PzDict ctx) $ symbSplitImpl $ symb iden
 -- TODO handle impure context ident
 -- TODO handle arg idents
 invokeFunc :: Dict -> Pos -> Func -> [WithPos PzVal] -> [StackFrame] -> EvalResult
-invokeFunc ctx p (Func _ _ _ _ body) args frames =
-    case body of
+invokeFunc ctx p func args frames =
+    case body func of
         BodyBuiltIn ident -> invokeFuncBuiltIn ctx p args ident frames
         BodyCustom es -> Left $ "TODO: Invoke custom function: " ++ show es
 
