@@ -23,14 +23,14 @@ toFormSpec :: Spec
 toFormSpec = describe "toForm" $ do
     it "converts empty list" $ do
         property $ \p -> do
-            toForm p KindList [] `shouldBe` [AstExpr p $ AstIdent $ identList]
-            toForm p KindDict [] `shouldBe` [AstExpr p $ AstIdent $ identDict]
+            toForm p KindList [] `shouldBe` [WithPos p $ AstIdent $ identList]
+            toForm p KindDict [] `shouldBe` [WithPos p $ AstIdent $ identDict]
             toForm p KindForm [] `shouldBe` []
 
     it "converts list" $ do
         property $ \p es -> do
-            toForm p KindList es `shouldBe` (AstExpr p $ AstIdent $ identList) : es
-            toForm p KindDict es `shouldBe` (AstExpr p $ AstIdent $ identDict) : es
+            toForm p KindList es `shouldBe` (WithPos p $ AstIdent $ identList) : es
+            toForm p KindDict es `shouldBe` (WithPos p $ AstIdent $ identDict) : es
             toForm p KindForm es `shouldBe` es
 
 invalidArityMsgSpec :: Spec

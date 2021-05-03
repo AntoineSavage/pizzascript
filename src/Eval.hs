@@ -19,12 +19,12 @@ data Acc
     deriving (Show, Eq)
 
 data StackFrame
-    = Block [AstExpr]
-    | Form Pos [AstExpr]
-    | Invoc Pos Func [PzVal] (Maybe [AstExpr])
+    = Block [WithPos AstExpr]
+    | Form Pos [WithPos AstExpr]
+    | Invoc Pos Func [PzVal] (Maybe [WithPos AstExpr])
     deriving (Show, Eq)
 
-eval :: [AstExpr] -> IO ()
+eval :: [WithPos AstExpr] -> IO ()
 eval es = go $ Acc Nothing builtInCtx [Block es]
 
 go :: Acc -> IO ()
@@ -41,7 +41,7 @@ evalFrame result ctx frame frames =
         Form p es -> evalForm result ctx p es frames
         Invoc p f as es -> evalInvoc result ctx p f as es frames
 
-evalBlock :: Result -> Dict -> [AstExpr] -> [StackFrame] -> EvalResult
+evalBlock :: Result -> Dict -> [WithPos AstExpr] -> [StackFrame] -> EvalResult
 evalBlock result ctx es frames =
     case es of
         [] ->
@@ -52,7 +52,7 @@ evalBlock result ctx es frames =
             -- evaluate next block expression
             evalExpr ctx e Eval $ Block es : frames
 
-evalForm :: Result -> Dict -> Pos -> [AstExpr] -> [StackFrame] -> EvalResult
+evalForm :: Result -> Dict -> Pos -> [WithPos AstExpr] -> [StackFrame] -> EvalResult
 evalForm result ctx p elems frames =
     case result of
         Nothing ->
@@ -78,7 +78,7 @@ evalForm result ctx p elems frames =
                     ++ show f
                     ++ "\n at: " ++ show p
 
-evalInvoc :: Result -> Dict -> Pos -> Func -> [PzVal] -> Maybe [AstExpr] -> [StackFrame] -> EvalResult
+evalInvoc :: Result -> Dict -> Pos -> Func -> [PzVal] -> Maybe [WithPos AstExpr] -> [StackFrame] -> EvalResult
 evalInvoc result ctx p func as melems frames =
     case result of
         Nothing ->
@@ -112,8 +112,8 @@ evalInvoc result ctx p func as melems frames =
                     -- argument evaluation result
                     return $ Acc Nothing ctx $ Invoc p func (r:as) (Just es) : frames
 
-evalExpr :: Dict -> AstExpr -> FuncArgPass -> [StackFrame] -> EvalResult
-evalExpr ctx e@(AstExpr p v) eval frames = 
+evalExpr :: Dict -> WithPos AstExpr -> FuncArgPass -> [StackFrame] -> EvalResult
+evalExpr ctx e@(WithPos p v) eval frames = 
     let setResult result = return $ Acc (Just result) ctx frames in
     case (v, eval) of
         -- numbers and strings
@@ -201,8 +201,8 @@ returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
 returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) ctx frames
 
 -- Uneval
-uneval :: PzVal -> AstExpr
-uneval v = AstExpr undefined $
+uneval :: PzVal -> WithPos AstExpr
+uneval v = WithPos undefined $
     case v of
         PzUnit -> AstList KindForm []
         PzNum n -> AstNum n
@@ -213,12 +213,12 @@ uneval v = AstExpr undefined $
         PzFunc f -> AstList KindForm $ unevalFunc f
 
 -- Func eval / uneval
-evalFunc :: Dict -> [AstExpr] -> Either String Func
+evalFunc :: Dict -> [WithPos AstExpr] -> Either String Func
 evalFunc = undefined -- TODO
 
-unevalFunc :: Func -> [AstExpr]
+unevalFunc :: Func -> [WithPos AstExpr]
 unevalFunc = undefined -- TODO
 
--- TODO: FuncCustom: FuncExplCtx FuncArgPass FuncArgs [AstExpr]
+-- TODO: FuncCustom: FuncExplCtx FuncArgPass FuncArgs [WithPos AstExpr]
 -- toFuncCustom :: Func -> Either Ident FuncCustom (returns: Left BodyBuiltIn.ident)
 -- fromFuncCustom :: Dict -> FuncCustom -> Func

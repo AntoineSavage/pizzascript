@@ -40,95 +40,81 @@ parseElem = Elem . (read :: String -> Int) <$> many1 digit
 unparseElem :: Elem -> String
 unparseElem (Elem x) = show x
 
--- Types and instances
-instance Arbitrary Ident where
-    arbitrary = Ident <$> arbMany 1 5 (do IdentPart p <- arbitrary; return p)
+-- Arbitrary utils
+class Arbitrary a => ArbWithDepth a where arbWithDepth :: Int -> Gen a
 
+arbDepth :: ArbWithDepth a => Gen a
+arbDepth = chooseInt (0, 3) >>= arbWithDepth
+
+arbMany :: Int -> Int -> Gen a -> Gen [a]
+arbMany min max me = chooseInt (min, max) >>= flip vectorOf me
+
+arbUnquoteValid :: Gen (WithPos AstExpr)
+arbUnquoteValid = do UnquoteValid e <- arbitrary; return e
+
+-- Types and instances
+
+instance Arbitrary Ident where arbitrary = Ident <$> arbMany 1 5 arbP
 newtype IdentPart = IdentPart String deriving (Show, Eq)
 instance Arbitrary IdentPart where
     arbitrary = IdentPart <$> liftM2 (:) (elements validFirsts) (chooseInt (0, 5) >>= flip vectorOf (elements validNexts))
+arbP = do IdentPart p <- arbitrary; return p
 
-instance Arbitrary Symb where
-    arbitrary = liftM2 Symb arbitrary arbitrary
-
+instance Arbitrary Symb where arbitrary = liftM2 Symb arbitrary arbitrary
 instance Arbitrary SourcePos where arbitrary = liftM3 newPos arbitrary arbitrary arbitrary
 
 newtype Elem = Elem Int deriving (Show, Eq)
 instance Arbitrary Elem where arbitrary = do Positive x <- arbitrary; return $ Elem x
 
 newtype Few a = Few [a] deriving (Show, Eq)
-instance Arbitrary a => Arbitrary (Few a) where
-    arbitrary = Few <$> arbMany 0 5 arbitrary
+instance Arbitrary a => Arbitrary (Few a) where arbitrary = Few <$> arbMany 0 5 arbitrary
 
-instance Arbitrary AstExpr where
-    arbitrary = chooseInt (0, 3) >>= arbitraryExprOf
+instance ArbWithDepth a => Arbitrary (WithPos a) where arbitrary = arbDepth
+instance ArbWithDepth a => ArbWithDepth (WithPos a) where arbWithDepth = liftM2 WithPos arbitrary . arbWithDepth
 
-arbK = elements kinds
-arbMany min max me = chooseInt (min, max) >>= flip vectorOf me
-
-arbitraryExprOf depth = do
-    p <- arbitrary
-    fmap (AstExpr p) $ oneof $
+instance Arbitrary AstExpr where arbitrary = arbDepth
+instance ArbWithDepth AstExpr where
+    arbWithDepth depth = oneof $
         [ AstNum <$> arbitrary
         , AstStr <$> arbitrary
         , AstIdent <$> arbitrary
         , AstSymb <$> liftM2 Symb arbitrary arbitrary
         ] ++
         (if depth <= 0 then [] else
-            [ liftM2 AstList arbK $ arbMany 0 3 $ arbitraryExprOf $ depth-1
+            [ liftM2 AstList (elements kinds) $ arbMany 0 3 $ arbWithDepth $ depth-1
             ]
         )
 
-newtype UnquoteValid
-    = UnquoteValid AstExpr
-    deriving (Show, Eq)
-
-newtype UnquoteValids
-    = UnquoteValids [AstExpr]
-    deriving (Show, Eq)
-
-instance Arbitrary UnquoteValid where
-    arbitrary = UnquoteValid <$> (chooseInt (0, 3) >>= arbitraryUnquoteValidOf)
-
-instance Arbitrary UnquoteValids where
-    arbitrary = UnquoteValids <$> arbMany 0 3 (do UnquoteValid e <- arbitrary; return e)
-
-arbitraryUnquoteValidOf depth = do
-    p <- arbitrary
-    fmap (AstExpr p) $ oneof $
+newtype UnquoteValid = UnquoteValid (WithPos AstExpr) deriving (Show, Eq)
+instance Arbitrary UnquoteValid where arbitrary = arbDepth
+instance ArbWithDepth UnquoteValid where
+    arbWithDepth depth = fmap UnquoteValid $ liftM2 WithPos arbitrary $ oneof $
         [ AstNum <$> arbitrary
         , AstStr <$> arbitrary
         , AstSymb <$> liftM2 Symb arbitrary arbitrary
         ] ++
         ( if depth <= 0 then [] else
-            [ AstList KindList <$> arbMany 0 3 (arbitraryUnquoteValidOf $ depth-1)
+            [ AstList KindList <$> arbMany 0 3 arbUnquoteValid
             ]
         )
 
-instance Arbitrary PzVal where
-    arbitrary = chooseInt (0, 3) >>= arbitraryValOf
+newtype UnquoteValids = UnquoteValids [WithPos AstExpr] deriving (Show, Eq)
+instance Arbitrary UnquoteValids where arbitrary = UnquoteValids <$> arbMany 0 3 arbUnquoteValid
 
-arbitraryValOf depth = oneof $
+instance Arbitrary PzVal where arbitrary = arbDepth
+instance ArbWithDepth PzVal where
+    arbWithDepth depth = let sub = arbWithDepth $ depth-1 in oneof $
         [ return PzUnit
         , PzNum <$> arbitrary
         , PzStr <$> arbitrary
         , PzSymb <$> liftM2 Symb arbitrary arbitrary
         ] ++
         (if depth <= 0 then [] else
-            [ PzList <$> arbMany 0 3 (arbitraryValOf $ depth-1)
-            , PzDict . M.fromList <$> arbMany 0 3 (liftM2 (,) (arbitraryValOf $ depth-1) $ arbitraryValOf $ depth-1)
+            [ fmap PzList $ arbMany 0 3 sub
+            , fmap (PzDict . M.fromList) $ arbMany 0 3 $ liftM2 (,) sub sub
             , PzFunc <$> liftM5 Func arbitrary arbitrary (elements argPasses) arbitrary arbitrary
             ]
         )
 
-instance Arbitrary FuncArgs where
-    arbitrary = oneof
-        [ ArgsVaria <$> arbitrary
-        , ArgsArity <$> arbitrary
-        ]
-
-instance Arbitrary FuncBody where
-    arbitrary = oneof
-        [ BodyBuiltIn <$> arbitrary
-        , BodyCustom <$> arbitrary
-        ]
+instance Arbitrary FuncArgs where arbitrary = oneof [ArgsVaria <$> arbitrary, ArgsArity <$> arbitrary]
+instance Arbitrary FuncBody where arbitrary = oneof [BodyBuiltIn <$> arbitrary, BodyCustom <$> arbitrary]

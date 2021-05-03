@@ -8,7 +8,7 @@ import Data.Nat ( len, unlen, Nat(..) )
 import Numeric ( readHex, showHex )
 import Text.Parsec
 import Text.Parsec.String ( Parser )
-import Types ( AstExpr(..), AstListKind(..), AstVal(..), Ident(..), Symb(..) )
+import Types ( AstExpr(..), AstListKind(..), Ident(..), Symb(..), WithPos(..) )
 import Utils ( toForm, symb )
 
 -- Ignore
@@ -143,8 +143,8 @@ unparseMany :: (a -> String) -> [a] -> String
 unparseMany f = unwords . map f
 
 -- Expressions
-parseExpr :: Parser () -> Parser AstExpr
-parseExpr ign = liftM2 AstExpr getPosition $
+parseExpr :: Parser () -> Parser (WithPos AstExpr)
+parseExpr ign = liftM2 WithPos getPosition $
             AstNum <$> (parseNum <?> "number")
         <|> AstStr <$> (parseStr <?> "string")
         <|> AstIdent <$> (parseIdent <?> "identifier")
@@ -153,8 +153,8 @@ parseExpr ign = liftM2 AstExpr getPosition $
         <|> AstList KindDict <$> (parseList KindDict ign (parseExpr ign) <?> "dictionary")
         <|> AstList KindForm <$> (parseList KindForm ign (parseExpr ign) <?> "form")
 
-unparseExpr :: AstExpr -> String
-unparseExpr (AstExpr _ v) =
+unparseExpr :: WithPos AstExpr -> String
+unparseExpr (WithPos _ v) =
     case v of
         AstNum n -> unparseNum n
         AstStr s -> unparseStr s
@@ -163,9 +163,9 @@ unparseExpr (AstExpr _ v) =
         AstList k l -> unparseList k unparseExpr l
 
 -- Quoting
-quote :: AstExpr -> AstExpr
-quote e@(AstExpr p v) =
-    let toExpr = AstExpr p in
+quote :: WithPos AstExpr -> WithPos AstExpr
+quote e@(WithPos p v) =
+    let toExpr = WithPos p in
     case v of
         -- Numbers and strings quote as themselves
         AstNum _ -> e
@@ -185,9 +185,9 @@ quote e@(AstExpr p v) =
         AstList k es ->
             toExpr $ AstList KindList $ map quote $ toForm p k es
 
-unquote :: AstExpr -> Either String AstExpr
-unquote e@(AstExpr p v) =
-    let toExpr = AstExpr p in
+unquote :: WithPos AstExpr -> Either String (WithPos AstExpr)
+unquote e@(WithPos p v) =
+    let withPos = WithPos p in
     case v of
         -- Numbers and strings unquote as themselves
         AstNum _ -> return e
@@ -200,7 +200,7 @@ unquote e@(AstExpr p v) =
         -- Symbols with one quote unquote to identifiers
         -- Symbols with two or more quotes unquote to symbols with one less quote
         AstSymb (Symb n ident) ->
-            return $ toExpr $ case n of
+            return $ withPos $ case n of
                 Z -> AstIdent ident
                 (S n) -> AstSymb $ Symb n ident
 
@@ -208,6 +208,6 @@ unquote e@(AstExpr p v) =
         -- Dicts and forms cannot be unquoted
         AstList k es ->
             case k of
-                KindList -> toExpr . AstList KindForm <$> mapM unquote es
+                KindList -> withPos . AstList KindForm <$> mapM unquote es
                 KindDict -> Left $ "Unquote: unexpected dictionary: " ++ unparseList KindDict unparseExpr es
                 KindForm -> Left $ "Unquote: unexpected form: " ++ unparseList KindForm unparseExpr es

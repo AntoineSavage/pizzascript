@@ -13,9 +13,9 @@ ident = Ident . (:[])
 symb :: Ident -> Symb
 symb = Symb Z
 
-toForm :: Pos -> AstListKind -> [AstExpr] -> [AstExpr]
+toForm :: Pos -> AstListKind -> [WithPos AstExpr] -> [WithPos AstExpr]
 toForm p k =
-    let identToExpr ident = AstExpr p $ AstIdent ident
+    let identToExpr ident = WithPos p $ AstIdent ident
     in case k of
         KindList -> (identToExpr identList:)
         KindDict -> (identToExpr identDict:)

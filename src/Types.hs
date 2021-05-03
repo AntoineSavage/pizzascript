@@ -25,19 +25,11 @@ instance Ord a => Ord (WithPos a) where compare (WithPos _ x) (WithPos _ y) = co
 
 -- AST types
 data AstExpr
-    = AstExpr Pos AstVal
-    deriving (Show)
-
--- Ignore position
-instance Eq AstExpr where (==) (AstExpr _ v1) (AstExpr _ v2) = v1 == v2
-instance Ord AstExpr where compare (AstExpr _ v1) (AstExpr _ v2) = compare v1 v2
-
-data AstVal
     = AstNum Double
     | AstStr String
     | AstIdent Ident
     | AstSymb Symb
-    | AstList AstListKind [AstExpr]
+    | AstList AstListKind [WithPos AstExpr]
     deriving (Show, Eq, Ord)
 
 data AstListKind
