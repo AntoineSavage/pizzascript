@@ -24,8 +24,8 @@ data StackFrame
     | Invoc Pos Func [WithPos PzVal] (Maybe [WithPos AstExpr])
     deriving (Show, Eq)
 
-eval :: [WithPos AstExpr] -> IO ()
-eval es = go $ Acc Nothing builtInCtx [Block es]
+evalMany :: [WithPos AstExpr] -> IO ()
+evalMany es = go $ Acc Nothing builtInCtx [Block es]
 
 go :: Acc -> IO ()
 go (Acc result ctx []) = return () -- no more frames: halt
@@ -126,8 +126,8 @@ evalExpr ctx e@(WithPos p v) eval frames =
 
         -- identifiers
         (AstIdent ident, Eval) -> evalIdent ctx p ident >>= setResult
-        (AstIdent ident, DeepQuote) -> evalIdent ctx p ident >>= \v -> evalExpr ctx (uneval v) Quote frames
-        (AstIdent ident, DeepUnquote) -> evalIdent ctx p ident >>= \v -> evalExpr ctx (uneval v) Unquote frames
+        (AstIdent ident, DeepQuote) -> evalIdent ctx p ident >>= \r -> evalExpr ctx (unevalExpr r) Quote frames
+        (AstIdent ident, DeepUnquote) -> evalIdent ctx p ident >>= \r -> evalExpr ctx (unevalExpr r) Unquote frames
 
         -- lists
         (AstList k elems, Eval) -> return $ Acc Nothing ctx $ Form p (toForm p k elems) : frames
@@ -195,8 +195,8 @@ invokeFuncBuiltIn ctx p args (Ident ps) frames =
 
         -- functions
         ["func"] -> do
-            es <- mapM (unquote.uneval) args
-            returnFrom frames $ (ctx,) . WithPos p . PzFunc <$> evalFunc ctx es
+            es <- mapM (unquote.unevalExpr) args
+            returnFrom frames $ (ctx,) . WithPos p . PzFunc . fromFuncCustom ctx <$> evalFuncCustom es
 
         -- miscellaneous
         -- TODO
@@ -207,24 +207,37 @@ returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
 returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) ctx frames
 
 -- Uneval
-uneval :: WithPos PzVal -> WithPos AstExpr
-uneval (WithPos p v) = WithPos p $
+unevalExpr :: WithPos PzVal -> WithPos AstExpr
+unevalExpr (WithPos p v) = WithPos p $
     case v of
         PzUnit -> AstList KindForm []
         PzNum n -> AstNum n
         PzStr s -> AstStr s
         PzSymb s -> AstSymb s
-        PzList l -> AstList KindList $ map uneval l
-        PzDict m -> AstList KindDict $ map (\(k, v) -> uneval $ withPos $ PzList [k, v]) $ M.assocs m
-        PzFunc f -> AstList KindForm $ unevalFunc f
+        PzList l -> AstList KindList $ map unevalExpr l
+        PzDict m -> AstList KindDict $ map (\(k, v) -> withPos $ AstList KindForm [unevalExpr k, unevalExpr v]) $ M.assocs m
+        PzFunc f ->
+            case toFuncCustom f of
+                Left ident -> AstSymb $ symb ident
+                Right fc -> AstList KindForm $ unevalFuncCustom fc
 
--- Func eval / uneval
-evalFunc :: Dict -> [WithPos AstExpr] -> Either String Func
-evalFunc = undefined -- TODO
+-- Eval / uneval func custom
+data FuncCustom
+    = FuncCustom FuncExplCtx FuncArgPass FuncArgs [WithPos AstExpr]
+    deriving (Show, Eq)
 
-unevalFunc :: Func -> [WithPos AstExpr]
-unevalFunc = undefined -- TODO
+toFuncCustom :: Func -> Either Ident FuncCustom
+toFuncCustom func =
+    case body func of
+        BodyBuiltIn ident -> Left ident
+        BodyCustom es -> Right $ FuncCustom (explCtx func) (argPass func) (args func) es
 
--- TODO: FuncCustom: FuncExplCtx FuncArgPass FuncArgs [WithPos AstExpr]
--- toFuncCustom :: Func -> Either Ident FuncCustom (returns: Left BodyBuiltIn.ident)
--- fromFuncCustom :: Dict -> FuncCustom -> Func
+fromFuncCustom :: Dict -> FuncCustom -> Func
+fromFuncCustom ctx (FuncCustom explCtx argPass args es) =
+    Func ctx explCtx argPass args $ BodyCustom es
+
+evalFuncCustom :: [WithPos AstExpr] -> Either String FuncCustom
+evalFuncCustom = undefined -- TODO
+
+unevalFuncCustom :: FuncCustom -> [WithPos AstExpr]
+unevalFuncCustom = undefined -- TODO
