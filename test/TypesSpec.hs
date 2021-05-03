@@ -9,28 +9,34 @@ import Types
 
 spec :: Spec
 spec = do
-    metaEqSpec
-    metaOrdSpec
+    astExprEqSpec
+    astExprOrdSpec
 
-metaEqSpec :: Spec
-metaEqSpec = describe "Meta (eq)" $ do
+astExprEqSpec :: Spec
+astExprEqSpec = describe "AstExpr (eq)" $ do
     forM_ [p1, p2] $ \p -> do
         it "ignores position" $ do
-            property $ \d -> do
+            property $ \d n -> do
                 let d1 = d
                     d2 = '_' : d
-                (Meta p1 d1) == (Meta p d2) `shouldBe` False
-                (Meta p1 d1) == (Meta p d1) `shouldBe` True
+                    v1 = AstNum n
+                    v2 = AstNum $ n + 1
+                (AstExpr p1 d1 v1) == (AstExpr p d2 v1) `shouldBe` False
+                (AstExpr p1 d1 v1) == (AstExpr p d1 v2) `shouldBe` False
+                (AstExpr p1 d1 v1) == (AstExpr p d1 v1) `shouldBe` True
 
-metaOrdSpec :: Spec
-metaOrdSpec = describe "Meta (ord)" $ do
+astExprOrdSpec :: Spec
+astExprOrdSpec = describe "AstExpr (ord)" $ do
     forM_ [p1, p2] $ \p -> do
         it "ignores position" $ do
-            property $ \d -> do
+            property $ \d n -> do
                 let d1 = d
                     d2 = '_' : d
-                compare (Meta p1 d1) (Meta p d2) `shouldBe` compare d1 d2
-                compare (Meta p1 d1) (Meta p d1) `shouldBe` EQ
+                    v1 = AstNum n
+                    v2 = AstNum $ n + 1
+                compare (AstExpr p1 d1 v1) (AstExpr p d2 v1) `shouldBe` compare d1 d2
+                compare (AstExpr p1 d1 v1) (AstExpr p d1 v2) `shouldBe` compare v1 v2
+                compare (AstExpr p1 d1 v1) (AstExpr p d1 v1) `shouldBe` EQ
 
 p1 = newPos "abc" 1 1
 p2 = newPos "xyz" 2 2

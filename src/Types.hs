@@ -17,21 +17,21 @@ data Symb
 -- AST types
 type AstPos = SourcePos
 type AstDoc = String
-data Meta
-    = Meta AstPos AstDoc
-    deriving (Show)
-
--- Ignore position
-instance Eq Meta where (==) (Meta _ d1) (Meta _ d2) = d1 == d2
-instance Ord Meta where compare (Meta _ d1) (Meta _ d2) = compare d1 d2
 
 data Ast
     = Ast AstDoc [AstExpr]
     deriving (Show, Eq)
 
 data AstExpr
-    = AstExpr Meta AstVal
-    deriving (Show, Eq, Ord)
+    = AstExpr AstPos AstDoc AstVal
+    deriving (Show)
+
+-- Ignore position
+instance Eq AstExpr where (==) (AstExpr _ d1 v1) (AstExpr _ d2 v2) = d1 == d2 && v1 == v2
+instance Ord AstExpr where
+    compare (AstExpr _ d1 v1) (AstExpr _ d2 v2) =
+        let dCmp = compare d1 d2
+        in if dCmp /= EQ then dCmp else compare v1 v2
 
 data AstVal
     = AstNum Double
