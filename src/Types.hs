@@ -48,6 +48,7 @@ data AstListKind
     deriving (Show, Eq, Ord)
 
 -- Evaluated types
+-- TODO: PzExpr with Meta
 data PzVal
     = PzUnit
     | PzNum Double
@@ -60,11 +61,11 @@ data PzVal
 
 type Dict = M.Map PzVal PzVal
 data Func
-    = Func FuncDefCtx FuncImpCtx FuncArgPass FuncArgs FuncBody
+    = Func FuncImplCtx FuncExplCtx FuncArgPass FuncArgs FuncBody
     deriving (Show, Eq, Ord)
 
-type FuncDefCtx = Dict
-type FuncImpCtx = Maybe Ident
+type FuncImplCtx = Dict
+type FuncExplCtx = Maybe Ident
 
 data FuncArgPass
     = Eval

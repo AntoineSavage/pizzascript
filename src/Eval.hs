@@ -218,3 +218,7 @@ evalFunc = undefined -- TODO
 
 unevalFunc :: Func -> [AstExpr]
 unevalFunc = undefined -- TODO
+
+-- TODO: FuncCustom: FuncExplCtx FuncArgPass FuncArgs [AstExpr]
+-- toFuncCustom :: Func -> Either Ident FuncCustom (returns: Left BodyBuiltIn.ident)
+-- fromFuncCustom :: Dict -> FuncCustom -> Func
