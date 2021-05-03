@@ -14,9 +14,16 @@ data Symb
     = Symb Nat Ident
     deriving (Show, Eq, Ord)
 
--- AST (non-evaluated) types
+-- AST types (non-evaluated)
 type AstPos = SourcePos
 type AstDoc = String
+data Meta
+    = Meta AstPos AstDoc
+    deriving (Show)
+
+-- Ignore position
+instance Eq Meta where (==) (Meta _ d1) (Meta _ d2) = d1 == d2
+instance Ord Meta where compare (Meta _ d1) (Meta _ d2) = compare d1 d2
 
 data Ast
     = Ast AstDoc [AstExpr]
