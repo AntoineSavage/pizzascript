@@ -50,7 +50,7 @@ Additionally, the following functions work on all types:
 # () < any_num < any_str < any_symb < any_list < any_dict < any_func
 
 (src_pos main) # -> "src/main, line 1, column 2"
-(src_doc main) # -> "# TODO: implement main"
+(src_doc main) # -> "# This is the main function"
 ```
 
 # The unit type `()`
@@ -1134,9 +1134,19 @@ This algorithm ensures that:
       - creating a `friend zone` in A and B, where code required for both to evaluate correctly comes before the import statement of the other
       - moving dependencies to a new module
 
-# TODOs
+# Roadmap
 
 The preceding only touches upon built-in primitives of the language. The goal is that more advanced features can be implemented in the language itself using those primitives
+
+## Doc
+
+(def
+"function id returns its argument unchanged"
+"Example: "
+">> (id 123)"
+"123"
+id (func (x) x)
+)
 
 ## Error Handling
 

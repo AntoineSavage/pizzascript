@@ -159,9 +159,9 @@ evalIdent ctx p ident = inner (withPos $ PzDict ctx) $ symbSplitImpl $ symb iden
                                 ++ "\n at: " ++ show p
                                 ++ "\n non-dictionary context: " ++ show val_or_ctx
 
--- TODO handle definition context
--- TODO handle impure context ident
--- TODO handle arg idents
+-- TODO handle implicit context
+-- TODO handle explicit context
+-- TODO handle args
 invokeFunc :: Dict -> Pos -> Func -> [WithPos PzVal] -> [StackFrame] -> EvalResult
 invokeFunc ctx p func args frames =
     case body func of
