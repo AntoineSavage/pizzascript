@@ -11,7 +11,7 @@ import Data.Nat ( Nat(..) )
 import Types
 import Utils ( symb, toForm )
 
-type Result = Maybe PzVal
+type Result = Maybe (WithPos PzVal)
 type EvalResult = Either String Acc
 
 data Acc
@@ -21,7 +21,7 @@ data Acc
 data StackFrame
     = Block [WithPos AstExpr]
     | Form Pos [WithPos AstExpr]
-    | Invoc Pos Func [PzVal] (Maybe [WithPos AstExpr])
+    | Invoc Pos Func [WithPos PzVal] (Maybe [WithPos AstExpr])
     deriving (Show, Eq)
 
 eval :: [WithPos AstExpr] -> IO ()
@@ -60,13 +60,13 @@ evalForm result ctx p elems frames =
             case elems of
                 [] ->
                     -- empty form -> return unit type (and pop frame)
-                    return $ Acc (Just PzUnit) ctx frames
+                    return $ Acc (Just $ WithPos p PzUnit) ctx frames
         
                 e:es ->
                     -- evaluate first form element (should be func)
                     evalExpr ctx e Eval $ Form p es : frames
         
-        Just f ->
+        Just (WithPos _ f) ->
             -- process result (first form elem, should be func)
             case f of
                 PzFunc func ->
@@ -78,7 +78,7 @@ evalForm result ctx p elems frames =
                     ++ show f
                     ++ "\n at: " ++ show p
 
-evalInvoc :: Result -> Dict -> Pos -> Func -> [PzVal] -> Maybe [WithPos AstExpr] -> [StackFrame] -> EvalResult
+evalInvoc :: Result -> Dict -> Pos -> Func -> [WithPos PzVal] -> Maybe [WithPos AstExpr] -> [StackFrame] -> EvalResult
 evalInvoc result ctx p func as melems frames =
     case result of
         Nothing ->
@@ -86,7 +86,7 @@ evalInvoc result ctx p func as melems frames =
             case melems of
                 Nothing -> 
                     -- marked for invocation: invoke function
-                    case invokeFunc ctx func (reverse as) frames of
+                    case invokeFunc ctx p func (reverse as) frames of
                         Left s -> Left $ s ++ "\n at: " ++ show p
                         Right acc -> return acc
 
@@ -117,11 +117,11 @@ evalExpr ctx e@(WithPos p v) eval frames =
     let setResult result = return $ Acc (Just result) ctx frames in
     case (v, eval) of
         -- numbers and strings
-        (AstNum n, _) -> setResult $ PzNum n
-        (AstStr s, _) -> setResult $ PzStr s
+        (AstNum n, _) -> setResult $ WithPos p $ PzNum n
+        (AstStr s, _) -> setResult $ WithPos p $ PzStr s
 
         -- symbols
-        (AstSymb symb, Eval) -> setResult $ PzSymb symb
+        (AstSymb symb, Eval) -> setResult $ WithPos p $ PzSymb symb
 
         -- identifiers
         (AstIdent ident, Eval) -> evalIdent ctx p ident >>= setResult
@@ -137,35 +137,40 @@ evalExpr ctx e@(WithPos p v) eval frames =
         (_, DeepQuote) -> evalExpr ctx e Quote frames
         (_, DeepUnquote) -> evalExpr ctx e Unquote frames
 
-evalIdent :: Dict -> Pos -> Ident -> Either String PzVal
-evalIdent ctx p ident = inner (PzDict ctx) $ symbSplitImpl $ symb ident where
-    inner val symbs =
+evalIdent :: Dict -> Pos -> Ident -> Either String (WithPos PzVal)
+evalIdent ctx p ident = inner (withPos $ PzDict ctx) $ symbSplitImpl $ symb ident where
+    inner val_or_ctx symbs =
         case symbs of
-            [] -> Right val
-            s:ss ->
-                case val of
-                    PzDict m ->
-                        case M.lookup (PzSymb s) m of
+            [] -> Right val_or_ctx
+            s@(Symb _ i):ss ->
+                case val_or_ctx of
+                    (WithPos _ (PzDict m)) ->
+                        case M.lookup (withPos $ PzSymb s) m of
                             Just v' -> inner v' ss
-                            Nothing -> Left $  "Error: Undefined identifier: " ++ show ident
+
+                            Nothing -> Left $  "Error: Undefined identifier: " ++ show i
+                                ++ "\n when evaluating (possibly qualified) identifier: " ++ show ident
                                 ++ "\n at: " ++ show p
-                                ++ "\n ctx keys: " ++ show (M.keys ctx)
-                    _ -> Left $  "Error: Non-dictionary field request: " ++ show s
-                                ++ "\n got: " ++ show val
-                                ++ "\n for qualified identifier: " ++ show ident
+                                -- TODO Display only single-quoted, unqualified symbols, as identifiers
+                                ++ "\n context keys: " ++ show (M.keys m)
+
+                    _ -> Left $  "Error: Evaluating child identifier in non-dictionary context"
+                                ++ "\n child identifier: " ++ show i
+                                ++ "\n part of qualified identifier: " ++ show ident
                                 ++ "\n at: " ++ show p
+                                ++ "\n non-dictionary context: " ++ show val_or_ctx
 
 -- TODO handle definition context
 -- TODO handle impure context ident
 -- TODO handle arg idents
-invokeFunc :: Dict -> Func -> [PzVal] -> [StackFrame] -> EvalResult
-invokeFunc ctx (Func _ _ _ _ body) args frames =
+invokeFunc :: Dict -> Pos -> Func -> [WithPos PzVal] -> [StackFrame] -> EvalResult
+invokeFunc ctx p (Func _ _ _ _ body) args frames =
     case body of
-        BodyBuiltIn ident -> invokeFuncBuiltIn ctx args ident frames
+        BodyBuiltIn ident -> invokeFuncBuiltIn ctx p args ident frames
         BodyCustom es -> Left $ "TODO: Invoke custom function: " ++ show es
 
-invokeFuncBuiltIn :: Dict -> [PzVal] -> Ident -> [StackFrame] -> EvalResult
-invokeFuncBuiltIn ctx args (Ident ps) frames =
+invokeFuncBuiltIn :: Dict -> Pos -> [WithPos PzVal] -> Ident -> [StackFrame] -> EvalResult
+invokeFuncBuiltIn ctx p args (Ident ps) frames =
     case ps of
         -- numbers
         -- TODO
@@ -190,7 +195,7 @@ invokeFuncBuiltIn ctx args (Ident ps) frames =
         -- functions
         ["func"] -> do
             es <- mapM (unquote.uneval) args
-            returnFrom frames $ (ctx,) . PzFunc <$> evalFunc ctx es
+            returnFrom frames $ (ctx,) . WithPos p . PzFunc <$> evalFunc ctx es
 
         -- miscellaneous
         -- TODO
@@ -201,15 +206,15 @@ returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
 returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) ctx frames
 
 -- Uneval
-uneval :: PzVal -> WithPos AstExpr
-uneval v = WithPos undefined $
+uneval :: WithPos PzVal -> WithPos AstExpr
+uneval (WithPos p v) = WithPos p $
     case v of
         PzUnit -> AstList KindForm []
         PzNum n -> AstNum n
         PzStr s -> AstStr s
         PzSymb s -> AstSymb s
         PzList l -> AstList KindList $ map uneval l
-        PzDict m -> AstList KindDict $ map (\(k, v) -> uneval $ PzList [k, v]) $ M.assocs m
+        PzDict m -> AstList KindDict $ map (\(k, v) -> uneval $ withPos $ PzList [k, v]) $ M.assocs m
         PzFunc f -> AstList KindForm $ unevalFunc f
 
 -- Func eval / uneval

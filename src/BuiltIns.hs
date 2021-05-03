@@ -29,9 +29,9 @@ builtInCtx = M.fromList
     -- booleans
       (pzFalse, pzFalse)
     , (pzTrue, pzTrue)
-    , (PzSymb $ symb identNot, pzNot)
-    , (PzSymb $ symb identOr, pzOr)
-    , (PzSymb $ symb identAnd, pzAnd)
+    , (withPos $ PzSymb $ symb identNot, pzNot)
+    , (withPos $ PzSymb $ symb identOr, pzOr)
+    , (withPos $ PzSymb $ symb identAnd, pzAnd)
 
     -- lists
     -- TODO
@@ -40,7 +40,7 @@ builtInCtx = M.fromList
     -- TODO
 
     -- functions
-    , (PzSymb $ symb identFunc, pzFunc)
+    , (withPos $ PzSymb $ symb identFunc, pzFunc)
 
     -- miscellaneous
     -- TODO
@@ -60,20 +60,20 @@ builtInCtx = M.fromList
 -- TODO
 
 -- booleans
-pzFalse :: PzVal
-pzFalse = PzSymb symbFalse
+pzFalse :: WithPos PzVal
+pzFalse = withPos $ PzSymb symbFalse
 
-pzTrue :: PzVal
-pzTrue = PzSymb symbTrue
+pzTrue :: WithPos PzVal
+pzTrue = withPos $ PzSymb symbTrue
 
-pzNot :: PzVal
-pzNot = PzFunc $ Func M.empty Nothing Eval (ArgsArity [identX]) $ BodyBuiltIn identNot
+pzNot :: WithPos PzVal
+pzNot = withPos $ PzFunc $ Func M.empty Nothing Eval (ArgsArity [identX]) $ BodyBuiltIn identNot
 
-pzOr :: PzVal
-pzOr = PzFunc $ Func M.empty Nothing Eval (ArgsArity [identX, identY]) $ BodyBuiltIn identOr
+pzOr :: WithPos PzVal
+pzOr = withPos $ PzFunc $ Func M.empty Nothing Eval (ArgsArity [identX, identY]) $ BodyBuiltIn identOr
 
-pzAnd :: PzVal
-pzAnd = PzFunc $ Func M.empty Nothing Eval (ArgsArity [identX, identY]) $ BodyBuiltIn identAnd
+pzAnd :: WithPos PzVal
+pzAnd = withPos $ PzFunc $ Func M.empty Nothing Eval (ArgsArity [identX, identY]) $ BodyBuiltIn identAnd
 
 -- lists
 -- TODO
@@ -82,8 +82,8 @@ pzAnd = PzFunc $ Func M.empty Nothing Eval (ArgsArity [identX, identY]) $ BodyBu
 -- TODO
 
 -- functions
-pzFunc :: PzVal
-pzFunc = PzFunc $ Func M.empty (Just identCtx) Quote (ArgsVaria identArgs) $ BodyBuiltIn identFunc
+pzFunc :: WithPos PzVal
+pzFunc = withPos $ PzFunc $ Func M.empty (Just identCtx) Quote (ArgsVaria identArgs) $ BodyBuiltIn identFunc
 
 -- miscellaneous
 -- TODO
@@ -92,7 +92,7 @@ pzFunc = PzFunc $ Func M.empty (Just identCtx) Quote (ArgsVaria identArgs) $ Bod
 -- Implems
 -------------
 
-type FuncReturn = Either String (Dict, PzVal)
+type FuncReturn = Either String (Dict, WithPos PzVal)
 
 -- numbers
 -- TODO
@@ -105,14 +105,14 @@ symbSplitImpl :: Symb -> [Symb]
 symbSplitImpl (Symb n (Ident ps)) = map (Symb n . Ident . (:[])) ps
 
 -- booleans
-_not :: Dict -> [PzVal] -> FuncReturn
+_not :: Dict -> [WithPos PzVal] -> FuncReturn
 _not ctx args = f1 args $ \x -> return $ (ctx,) $ case boolish x of
     FalseReal -> pzTrue
     Falsish -> pzTrue
     Truish -> pzFalse
     TrueReal -> pzFalse
 
-_or :: Dict -> [PzVal] -> FuncReturn
+_or :: Dict -> [WithPos PzVal] -> FuncReturn
 _or ctx args = f2 args $ \x y -> return $ (ctx,) $
     case (boolish x, boolish y) of
         (TrueReal , _)            -> x
@@ -122,7 +122,7 @@ _or ctx args = f2 args $ \x y -> return $ (ctx,) $
         (Falsish  , _)            -> y
         (FalseReal, _)            -> y
 
-_and :: Dict -> [PzVal] -> FuncReturn
+_and :: Dict -> [WithPos PzVal] -> FuncReturn
 _and ctx args = f2 args $ \x y -> return $ (ctx,) $
     case (boolish x, boolish y) of
         (FalseReal, _)            -> x
@@ -154,10 +154,10 @@ data Boolish
     | TrueReal
     deriving (Show, Eq)
 
-boolish :: PzVal -> Boolish
-boolish v
-  | v == pzFalse = FalseReal
-  | v == pzTrue = TrueReal
+boolish :: WithPos PzVal -> Boolish
+boolish x@(WithPos _ v)
+  | x == pzFalse = FalseReal
+  | x == pzTrue = TrueReal
   | otherwise = case v of
     PzUnit -> Falsish
     PzNum 0 -> Falsish

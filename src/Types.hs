@@ -39,7 +39,6 @@ data AstListKind
     deriving (Show, Eq, Ord)
 
 -- Value types
--- TODO: PzExpr with Meta
 -- TODO: getter for Func.argPass
 -- TODO: getter for Func.body
 -- TODO: getter for Meta.p, meta.d
@@ -48,12 +47,12 @@ data PzVal
     | PzNum Double
     | PzStr String
     | PzSymb Symb
-    | PzList [PzVal]
+    | PzList [WithPos PzVal]
     | PzDict Dict
     | PzFunc Func
     deriving (Show, Eq, Ord)
 
-type Dict = M.Map PzVal PzVal
+type Dict = M.Map (WithPos PzVal) (WithPos PzVal)
 data Func
     = Func FuncImplCtx FuncExplCtx FuncArgPass FuncArgs FuncBody
     deriving (Show, Eq, Ord)
@@ -76,5 +75,5 @@ data FuncArgs
 
 data FuncBody
     = BodyBuiltIn Ident
-    | BodyCustom [AstExpr]
+    | BodyCustom [WithPos AstExpr]
     deriving (Show, Eq, Ord)
