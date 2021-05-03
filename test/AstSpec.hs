@@ -748,7 +748,7 @@ unparseManySpec = describe "unparseMany" $ do
 parseExprVsUnparseExprSpec :: Spec
 parseExprVsUnparseExprSpec = describe "parseExpr vs unparseExpr" $ do
     it "composes parseExpr and unparseExpr into id" $ do
-        property $ \e@(AstExpr _ d _) -> do
+        property $ \e@(AstExpr (Meta _ d) _) -> do
             let s = unparseExpr e
             parse (spaces >> parseExpr doc d) "tests" s `shouldBe` Right e
             unparseExpr <$> parse (spaces >> parseExpr doc d) "tests" s `shouldBe` Right s
@@ -756,48 +756,48 @@ parseExprVsUnparseExprSpec = describe "parseExpr vs unparseExpr" $ do
 parseExprSpec :: Spec
 parseExprSpec = describe "parseExpr" $ do
     it "parses num" $ do
-        property $ \(D d) n -> do
-            parse (parseExpr doc d) "tests" (unparseNum n) `shouldBe` Right (AstExpr pos d $ AstNum n)
+        property $ \m@(Meta _ d) n -> do
+            parse (parseExpr doc d) "tests" (unparseNum n) `shouldBe` Right (AstExpr m $ AstNum n)
 
     it "parses str" $ do
-        property $ \(D d) s -> do
-            parse (parseExpr doc d) "tests" (unparseStr s) `shouldBe` Right (AstExpr pos d $ AstStr s)
+        property $ \m@(Meta _ d) s -> do
+            parse (parseExpr doc d) "tests" (unparseStr s) `shouldBe` Right (AstExpr m $ AstStr s)
 
     it "parses ident" $ do
-        property $ \(D d) ident -> do
-            parse (parseExpr doc d) "tests" (unparseIdent ident) `shouldBe` Right (AstExpr pos d $ AstIdent ident)
+        property $ \m@(Meta _ d) ident -> do
+            parse (parseExpr doc d) "tests" (unparseIdent ident) `shouldBe` Right (AstExpr m $ AstIdent ident)
 
     it "parses symb" $ do
-        property $ \(D d) n ident -> do
-            parse (parseExpr doc d) "tests" (unparseSymb $ Symb n ident) `shouldBe` Right (AstExpr pos d $ AstSymb $ Symb n ident)
+        property $ \m@(Meta _ d) n ident -> do
+            parse (parseExpr doc d) "tests" (unparseSymb $ Symb n ident) `shouldBe` Right (AstExpr m $ AstSymb $ Symb n ident)
 
     it "parses list" $ do
-        property $ \(D d1) (D d2) (Few es) -> do
+        property $ \m@(Meta _ d1) (D d2) (Few es) -> do
             forM_ kinds $ \k -> do
-                parse (parseExpr doc d1) "tests" (unparseList k d2 unparseExpr es) `shouldBe` Right (AstExpr pos d1 $ AstList k d2 es)
+                parse (parseExpr doc d1) "tests" (unparseList k d2 unparseExpr es) `shouldBe` Right (AstExpr m $ AstList k d2 es)
 
 unparseExprSpec :: Spec
 unparseExprSpec = describe "unparseExpr" $ do
     it "unparses num" $ do
-        property $ \(D d) n -> do
-            unparseExpr (AstExpr pos d $ AstNum n) `shouldBe` d ++ unparseNum n
+        property $ \m@(Meta _ d) n -> do
+            unparseExpr (AstExpr m $ AstNum n) `shouldBe` d ++ unparseNum n
 
     it "unparses str" $ do
-        property $ \(D d) s -> do
-            unparseExpr (AstExpr pos d $ AstStr s) `shouldBe` d ++ unparseStr s
+        property $ \m@(Meta _ d) s -> do
+            unparseExpr (AstExpr m $ AstStr s) `shouldBe` d ++ unparseStr s
 
     it "unparses ident" $ do
-        property $ \(D d) ident -> do
-            unparseExpr (AstExpr pos d $ AstIdent ident) `shouldBe` d ++ unparseIdent ident
+        property $ \m@(Meta _ d) ident -> do
+            unparseExpr (AstExpr m $ AstIdent ident) `shouldBe` d ++ unparseIdent ident
 
     it "unparses symb" $ do
-        property $ \(D d) n ident -> do
-            unparseExpr (AstExpr pos d $ AstSymb $ Symb n ident) `shouldBe` d ++ unparseSymb (Symb n ident)
+        property $ \m@(Meta _ d) n ident -> do
+            unparseExpr (AstExpr m $ AstSymb $ Symb n ident) `shouldBe` d ++ unparseSymb (Symb n ident)
 
     it "unparses list" $ do
-        property $ \(D d1) (D d2) (Few es) -> do
+        property $ \m@(Meta _ d1) (D d2) (Few es) -> do
             forM_ kinds $ \k -> do
-                unparseExpr (AstExpr pos d1 $ AstList k d2 es) `shouldBe` d1 ++ unparseList k d2 unparseExpr es
+                unparseExpr (AstExpr m $ AstList k d2 es) `shouldBe` d1 ++ unparseList k d2 unparseExpr es
 
 -- Quoting
 quoteVsUnquoteSpec :: Spec
@@ -810,80 +810,80 @@ quoteVsUnquoteSpec = describe "quote vs unquote" $ do
 quoteSpec :: Spec
 quoteSpec = describe "quote" $ do
     it "converts numbers into themselves" $ do
-        property $ \(D d) n -> do
-            let e = AstExpr pos d $ AstNum n
+        property $ \m n -> do
+            let e = AstExpr m $ AstNum n
             quote e `shouldBe` e
 
     it "converts strings into themselves" $ do
-        property $ \(D d) s -> do
-            let e = AstExpr pos d $ AstStr s
+        property $ \m s -> do
+            let e = AstExpr m $ AstStr s
             quote e `shouldBe` e
 
     it "converts identifiers into single-quoted symbols" $ do
-        property $ \(D d) i -> do
-            quote (AstExpr pos d $ AstIdent i) `shouldBe` AstExpr pos d (AstSymb $ Symb Z i)
+        property $ \m i -> do
+            quote (AstExpr m $ AstIdent i) `shouldBe` AstExpr m (AstSymb $ Symb Z i)
 
     it "converts symbols into one-more-quoted symbols" $ do
-        property $ \(D d) n ident -> do
-            quote (AstExpr pos d $ AstSymb $ Symb n ident) `shouldBe` AstExpr pos d (AstSymb $ Symb (S n) ident)
+        property $ \m n ident -> do
+            quote (AstExpr m $ AstSymb $ Symb n ident) `shouldBe` AstExpr m (AstSymb $ Symb (S n) ident)
 
     it "converts lists into 'list-prefixed lists" $ do
-        property $ \(D d1) (D d2) (Few es) -> do
-            quote (AstExpr pos d1 $ AstList KindList d2 es) `shouldBe`
-                AstExpr pos d1 (AstList KindList d2 $ map quote $ toForm pos KindList es)
+        property $ \m@(Meta p d1) (D d2) (Few es) -> do
+            quote (AstExpr m $ AstList KindList d2 es) `shouldBe`
+                AstExpr m (AstList KindList d2 $ map quote $ toForm p KindList es)
 
     it "converts dicts into 'dict-prefixed lists" $ do
-        property $ \(D d1) (D d2) (Few es) -> do
-            quote (AstExpr pos d1 $ AstList KindDict d2 es) `shouldBe`
-                AstExpr pos d1 (AstList KindList d2 $ map quote $ toForm pos KindDict es)
+        property $ \m@(Meta p d1) (D d2) (Few es) -> do
+            quote (AstExpr m $ AstList KindDict d2 es) `shouldBe`
+                AstExpr m (AstList KindList d2 $ map quote $ toForm p KindDict es)
 
     it "converts forms into lists" $ do
-        property $ \(D d1) (D d2) (Few es) -> do
-            quote (AstExpr pos d1 $ AstList KindForm d2 es) `shouldBe`
-                AstExpr pos d1 (AstList KindList d2 $ map quote es)
+        property $ \m@(Meta _ d1) (D d2) (Few es) -> do
+            quote (AstExpr m $ AstList KindForm d2 es) `shouldBe`
+                AstExpr m (AstList KindList d2 $ map quote es)
 
 unquoteSpec :: Spec
 unquoteSpec = describe "unquote" $ do
     it "converts numbers into themselves" $ do
-        property $ \(D d) n -> do
-            let e = AstExpr pos d $ AstNum n
+        property $ \m n -> do
+            let e = AstExpr m $ AstNum n
             unquote e `shouldBe` Right e
 
     it "converts strings into themselves" $ do
-        property $ \(D d) s -> do
-            let e = AstExpr pos d $ AstStr s
+        property $ \m s -> do
+            let e = AstExpr m $ AstStr s
             unquote e `shouldBe` Right e
 
     it "rejects identifiers" $ do
-        property $ \(D d) i -> do
-            let e = AstExpr pos d $ AstIdent i
+        property $ \m i -> do
+            let e = AstExpr m $ AstIdent i
             unquote e `shouldBe` Left ("Unquote: unexpected identifier: " ++ unparseIdent i)
 
     it "converts single-quoted symbols into identifiers" $ do
-        property $ \(D d) i -> do
-            unquote (AstExpr pos d $ AstSymb $ Symb Z i) `shouldBe` Right (AstExpr pos d $ AstIdent i)
+        property $ \m i -> do
+            unquote (AstExpr m $ AstSymb $ Symb Z i) `shouldBe` Right (AstExpr m $ AstIdent i)
 
     it "converts two-or-more-quoted symbols into one-less-quoted symbol" $ do
-        property $ \(D d) n i -> do
-            unquote (AstExpr pos d $ AstSymb $ Symb (S n) i) `shouldBe` Right (AstExpr pos d $ AstSymb $ Symb n i)
+        property $ \m n i -> do
+            unquote (AstExpr m $ AstSymb $ Symb (S n) i) `shouldBe` Right (AstExpr m $ AstSymb $ Symb n i)
 
     it "converts lists into forms" $ do
-        property $ \(D d1) (D d2) (UnquoteValids es) -> do
+        property $ \m@(Meta _ d1) (D d2) (UnquoteValids es) -> do
             let list = AstList KindList d2 es
-                mactual = unquote $ AstExpr pos d1 list
+                mactual = unquote $ AstExpr m list
             isRight mactual `shouldBe` True
-            mactual `shouldBe` (AstExpr pos d1 . AstList KindForm d2 <$> mapM unquote es)
+            mactual `shouldBe` (AstExpr m . AstList KindForm d2 <$> mapM unquote es)
     
     it "rejects dictionaries" $ do
-        property $ \(D d1) (D d2) (Few es) -> do
+        property $ \m@(Meta _ d1) (D d2) (Few es) -> do
             let dictionary = AstList KindDict d2 es
-            unquote (AstExpr pos d1 dictionary) `shouldBe`
+            unquote (AstExpr m dictionary) `shouldBe`
                 Left ("Unquote: unexpected dictionary: " ++ unparseList KindDict d2 unparseExpr es)
 
     it "rejects forms" $ do
-        property $ \(D d1) (D d2) (Few es) -> do
+        property $ \m@(Meta _ d1) (D d2) (Few es) -> do
             let form = AstList KindForm d2 es
-            unquote (AstExpr pos d1 form) `shouldBe`
+            unquote (AstExpr m form) `shouldBe`
                 Left ("Unquote: unexpected form: " ++ unparseList KindForm d2 unparseExpr es)
 
 parseList' k = parse (parseList k doc parseElem) "tests"

@@ -9,7 +9,7 @@ import BuiltIns
 import Control.Monad ( forM_, liftM2 )
 import Data.Nat ( Nat(..) )
 import Types
-import Utils ( pos, symb, toForm, FuncReturn )
+import Utils ( meta, pos, symb, toForm, FuncReturn )
 
 type Result = Maybe PzVal
 type EvalResult = Either String Acc
@@ -113,7 +113,7 @@ evalInvoc result ctx p func as melems frames =
                     return $ Acc Nothing ctx $ Invoc p func (r:as) (Just es) : frames
 
 evalExpr :: Dict -> AstExpr -> FuncArgPass -> [StackFrame] -> EvalResult
-evalExpr ctx e@(AstExpr p _ v) eval frames = 
+evalExpr ctx e@(AstExpr m@(Meta p _) v) eval frames = 
     let setResult result = return $ Acc (Just result) ctx frames in
     case (v, eval) of
         -- numbers and strings
@@ -202,7 +202,7 @@ returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) ctx frames
 
 -- Uneval
 uneval :: PzVal -> AstExpr
-uneval v = AstExpr pos "" $
+uneval v = AstExpr meta $
     case v of
         PzUnit -> AstList KindForm "" []
         PzNum n -> AstNum n

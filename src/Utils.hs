@@ -10,6 +10,9 @@ import Text.Parsec.Pos ( newPos )
 pos :: AstPos
 pos = newPos "<built-in>" 0 0
 
+meta :: Meta
+meta = Meta pos ""
+
 ident :: String -> Ident
 ident = Ident . (:[])
 
@@ -18,7 +21,7 @@ symb = Symb Z
 
 toForm :: AstPos -> AstListKind -> [AstExpr] -> [AstExpr]
 toForm p k =
-    let identToExpr ident = AstExpr p "" $ AstIdent ident
+    let identToExpr ident = AstExpr (Meta p "") $ AstIdent ident
     in case k of
         KindList -> (identToExpr identList:)
         KindDict -> (identToExpr identDict:)

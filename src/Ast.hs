@@ -8,7 +8,7 @@ import Data.Nat ( len, unlen, Nat(..) )
 import Numeric ( readHex, showHex )
 import Text.Parsec
 import Text.Parsec.String ( Parser )
-import Types ( Ast(..), AstExpr(..), AstListKind(..), AstVal(..), Ident(..), Symb(..) )
+import Types ( Ast(..), AstExpr(..), AstListKind(..), AstVal(..), Ident(..), Symb(..), Meta(..) )
 import Utils ( toForm, symb )
 
 -- AST
@@ -161,7 +161,7 @@ unparseMany d f es = concatMap f es ++ d
 
 -- Expressions
 parseExpr :: Parser String -> String -> Parser AstExpr
-parseExpr doc d = liftM2 (`AstExpr` d) getPosition $
+parseExpr doc d = liftM2 (AstExpr . flip Meta d) getPosition $
             AstNum <$> (parseNum <?> "number")
         <|> AstStr <$> (parseStr <?> "string")
         <|> AstIdent <$> (parseIdent <?> "identifier")
@@ -171,18 +171,18 @@ parseExpr doc d = liftM2 (`AstExpr` d) getPosition $
         <|> uncurry (flip $ AstList KindForm) <$> (parseList KindForm doc (parseExpr doc) <?> "form")
 
 unparseExpr :: AstExpr -> String
-unparseExpr (AstExpr _ d v) =
-    d ++ case v of
+unparseExpr (AstExpr (Meta _ d1) v) =
+    d1 ++ case v of
         AstNum n -> unparseNum n
         AstStr s -> unparseStr s
         AstIdent i -> unparseIdent i
         AstSymb s -> unparseSymb s
-        AstList k d l -> unparseList k d unparseExpr l
+        AstList k d2 l -> unparseList k d2 unparseExpr l
 
 -- Quoting
 quote :: AstExpr -> AstExpr
-quote e@(AstExpr p d v) =
-    let toExpr = AstExpr p d in
+quote e@(AstExpr m@(Meta p _) v) =
+    let toExpr = AstExpr m in
     case v of
         -- Numbers and strings quote as themselves
         AstNum _ -> e
@@ -203,8 +203,8 @@ quote e@(AstExpr p d v) =
             toExpr $ AstList KindList d $ map quote $ toForm p k es
 
 unquote :: AstExpr -> Either String AstExpr
-unquote e@(AstExpr p d v) =
-    let toExpr = AstExpr p d in
+unquote e@(AstExpr m v) =
+    let toExpr = AstExpr m in
     case v of
         -- Numbers and strings unquote as themselves
         AstNum _ -> return e

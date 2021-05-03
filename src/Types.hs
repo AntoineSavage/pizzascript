@@ -30,19 +30,8 @@ data Ast
     deriving (Show, Eq)
 
 data AstExpr
-    = AstExpr AstPos AstDoc AstVal
-    deriving (Show)
-
-instance Eq AstExpr where 
-    -- Ignore position
-    (==) (AstExpr _ d1 v1) (AstExpr _ d2 v2) = d1 == d2 && v1 == v2
-
-instance Ord AstExpr where 
-    -- Ignore position
-    compare (AstExpr _ d1 v1) (AstExpr _ d2 v2) =
-        let dCmp = compare d1 d2
-            vCmp = compare v1 v2
-        in if dCmp /= EQ then dCmp else vCmp 
+    = AstExpr Meta AstVal
+    deriving (Show, Eq, Ord)
 
 data AstVal
     = AstNum Double
