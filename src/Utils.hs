@@ -29,16 +29,16 @@ type FuncReturn = Either String (Dict, PzVal)
 invalidArityMsg :: Int -> [a] -> String
 invalidArityMsg n args = "Invalid number of arguments. Expected " ++ show n ++ ", got: " ++ show (length args)
 
-f0 :: [PzVal] -> (() -> FuncReturn) -> FuncReturn
+f0 :: [a] -> (() -> Either String b) -> Either String b
 f0 args f = case args of [] -> f (); _ -> Left $ invalidArityMsg 0 args
 
-f1 :: [PzVal] -> (PzVal -> FuncReturn) -> FuncReturn
+f1 :: [a] -> (a -> Either String b) -> Either String b
 f1 args f = case args of [x] -> f x; _ -> Left $ invalidArityMsg 1 args
 
-f2 :: [PzVal] -> (PzVal -> PzVal -> FuncReturn) -> FuncReturn
+f2 :: [a] -> (a -> a -> Either String b) -> Either String b
 f2 args f = case args of [x, y] -> f x y; _ -> Left $ invalidArityMsg 2 args
 
-f3 :: [PzVal] -> (PzVal -> PzVal -> PzVal -> FuncReturn) -> FuncReturn
+f3 :: [a] -> (a -> a -> a -> Either String b) -> Either String b
 f3 args f = case args of [x, y, z] -> f x y z; _ -> Left $ invalidArityMsg 3 args
 
 -----------------

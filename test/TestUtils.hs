@@ -125,7 +125,7 @@ arbitraryValOf depth = oneof $
         (if depth <= 0 then [] else
             [ PzList <$> arbMany 0 3 (arbitraryValOf $ depth-1)
             , PzDict . M.fromList <$> arbMany 0 3 (liftM2 (,) (arbitraryValOf $ depth-1) $ arbitraryValOf $ depth-1)
-            , PzFunc <$> liftM4 Func (elements argPasses) arbitrary arbitrary arbitrary
+            , PzFunc <$> liftM5 Func arbitrary arbitrary (elements argPasses) arbitrary arbitrary
             ]
         )
 
