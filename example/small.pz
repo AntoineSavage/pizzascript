@@ -1,15 +1,1 @@
-# small.pz
-()
-
-0 1 2 3 4 -1 -2 -3 -4
-0.1 1.2 2.3 -0.1 -1.2
-3.1415e2 -3.1415E-2
-
-"" "Hello World!""âêîôû""\n\t\b"
-
-'abc 'xyz '_123
-
-false true
-(not false) (not true)
-(not ())
 (not 0)

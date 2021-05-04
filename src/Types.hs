@@ -79,3 +79,14 @@ data FuncBody
     = BodyBuiltIn Ident
     | BodyCustom [WithPos AstExpr]
     deriving (Show, Eq, Ord)
+
+type Result = Maybe (WithPos PzVal)
+data Acc
+    = Acc Result [StackFrame]
+    deriving (Show, Eq)
+
+data StackFrame
+    = Block Dict [WithPos AstExpr]
+    | Form Dict Pos (Maybe (WithPos Ident)) [WithPos AstExpr]
+    | Invoc Dict Pos (Maybe (WithPos Ident)) Func [WithPos PzVal] (Maybe [WithPos AstExpr])
+    deriving (Show, Eq)

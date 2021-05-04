@@ -10,28 +10,23 @@ import BuiltIns
 import Control.Monad ( forM_, liftM2 )
 import Data.Maybe
 import Data.Nat ( Nat(..) )
+import Pretty
 import Types
 import Utils
 
-type Result = Maybe (WithPos PzVal)
 type EvalResult = Either String Acc
-
-data Acc
-    = Acc Result [StackFrame]
-    deriving (Show, Eq)
-
-data StackFrame
-    = Block Dict [WithPos AstExpr]
-    | Form Dict Pos (Maybe (WithPos Ident)) [WithPos AstExpr]
-    | Invoc Dict Pos (Maybe (WithPos Ident)) Func [WithPos PzVal] (Maybe [WithPos AstExpr])
-    deriving (Show, Eq)
 
 evalMany :: [WithPos AstExpr] -> IO ()
 evalMany es = go $ Acc Nothing [Block builtInCtx es]
 
 go :: Acc -> IO ()
-go (Acc result []) = return () -- no more frames: halt
-go (Acc result (frame:frames)) =
+go (Acc result []) = putStrLn "Halting" -- no more frames: halt
+go (Acc result (frame:frames)) = do
+    putStrLn "=========="
+    putStrLn $ "Result: " ++ show result
+    putStrLn $ "Frame: " ++ prettyFrame 0 frame
+    putStrLn $ "Nbr additional frames: " ++ show (length frames)
+    putStrLn "----------"
     case evalFrame result frame frames of
         Left s -> putStrLn s
         Right acc -> go acc
