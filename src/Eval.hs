@@ -107,6 +107,7 @@ evalInvoc result ctx p func as melems frames =
             case melems of
                 Nothing ->
                     -- function invocation result (pop frame)
+                    -- TODO: Impure functions: handle explicit output context
                     return $ Acc (Just r) ctx frames
 
                 Just es -> 
@@ -163,15 +164,11 @@ evalIdent ctx p ident = inner (withPos $ PzDict ctx) $ symbSplitImpl $ symb iden
                         ++ "\n at: " ++ show p
                         ++ "\n non-dictionary context: " ++ show val_or_ctx
 
--- TODO handle implicit context
--- TODO handle explicit context
--- TODO handle args
 invokeFunc :: Dict -> Pos -> Func -> [WithPos PzVal] -> [StackFrame] -> EvalResult
-invokeFunc ctx p func args frames =
-    case body func of
-        BodyBuiltIn ident -> invokeFuncBuiltIn ctx p args ident frames
-        BodyCustom es -> Left $
-            "TODO: Invoke custom function: " ++ show func
+invokeFunc ctx p (Func implCtx impArgs args body) as frames =
+    case body of
+        BodyBuiltIn ident -> invokeFuncBuiltIn ctx p as ident frames
+        BodyCustom es -> invokeFuncCustom ctx p as implCtx impArgs args es frames
 
 invokeFuncBuiltIn :: Dict -> Pos -> [WithPos PzVal] -> Ident -> [StackFrame] -> EvalResult
 invokeFuncBuiltIn ctx p args (Ident ps) frames =
@@ -197,21 +194,28 @@ invokeFuncBuiltIn ctx p args (Ident ps) frames =
         -- TODO
 
         -- functions
-        ["func"] -> returnFrom frames $ _func p ctx args
+        ["func"] -> returnFrom frames $ _func ctx p args
 
         -- miscellaneous
         -- TODO
 
         _ -> Left $ "TODO: Implement built-in function: " ++ show ps
 
-returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
-returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) ctx frames
-
-_func :: Pos -> Dict -> [WithPos PzVal] -> FuncReturn
-_func p ctx args = do
+_func :: Dict -> Pos -> [WithPos PzVal] -> FuncReturn
+_func ctx p args = do
     es <- mapM (unquote.unevalExpr) args
     fc <- evalFuncCustom es
     return (ctx, WithPos p $ PzFunc $ fromFuncCustom ctx fc)
+
+-- TODO handle explicit context
+-- TODO handle args
+invokeFuncCustom :: Dict -> Pos -> [WithPos PzVal] -> Dict -> FuncImpureArgs -> FuncArgs -> [WithPos AstExpr] -> [StackFrame] -> EvalResult
+invokeFuncCustom ctx p as implCtx impArgs args es frames =
+    return $ Acc Nothing implCtx $ Block es : frames
+
+-- Utils
+returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
+returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) ctx frames
 
 -- Eval custom function
 evalFuncCustom :: [WithPos AstExpr] -> Either String FuncCustom
