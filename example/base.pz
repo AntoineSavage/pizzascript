@@ -2,11 +2,11 @@
 
 # define 'def manually
 # immediately invoke an anonymous function
-((func ctx 'eval () [
+((func ('eval ctx) () [
     (put 'def
         # This is the 'def definition
-        (func ctx 'quote (k v) [   
-            (put k ((func 'deep_unquote (x) x) v) ctx)
+        (func ('quote ctx) (k v) [   
+            (put k ((func ('deep_unquote) (x) x) v) ctx)
             () # 'def returns nothing
         ])
         ctx
@@ -18,27 +18,27 @@
 (def id (func (x) x))
 (def flip (func (f x y) (f y x)))
 
-(def quote (func 'quote (x) x))
-(def unquote (func 'unquote (x) x))
-(def deep_quote (func 'deep_quote (x) x))
-(def deep_unquote (func 'deep_unquote (x) x))
+(def quote (func ('quote) (x) x))
+(def unquote (func ('unquote) (x) x))
+(def deep_quote (func ('deep_quote) (x) x))
+(def deep_unquote (func ('deep_unquote) (x) x))
 
 # control structures
-(def if (func 'quote (pq tq fq)
+(def if (func ('quote) (qp qt qf)
     # can be any type
-    (def p_any (deep_unquote pq))
+    (def p_any (deep_unquote qp))
 
     # can be 'false or 'true
     (def p (not (not p_any)))
 
-    # tq or fq according to p
-    (def rq (or
-        (and p tq)
-        (and (not p) fq)
+    # qt or qf according to p
+    (def qr (or
+        (and p qt)
+        (and (not p) qf)
     ))
 
     # evaluate result
-    (deep_unquote rq)
+    (deep_unquote qr)
 ))
 
 # lists

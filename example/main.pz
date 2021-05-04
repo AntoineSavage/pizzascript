@@ -87,8 +87,8 @@ true
 (func args args)        # variadic, returns its args
 
 # impure functions
-(func ctx 'evaled        (x) [ctx x])
-(func ctx 'quoted        (x) [ctx x])
-(func ctx 'unquoted      (x) [ctx x])
-(func ctx 'deep_quoted   (x) [ctx x])
-(func ctx 'deep_unquoted (x) [ctx x])
+(func ('evaled ctx)        (x) [ctx x])
+(func ('quoted ctx)        (x) [ctx x])
+(func ('unquoted ctx)      (x) [ctx x])
+(func ('deep_quoted ctx)   (x) [ctx x])
+(func ('deep_unquoted ctx) (x) [ctx x])

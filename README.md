@@ -1,8 +1,9 @@
 # Comments
 
-The # symbol starts a single-comment, which ends at the end of the current line:
+The `#` character starts a single-comment, which ends at the end of the current line:
 ```
 # This is a single-comment
+# This is another single-line comment
 ```
 
 There are no multi-line comments
@@ -11,6 +12,7 @@ There are no multi-line comments
 
 Parentheses ( `(` and `)` ) denote forms (i.e. a function invocation). For example:
 ```
+()        # is the empty form, or unit type (see below)
 (f)       # invokes 'f with zero arguments
 (f x)     # invokes 'f with one argument 'x
 (f x y)   # invokes 'f with two argument 'x and 'y
@@ -40,28 +42,15 @@ The `typeof` function can be used to obtain the type of a value:
 (typeof any_func)   # -> 'func
 ```
 
-Additionally, the following functions work on all types:
-```
-(eq x y)  # -> 'true | 'false. Whether x and y are equal
-# values of different types are automatically different
-
-(lt x y)  # -> 'true | 'false. Whether x is less than y
-# values of different types are ordered as such:
-# () < any_num < any_str < any_symb < any_list < any_dict < any_func
-
-(src_pos main) # -> "src/main, line 1, column 2"
-(src_doc main) # -> "# This is the main function"
-```
-
 # The unit type `()`
 
-Has only one value: `()`, which is also its own type
+Also know as the empty form. Has only one value: `()`, which is also its own type
 
 Used to represent the absence of any meaningful value. Has no meaningful functions associated with it
 
 # Numbers
 
-Numbers can be ints (53-bit) or floats (64-bit)
+Numbers can be ints (53-bit precision) or floats (64-bit precision)
 
 Integer literals (positive or negative):
 ```
@@ -73,7 +62,7 @@ Floating-point number literals:
 ```
 0.1 1.1 2.2 10.01 123.123
 -1.1 -2.2 -3.3 -10.01 -123.123
-1.23e123 -123E-123
+1.2e12 -1.2E-12
 ```
 
 All numbers have type `'num`, which corresponds to the following function `num`:
@@ -128,8 +117,14 @@ All strings have type `'str`, which corresponds to the following variadic functi
 
 The following functions work on strings:
 ```
-(str_size "")    # -> 0
-(str_size "abc") # -> 3
+(size "")    # -> 0
+(size "abc") # -> 3
+
+(split "" "abc")    # -> ["a" "b" "c"]
+(split " " "a b c") # -> ["a" "b" "c"]
+
+(join "" "a" "b" "c")   # -> "abc"
+(join " " "a" "b" "c")  # -> "a b c"
 ```
 
 # Symbols
@@ -162,23 +157,22 @@ Here are a few qualified symbols:
 
 The following functions are used to manipulate symbols:
 ```
-(symb_split 'foo)         # -> ['foo]
-(symb_split 'foo.bar.baz) # -> ['foo 'bar 'baz]
+(split 'foo)         # -> ['foo]
+(split 'foo.bar.baz) # -> ['foo 'bar 'baz]
 
-(symb_merge 'foo)               # -> 'foo
-(symb_merge 'foo 'bar 'baz)     # -> 'foo.bar.baz
-(symb_merge 'foo ['bar] ['baz]) # -> 'foo.bar.baz
+(join 'foo)               # -> 'foo
+(join 'foo 'bar 'baz)     # -> 'foo.bar.baz
 
 # Number of quotes must match
-(symb_merge ''foo ''bar ''baz)  # -> ''foo.bar.baz
-(symb_merge 'foo ''bar '''baz)  # -> error
+(join ''foo ''bar ''baz)  # -> ''foo.bar.baz
+(join 'foo ''bar '''baz)  # -> error
 ```
 
 The number of quotes of a symbol can be obtained like this:
 ```
-(symb_nbr_quotes 'foo)  # -> 1
-(symb_nbr_quotes ''bar) # -> 2
-(symb_nbr_quotes '''foo.bar.baz) # -> 3
+(nbr_quotes 'foo)           # -> 1
+(nbr_quotes ''bar)          # -> 2
+(nbr_quotes '''foo.bar.baz) # -> 3
 ```
 
 Booleans and other enum-like values are implemented using symbols like this:
@@ -193,6 +187,7 @@ Symbols have a close relationship with identifiers. An identifier is a symbol, b
 
 An identifier is just a name representing a previously defined value. In particular, an identifier is **not** a literal of any kind, or is **not** itself a value of any kind. In order to obtain the value associated to the identifier, it must be evaluated. For example, in the following:
 ```
+# 'def associates an identifier to a value
 (def my_value "hello world")
 ```
 We can say that identifier `my_value` represents the value `"hello world"`, and its matching symbol looks like `'my_value`. When evaluating identifier `my_value`, it will produce value `"hello world"`
@@ -219,7 +214,7 @@ Any identifier can be converted into a symbol by *quoting* it, i.e. adding one o
 
 Conversely, any symbol can be converted into an identifier by *unquoting* it, i.e. removing one or more leading quote and evaluating the result. Keep in mind that unquoting a symbol may lead to an undefined identifier error
 
-Note that a symbol by itself is not required to correspond to a previously defined identifier. Only the unquoting process requires that relationship between symbols and identifiers. For example, symbol `'foo` is a perfectly valid symbol and can be freely passed around, even places where identifier `foo` is not defined
+Note that a symbol by itself is not required to correspond to a previously defined identifier. Only the unquoting process requires that relationship between symbols and identifiers. For example, symbol `'foo` is a perfectly valid symbol and can be freely passed around, even places where identifier `foo` is not defined. Only when unquoting `'foo` does the identifier `foo` need to be defined
 
 We will see later on in this document how to programmatically quote and unquote identifiers and symbols
 
@@ -231,7 +226,7 @@ Boolean values (`false` and `true`) are implemented using symbols like this:
 (def true 'true)
 ```
 
-Which means that, when evaluated, boolean values return themselves
+Which means that boolean values are associated identifiers that, when evaluated, return themselves. In other words, it means that unquoting a boolean symbol returns itself
 
 Boolean operations (`not`, `or`, `and`) are actually applicable to all types. They operate on the *boolish* versions of their arguments, which can be obtained according to the following rules:
 
@@ -266,26 +261,36 @@ The following truth table applies for the `or` operation:
 
 | x         | y        | (or x y)
 |-----------|----------|---------
-| `'true`   | *        | x
-| *truish*  | `true`   | y
-| *truish*  | *        | x
-| *falsish* | `'false` | x
-| *falsish* | *        | y
-| `'false`  | *        | y
+| `'true`   | *        | x (i.e. `'true` wins against anything)
+| *truish*  | `true`   | y (i.e. `'true` wins against anything)
+| *truish*  | *        | x (i.e. *truish* wins against anything not `'true`)
+| *falsish* | `'false` | x (i.e. *falsish* only wins against `'false`)
+| *falsish* | *        | y (i.e. *falsish* only wins against `'false`)
+| `'false`  | *        | y (i.e. `'false` wins against nothing)
 
 The following truth table applies for the `and` operation:
 
 | x         | y        | (and x y)
 |-----------|----------|---------
-| `'false`  | *        | x
-| *falsish* | `false`  | y
-| *falsish* | *        | x
-| *truish*  | `'true`  | x
-| *truish*  | *        | y
-| `'true`   | *        | y
+| `'false`  | *        | x (i.e. `'false` wins against anything)
+| *falsish* | `false`  | y (i.e. `'false` wins against anything)
+| *falsish* | *        | x (i.e. *falsish* wins against anything not `'false`)
+| *truish*  | `'true`  | x (i.e. *truish* only wins against `'true`)
+| *truish*  | *        | y (i.e. *truish* only wins against `'true`)
+| `'true`   | *        | y (i.e. `'true` wins against nothing)
 
-Note that boolean operations (`not`, `or`, `and`) will always evaluate both their arguments
+As you can see, the boolish truch tables for `or` and `and` are somewhat the opposite of each other. Also, remember that note that `or` and `and` will always evaluate *both* their arguments (i.e. they do not short-circuit as in other programming languages)
 
+Additionally, the following functions work on all data types and return boolean values:
+```
+(eq x y)  # -> 'true or 'false. Whether x and y are equal
+# values of different types are automatically different
+
+(lt x y)  # -> 'true or 'false. Whether x is less than y
+# values of different types are ordered as such:
+# () < any_num < any_str < any_symb < any_list < any_dict < any_func
+# values of the same type are ordered reasonably
+```
 
 # Lists
 
@@ -333,7 +338,7 @@ The following functions are used to manipulate lists:
 
 # Dictionaries
 
-Dictionaries are immutable and heterogenous containers of key/value pairs. All types can be keys in dictionaries
+Dictionaries are immutable and heterogenous containers of key/value pairs. Values of any types can be keys in dictionaries, because there is a strict ordering across all data types, regardless of type (yes, even functions)
 
 Here are some dictionary literals:
 ```
@@ -369,29 +374,7 @@ The curly brace notation (i.e. using `{` and `}` ) is useful for cleaning-up the
 
 All dictionaries have type `'dict`, which corresponds to the previously mentioned `dict` function
 
-## Dictionaries and qualified identifiers
-
-Dictionaries have a special relationship with qualified identifiers. If a dictionary contains a key that is an unqualified, single-quoted symbol, then it can be accessed by evaluating the corresponding identifier, *qualified* with the dictionary name. If no such key exists in the dictionary, an error will be raised
-
-Such unqualified, single-quoted symbol keys are also called *fields*
-
-For example:
-```
-# single key 'my_field (an unqualified, single-quoted symbol)
-# single value "my_value" (a string)
-(def my_dict {('my_field "my_value)}
-
-# obtain value of symbol key
-# simply evaluate the matching key identifier,
-# qualified with the dictionary identifier
-my_dict.my_field # -> "my_value"
-
-# updating value of symbol key
-# returns a new dictionary with the updated key/value pair
-(set my_dict.my_field 123) # -> {('my_field 123)}
-```
-
-The following functions are used to manipulate dictionaries (regardless of key type):
+The following functions are used to manipulate dictionaries:
 ```
 (is_empty {})                      # -> 'true
 (is_empty {("my_key" 'my_value)})  # -> 'false
@@ -416,11 +399,35 @@ The following functions are used to manipulate dictionaries (regardless of key t
 (del "my_key" {("my_key" 123)})  # -> {}, i.e. removes key/value pair
 ```
 
+## Dictionaries and qualified identifiers
+
+Dictionaries have a special relationship with qualified identifiers. If a dictionary contains a key that is an unqualified, single-quoted symbol (ex: `'foo`, `'bar`), then it can be accessed by evaluating the matching identifier, *qualified* with the dictionary identifier. If no such key exists in the dictionary, an error will be raised
+
+Such unqualified, single-quoted symbol keys are also called *fields*
+
+For example:
+```
+# single key 'my_field (an unqualified, single-quoted symbol)
+# single value "my_value" (a string)
+(def my_dict {('my_field "my_value)}
+
+# obtain value of symbol key
+# simply evaluate the matching key identifier,
+# qualified with the dictionary identifier
+my_dict.my_field # -> "my_value"
+
+# updating value of symbol key
+# returns a new dictionary with the updated key/value pair
+(set my_dict.my_field 123) # -> {('my_field 123)}
+```
+
+Note that `set` only works with qualified identifier, and raises an error if the matching symbol does not exist in the dictionary. In order to work with keys of any type, and/or add and remove keys, use `get`, `put` and `del` instead (see above)
+
 # Functions
 
 Here are some function literals:
 ```
-(func () ())            # nullary, returns ()
+(func () ())            # nullary, returns (), i.e. the unit type
 (func (x) x)            # unary, returns its arg
 (func (n m) (add n m))  # binary, sums its args
 # etc
@@ -437,11 +444,11 @@ Here are some useful functions:
 
 A function's argument list can be introspected like this:
 ```
-(func_args id)      # -> ['id]
-(func_args apply)   # -> ['f 'x]
-(func_args flip)    # -> ['f 'x 'y]
-(func_args compose) # -> ['f 'g]
-(func_args list)    # -> 'args, i.e. variadic
+(get_args id)      # -> ['id]
+(get_args apply)   # -> ['f 'x]
+(get_args flip)    # -> ['f 'x 'y]
+(get_args compose) # -> ['f 'g]
+(get_args list)    # -> 'args, i.e. variadic
 ```
 
 All functions have type `'func`, which corresponds to the function `func` used in function literals
@@ -457,41 +464,41 @@ A function can be annotated with an argument-passing behaviour symbol. This symb
 - `'deep_quote`: like `'quote`, but replace an identifier with its associated value beforehand
 - `'deep_unquote`: like `'unquote`, but replace an identifier with its associated value beforehand
 
-In a function literal, this symbol must appear immediately before the function argument declaration
+In a function literal, if present, this symbol must appear in a separate form, which MUST appear immediately before the function argument declaration
 
 Here are some examples of functions using such symbols:
 ```
 # evaluate the arguments left to right
 # the following two literals are equivalent
 (func (x) x)
-(func 'eval (x) x)
+(func ('eval) (x) x)
 
 # quote the arguments
-(func 'quote (x) x)
+(func ('quote) (x) x)
 
 # unquote (and evaluate) the arguments left to right
-(func 'unquote (x) x)
+(func ('unquote) (x) x)
 
 # deep-quote the arguments
-(func 'deep_quote (x) x)
+(func ('deep_quote) (x) x)
 
 # deep-unquote (and evaluate) the arguments left to right
-(func 'deep_unquote (x) x)
+(func ('deep_unquote) (x) x)
 ```
 
 A function's argument-passing behaviour symbol can be accessed like this:
 ```
-(def func_eval          (func 'eval         (x) x))
-(def func_quote         (func 'quote        (x) x))
-(def func_unquote       (func 'unquote      (x) x))
-(def func_deep_quote    (func 'deep_quote   (x) x))
-(def func_deep_unquote  (func 'deep_unquote (x) x))
+(def func_eval          (func ('eval)         (x) x))
+(def func_quote         (func ('quote)        (x) x))
+(def func_unquote       (func ('unquote)      (x) x))
+(def func_deep_quote    (func ('deep_quote)   (x) x))
+(def func_deep_unquote  (func ('deep_unquote) (x) x))
 
-(func_arg_pass func_eval)         # -> 'eval
-(func_arg_pass func_quote)        # -> 'quote
-(func_arg_pass func_unquote)      # -> 'unquote
-(func_arg_pass func_deep_quote)   # -> 'deep_quote
-(func_arg_pass func_deep_unquote) # -> 'deep_unquote
+(get_arg_pass func_eval)         # -> 'eval
+(get_arg_pass func_quote)        # -> 'quote
+(get_arg_pass func_unquote)      # -> 'unquote
+(get_arg_pass func_deep_quote)   # -> 'deep_quote
+(get_arg_pass func_deep_unquote) # -> 'deep_unquote
 ```
 
 The following sections describe each of these symbols in more details
@@ -514,7 +521,7 @@ Arguments are evaluated in two different ways:
 Here is a detailed example:
 ```
 # given:
-(def my_func (func 'eval (x) x)) # eq. to (func (x) x)
+(def my_func (func ('eval) (x) x)) # eq. to (func (x) x)
 (def n 123)
 
 # (fac 5) and n are evaluated here to 120 and 123 resp.
@@ -536,7 +543,7 @@ See section *Quoting values* for mode details on how to quote values
 Here is a detailed example:
 ```
 # given:
-(def my_func (func 'quote (x) x))
+(def my_func (func ('quote) (x) x))
 (def n 123)
 (def my_value [ 0 "" 'a [] {} (fac 5) n ])
 
@@ -563,7 +570,7 @@ See section *Unquoting values* for mode details on how to unquote values
 Here is a detailed example:
 ```
 # given:
-(def my_func (func 'unquote (x) x))
+(def my_func (func ('unquote) (x) x))
 (def n 123)
 (def my_code ['list 0 "" ''a ['list] ['dict] ['fac 5] 'n])
 
@@ -593,7 +600,7 @@ See section *Quoting values* for mode details on how to quote values
 Here is a detailed example:
 ```
 # given:
-(def my_func (func 'deep_quoted (x) x))
+(def my_func (func ('deep_quoted) (x) x))
 (def n 123)
 
 # (fac 5) and n are evaluated here to 120 and 123 resp.
@@ -625,7 +632,7 @@ See section *Unquoting values* for mode details on how to unquote values
 Here is a detailed example:
 ```
 # given:
-(def my_func (func 'deep_unquoted (x) x))
+(def my_func (func ('deep_unquoted) (x) x))
 (def n 123)
 (def my_code ['list 0 "" ''a ['list] ['dict] ['fac 5] 'n])
 
@@ -741,12 +748,12 @@ Unquoting adheres to the following rules:
 
 Any function has access to an implicit context. Impure functions (see below) have access to an additional, explicit context
 
-A context is a dictionary made up of unqualified, single-quoted symbol keys each associated to a given value. Such values can be of any type. This context dictionary is initialized at the beginning of a module evaluation, and can be used and modified by impure functions
+A context is a dictionary made up of unqualified, single-quoted symbol keys (ex: `'foo`, `'bar`) each associated to a given value. Such values can be of any type. This context dictionary is initialized at the beginning of a module evaluation, and can be used and modified by impure functions
 
-A context is said to be implicit when its keys can be referenced without being qualified by the context name, as simple identifiers. Conversely, a context is said to be explicit when its keys must be qualified with the context name, resulting in a qualified identifier.
+A context is said to be implicit when its keys can be referenced without being qualified by the context identifier, as simple identifiers. Conversely, a context is said to be explicit when its keys must be qualified with the context identifier, resulting in a qualified identifier. Refer to the dictionary section for the syntax used to evaluate unqualified, single-quoted symbol keys in a dictionary
 
 Another way to think about implicit contexts is like this:
-- pretend that there exists a context named `this` or `self` that refers to the current module (not any module instance like in OOP)
+- pretend that there exists a context named `this` or `self` that refers to the current module (not unlike class instances in OOP)
 - all unqualified identifiers are implicitely qualified with this `this` or `self` identifier
 - for example, unqualified identifier `fac` can be thought of as `this.fac`
 
@@ -765,22 +772,24 @@ For example:
 (print ctx.zero)
 ```
 
+In order for an explicit context to be accessible, it must be present in the current implicit context
+
 ### The function implicit context
 
 By default, a function only has access to its implicit context, called the *function implicit context*
 
-This *function implicit context* is the context of all identifiers (arguments, lambda closure, etc) that are defined when the function is created (i.e. using a function literal). Only those identifiers will be available unqualifiedly to the function when it is invoked
+This *function implicit context* is the context of all identifiers (arguments, lambda closure, etc) that are defined when the function is created (i.e. using a function literal). For this reason, the *function implicit context* can also be called the function *definition* context. Only identifiers present in this implicit context can be accessed when the function is invoked
 
 A function's implicit context can be accessed like this:
 ```
 # given
-(def add (func (x y) "<built-in + on x and y>"))
-(def add_logged (func (x y)
+(def add_plus_one (func (x y) (add x y 1)))
+(def add_plus_one_logged (func (x y)
   # log operands
   (print "x:" x ", y: " y)
 
   # log result
-  (def result "<built-in + on x and y>")
+  (def result (add x y 1))
   (print "result:" result)
 
   # return result
@@ -788,40 +797,42 @@ A function's implicit context can be accessed like this:
 ))
 
 # define custom function
-(def my_add (func (n) (add n 1)))
+(def double_plus_one (func (n) (add_plus_one n n)))
 
 # when getting the implicit context
-(func_get_ctx my_add)
-# -> {('add (func (x y) "<built-in + on x and y>"))}
+(get_impl_ctx double_plus_one)
+# -> {('add (func (x y) (add x y 1)))}
 
 # setting implicit context
-(def my_add_logged (func_set_ctx {('add add_logged)} my_add))
-
-# keep in mind that you should prefer function composition over this mechanism
+(def double_plus_one_logged (set_impl_ctx {('add add_plus_one_logged)} double_plus_one))
 ```
 
-The `def` operation seen up until now will also add the defined symbol to a function's own implicit context, thus allowing simple recursion to work as expected
+Keep in mind that manipulating the implicit context can cause the resulting function to misbehave, for example if a key of the implicit context is removed or is replaced with an incompatible value
 
-For mutually-recursive functions, one can devise an operation `mutual` that takes a number of functions, and will add all of them in each of them in a similar fashion
+### Recursion and the implicit context
+
+In order for recusrion to work, a function's implicit context needs to contain itself. For this reason, defining functions using `def` will not allow recursion, since `def` does not modify the defined values whatsoever. Therefore, recursive functions must be defined using `defun`, which only works on functions but will add the function's own name to its own implicit context, thus allowing simple recursion to work
+
+For mutually-recursive functions, one can devise an operation `mutual` that takes a number of functions, and will add all of their names in the implicit contexts of each of them
 
 ## Impure functions
 
 A function is said to be *impure* when it receives and returns an additional context argument, called the *function explicit context* (see next section). This context argument is used to perform impure actions, like changing definitions in the caller context.
 
 An impure function literal differs from a a normal function literal in the following ways:
-- an argument-passing behaviour symbol MUST appear immediately before the function argument declaration
-- an additional context argument (with arbitrary name) must appear immediately before the argument-passing behaviour symbol
+- an argument-passing behaviour symbol MUST appear in a separate form, which MUST appear immediately before the function argument declaration
+- an additional context argument (with arbitrary name) must appear immediately after the argument-passing behaviour symbol, in the same form
 - the function must return a size-2 list containing (in order):
-  - a context value, derived from the context argument (and possibly modified)
+  - a dictionary value, possibly derived from the context argument (and possibly modified)
   - the function's otherwise normal return value
 
 Here are some impure function literals that do not perform any impure actions:
 ```
-(func ctx 'eval ()    [ctx ()])         # nullary func, returns ()
-(func ctx 'eval (x)   [ctx x])          # unary, returns its arg
-(func ctx 'eval (n m) [ctx (add n m)])  # binary, sums its args
+(func ('eval ctx) ()    [ctx ()])         # nullary func, returns ()
+(func ('eval ctx) (x)   [ctx x])          # unary, returns its arg
+(func ('eval ctx) (n m) [ctx (add n m)])  # binary, sums its args
 # etc
-(func ctx 'eval args  [ctx args])       # variadic, returns its args
+(func ('eval ctx) args  [ctx args])       # variadic, returns its args
 ```
 
 Note that all examples used identifier `ctx` to refer to the additional context argument, but that is only a convention
@@ -830,13 +841,11 @@ Note that all examples used identifier `ctx` to refer to the additional context 
 
 An impure function receives an additional context argument, called the *function explicit context*
 
-This *function explicit context* is the context of all definitions available to the *caller* of the function. For this reason, it is also sometimes called *caller context*. Since it is an explicit context, all of its keys must be qualified with the context name
-
-Note that when using an explicit context, the chosen identifier (ex: `'ctx`) will be added to the function's implicit context, unless such an identifier is already defined in the function's implicit context, in which case an error is raised
+This *function explicit context* is the context of all definitions available to the *caller* of the function. For this reason, the *function explicit context* can also be called the function *caller context*. Since it is an explicit context, all of its keys must be qualified with the context identifier
 
 Here is an example of receiving (but not modifying) the explicit context:
 ```
-def my_func (func ctx 'eval (x y z)
+def my_func (func ('eval ctx) (x y z)
   (print ctx.zero)
   (print ctx.hello)
 
@@ -862,7 +871,7 @@ def my_func (func ctx 'eval (x y z)
 
 Here is an example of performing an impure action by modifying the explicit context:
 ```
-def my_func (func ctx 'eval (x y z)
+def my_func (func ('eval ctx) (x y z)
   (print ctx.n)
   (print ctx.hello)
 
@@ -892,10 +901,10 @@ def my_func (func ctx 'eval (x y z)
 A function's explicit context argument can be accessed like this:
 ```
 (def func_pure    (func (x) x))
-(def func_impure  (func ctx 'eval (x) [ctx x]))
+(def func_impure  (func ('eval ctx) (x) [ctx x]))
 
-(func_explicit_ctx func_pure)   # -> (), i.e. no explicit context
-(func_explicit_ctx func_impure) # -> 'ctx
+(get_expl_ctx func_pure)   # -> (), i.e. no explicit context
+(get_expl_ctx func_impure) # -> 'ctx
 ```
 
 ## Other uses for the explicit context
@@ -928,14 +937,14 @@ Assume an impure function `F`. Once `F` finishes its invocation, the interpreter
 Here is an example of implementing a prompt functionality:
 ```
 # prompt 1/3: request the writing of the prompt output string
-(def prompt1 (func ctx 'eval (str)
+(def prompt1 (func ('eval ctx) (str)
   [ (put ctx '__REQUEST_IO__  ['std_out str])
     ()
   ]
 ))
 
 # prompt 2/3: request the reading of the user input string
-(def prompt2 (func ctx 'eval ()
+(def prompt2 (func ('eval ctx) ()
   # ignore 'prompt1 response in ctx.__RESPONSE_IO__
   [ (put ctx '__REQUEST_IO__ 'std_in)
     ()
@@ -981,14 +990,14 @@ Assume an impure function `F`. Once `F` finishes its invocation, the interpreter
 Here is an example of implementing an import functionality:
 ```
 # import 1/2: send request
-(def import1 (func ctx 'eval (module)
+(def import1 (func ('eval ctx) (module)
   [ (put ctx '__REQUEST_MODULE_CTX__  module)
     ()
   ]
 ))
 
 # import 2/2: process response
-(def import2 (func ctx 'eval ()
+(def import2 (func ('eval ctx) ()
   [ (del ctx.__RESPONSE_MODULE_CTX__)
     ctx.__RESPONSE_MODULE_CTX__
   ]
@@ -1035,21 +1044,21 @@ Note: It is the responsibility of the programmer to pop the resume evaluation ha
 Here is an example of aborting and resuming evaluation:
 ```
 # this function will push a resume evaluation handler
-(def my_push (func ctx 'eval (handler)
+(def my_push (func ('eval ctx) (handler)
   [ (put ctx '__PUSH_RESUME_EVAL_HANDLER__ handler)
     ()
   ]
 ))
 
 # this function will pop a resume evaluation handler
-(def my_pop (func ctx 'eval ()
+(def my_pop (func ('eval ctx) ()
   [ (put ctx '__POP_RESUME_EVAL_HANDLER__ ())
     ()
   ]
 ))
 
 # this function will abort evaluation
-(def my_abort (func ctx 'eval (abort_with)
+(def my_abort (func ('eval ctx) (abort_with)
   [ (put ctx '__ABORT_EVAL_WITH__  abort_with)
     ()
   ]
