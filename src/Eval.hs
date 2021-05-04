@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
 module Eval where
 
@@ -142,7 +143,7 @@ evalIdent :: Dict -> Pos -> Ident -> Either String (WithPos PzVal)
 evalIdent ctx p ident = inner (withPos $ PzDict ctx) $ symbSplitImpl $ symb ident where
     inner val_or_ctx symbs =
         case symbs of
-            [] -> Right val_or_ctx
+            [] -> return val_or_ctx
             s@(Symb _ i):ss ->
                 case val val_or_ctx of
                     PzDict m ->
@@ -208,19 +209,18 @@ returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) ctx frames
 
 -- Uneval
 unevalExpr :: WithPos PzVal -> WithPos AstExpr
-unevalExpr (WithPos p v) = WithPos p $
-    case v of
-        PzUnit -> AstList KindForm []
-        PzNum n -> AstNum n
-        PzStr s -> AstStr s
-        PzSymb s -> AstSymb s
-        PzList l -> AstList KindList $ map unevalExpr l
-        PzDict m -> AstList KindDict $ flip map (M.assocs m) $
-            \(k, v) -> withPos $ AstList KindForm [unevalExpr k, unevalExpr v]
-        PzFunc f ->
-            case toFuncCustom f of
-                Left ident -> AstSymb $ symb ident
-                Right fc -> AstList KindForm $ unevalFuncCustom fc
+unevalExpr val = flip fmap val $ \case
+    PzUnit -> AstList KindForm []
+    PzNum n -> AstNum n
+    PzStr s -> AstStr s
+    PzSymb s -> AstSymb s
+    PzList l -> AstList KindList $ map unevalExpr l
+    PzDict m -> AstList KindDict $ flip map (M.assocs m) $
+        \(k, v) -> withPos $ AstList KindForm [unevalExpr k, unevalExpr v]
+    PzFunc f ->
+        case toFuncCustom f of
+            Left ident -> AstSymb $ symb ident
+            Right fc -> AstList KindForm $ unevalFuncCustom fc
 
 -- Eval / uneval func custom
 data FuncCustom
@@ -231,7 +231,7 @@ toFuncCustom :: Func -> Either Ident FuncCustom
 toFuncCustom func =
     case body func of
         BodyBuiltIn ident -> Left ident
-        BodyCustom es -> Right $ FuncCustom (explCtx func) (argPass func) (args func) es
+        BodyCustom es -> return $ FuncCustom (explCtx func) (argPass func) (args func) es
 
 fromFuncCustom :: Dict -> FuncCustom -> Func
 fromFuncCustom ctx (FuncCustom explCtx argPass args es) =
@@ -253,10 +253,22 @@ unparseImpureArgs :: FuncExplCtx -> FuncArgPass -> [WithPos AstExpr]
 unparseImpureArgs = undefined -- TODO
 
 parseArgs :: [WithPos AstExpr] -> Either String (FuncArgs, [WithPos AstExpr])
-parseArgs = undefined -- TODO
+parseArgs elems =
+    case elems of
+        WithPos p (AstIdent ident):es -> return (ArgsVaria (WithPos p ident), es)
+        WithPos p (AstList KindForm ies):es -> (,es) . ArgsArity <$> mapM toIdent ies where
+            toIdent (WithPos p v) = case v of
+                AstIdent i -> return $ WithPos p i
+                _ -> Left $ "Error: Function arity must be an identifier: " ++ show v
+                    ++ "\n at: " ++ show p
+
+        _ -> Left $ "Error: Function arguments must be either:"
+            ++ "\n - a single varargs identifier"
+            ++ "\n - an form of arity identifiers"
+            ++ "\n was: " ++ show (map val elems)
 
 unparseArgs :: FuncArgs -> [WithPos AstExpr]
 unparseArgs args =
     case args of
-        ArgsVaria (WithPos p i) -> [WithPos p $ AstIdent i]
-        ArgsArity is -> flip map is $ \(WithPos p i) -> WithPos p $ AstIdent i
+        ArgsVaria ident -> [fmap AstIdent ident]
+        ArgsArity is -> map (fmap AstIdent) is
