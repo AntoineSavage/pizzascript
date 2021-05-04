@@ -10,7 +10,7 @@ import BuiltIns
 import Control.Monad ( forM_, liftM2 )
 import Data.Nat ( Nat(..) )
 import Types
-import Utils ( symb, toForm )
+import Utils ( argPassToSymb, ident, toForm, toIdent, symb, symbToArgPass )
 
 type Result = Maybe (WithPos PzVal)
 type EvalResult = Either String Acc
@@ -243,29 +243,48 @@ evalFuncCustom es0 = do
     (args, es2) <- parseArgs es1
     return $ FuncCustom explCtx argPass args es2
 
-unevalFuncCustom :: FuncCustom -> [WithPos AstExpr]
-unevalFuncCustom (FuncCustom explCtx argPass args body) = unparseImpureArgs explCtx argPass ++ unparseArgs args ++ body
-
 parseImpureArgs :: [WithPos AstExpr] -> Either String (FuncExplCtx, FuncArgPass, [WithPos AstExpr])
-parseImpureArgs = undefined -- TODO
+parseImpureArgs elems =
+    let parseArgPass p s es = case symbToArgPass s of
+            Just r -> return r
+            Nothing -> Left $ "Invalid argument-passing symbol: " ++ show s
+                ++ "\n at: " ++ show p
+    in
+    case elems of
+        -- arg-pass symbol first
+        WithPos p (AstSymb s@(Symb Z (Ident [_]))):es -> do
+            argPass <- parseArgPass p s es
+            return (Nothing, WithPos p argPass, es)
 
-unparseImpureArgs :: FuncExplCtx -> FuncArgPass -> [WithPos AstExpr]
-unparseImpureArgs = undefined -- TODO
+        -- unqualified identifier followed by arg-pass symbol
+        WithPos p1 (AstIdent ec@(Ident [_])):WithPos p2 (AstSymb s@(Symb Z (Ident [ap]))):es -> do
+            argPass <- parseArgPass p1 s es
+            return (Just $ WithPos p1 ec, WithPos p2 argPass, es)
+
+        -- no match: assume no impure args
+        _ -> return (Nothing, withPos Eval, elems)
 
 parseArgs :: [WithPos AstExpr] -> Either String (FuncArgs, [WithPos AstExpr])
 parseArgs elems =
     case elems of
-        WithPos p (AstIdent ident):es -> return (ArgsVaria (WithPos p ident), es)
+        WithPos p (AstIdent (Ident [i])):es -> return (ArgsVaria (WithPos p $ ident i), es)
         WithPos p (AstList KindForm ies):es -> (,es) . ArgsArity <$> mapM toIdent ies where
-            toIdent (WithPos p v) = case v of
-                AstIdent i -> return $ WithPos p i
-                _ -> Left $ "Error: Function arity must be an identifier: " ++ show v
-                    ++ "\n at: " ++ show p
-
         _ -> Left $ "Error: Function arguments must be either:"
-            ++ "\n - a single varargs identifier"
-            ++ "\n - an form of arity identifiers"
+            ++ "\n - a single varargs unqualified identifier"
+            ++ "\n - an form of arity unqualified identifiers"
             ++ "\n was: " ++ show (map val elems)
+
+unevalFuncCustom :: FuncCustom -> [WithPos AstExpr]
+unevalFuncCustom (FuncCustom explCtx argPass args body) = unparseImpureArgs explCtx argPass ++ unparseArgs args ++ body
+
+unparseImpureArgs :: FuncExplCtx -> FuncArgPass -> [WithPos AstExpr]
+unparseImpureArgs explCtx argPass =
+    let argPassExpr = fmap (AstSymb . argPassToSymb) argPass in
+    case explCtx of
+        Just ident -> [ fmap AstIdent ident, argPassExpr ]
+        Nothing -> case argPass of
+            WithPos _ Eval -> []
+            _ -> [ argPassExpr ]
 
 unparseArgs :: FuncArgs -> [WithPos AstExpr]
 unparseArgs args =

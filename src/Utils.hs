@@ -13,6 +13,23 @@ ident = Ident . (:[])
 symb :: Ident -> Symb
 symb = Symb Z
 
+argPassToSymb :: ArgPass -> Symb
+argPassToSymb Eval = symbEval
+argPassToSymb Quote = symbQuote
+argPassToSymb Unquote = symbUnquote
+argPassToSymb DeepQuote = symbDeepQuote
+argPassToSymb DeepUnquote = symbDeepUnquote
+
+symbToArgPass :: Symb -> Maybe ArgPass
+symbToArgPass = flip M.lookup m where
+    m = M.fromList
+        [ (symbEval, Eval)
+        , (symbQuote, Quote)
+        , (symbUnquote, Unquote)
+        , (symbDeepQuote, DeepQuote)
+        , (symbDeepUnquote, DeepUnquote)
+        ]
+
 toForm :: Pos -> AstListKind -> [WithPos AstExpr] -> [WithPos AstExpr]
 toForm p k =
     let identToExpr ident = WithPos p $ AstIdent ident
@@ -20,6 +37,12 @@ toForm p k =
         KindList -> (identToExpr identList:)
         KindDict -> (identToExpr identDict:)
         KindForm -> id
+
+toIdent :: WithPos AstExpr -> Either String (WithPos Ident)
+toIdent (WithPos p v) = case v of
+    AstIdent (Ident [i]) -> return $ WithPos p $ ident i
+    _ -> Left $ "Error: Function arity argument must be an unqualified identifier: " ++ show v
+        ++ "\n at: " ++ show p
 
 invalidArityMsg :: Int -> [a] -> String
 invalidArityMsg n args = "Invalid number of arguments. Expected " ++ show n ++ ", got: " ++ show (length args)
