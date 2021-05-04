@@ -96,7 +96,7 @@ evalInvoc result ctx p func as melems frames =
 
                 Just (e:es) ->
                     -- evaluate function argument
-                    case evalExpr ctx e (argPass func) $ Invoc p func as (Just es) : frames of
+                    case evalExpr ctx e (val $ argPass func) $ Invoc p func as (Just es) : frames of
                         Left s -> Left $ s ++ "\n at: " ++ show p
                         Right acc -> return acc
 
@@ -111,7 +111,7 @@ evalInvoc result ctx p func as melems frames =
                     -- argument evaluation result
                     return $ Acc Nothing ctx $ Invoc p func (r:as) (Just es) : frames
 
-evalExpr :: Dict -> WithPos AstExpr -> FuncArgPass -> [StackFrame] -> EvalResult
+evalExpr :: Dict -> WithPos AstExpr -> ArgPass -> [StackFrame] -> EvalResult
 evalExpr ctx e@(WithPos p v) eval frames = 
     let setResult result = return $ Acc (Just result) ctx frames
         setResult' = setResult . WithPos p
@@ -256,4 +256,7 @@ parseArgs :: [WithPos AstExpr] -> Either String (FuncArgs, [WithPos AstExpr])
 parseArgs = undefined -- TODO
 
 unparseArgs :: FuncArgs -> [WithPos AstExpr]
-unparseArgs = undefined -- TODO
+unparseArgs args =
+    case args of
+        ArgsVaria (WithPos p i) -> [WithPos p $ AstIdent i]
+        ArgsArity is -> flip map is $ \(WithPos p i) -> WithPos p $ AstIdent i

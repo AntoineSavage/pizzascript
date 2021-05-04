@@ -55,9 +55,10 @@ data Func
     deriving (Show, Eq, Ord)
 
 type FuncImplCtx = Dict
-type FuncExplCtx = Maybe Ident
+type FuncExplCtx = Maybe (WithPos Ident)
+type FuncArgPass = WithPos ArgPass
 
-data FuncArgPass
+data ArgPass
     = Eval
     | Quote
     | Unquote
@@ -66,8 +67,8 @@ data FuncArgPass
     deriving (Show, Eq, Ord)
 
 data FuncArgs
-    = ArgsVaria Ident
-    | ArgsArity [Ident]
+    = ArgsVaria (WithPos Ident)
+    | ArgsArity [WithPos Ident]
     deriving (Show, Eq, Ord)
 
 data FuncBody

@@ -67,13 +67,13 @@ pzTrue :: WithPos PzVal
 pzTrue = withPos $ PzSymb symbTrue
 
 pzNot :: WithPos PzVal
-pzNot = withPos $ PzFunc $ Func M.empty Nothing Eval (ArgsArity [identX]) $ BodyBuiltIn identNot
+pzNot = withPos $ PzFunc $ Func M.empty Nothing (withPos Eval) (ArgsArity [withPos identX]) $ BodyBuiltIn identNot
 
 pzOr :: WithPos PzVal
-pzOr = withPos $ PzFunc $ Func M.empty Nothing Eval (ArgsArity [identX, identY]) $ BodyBuiltIn identOr
+pzOr = withPos $ PzFunc $ Func M.empty Nothing (withPos Eval) (ArgsArity [withPos identX, withPos identY]) $ BodyBuiltIn identOr
 
 pzAnd :: WithPos PzVal
-pzAnd = withPos $ PzFunc $ Func M.empty Nothing Eval (ArgsArity [identX, identY]) $ BodyBuiltIn identAnd
+pzAnd = withPos $ PzFunc $ Func M.empty Nothing (withPos Eval) (ArgsArity [withPos identX, withPos identY]) $ BodyBuiltIn identAnd
 
 -- lists
 -- TODO
@@ -83,7 +83,7 @@ pzAnd = withPos $ PzFunc $ Func M.empty Nothing Eval (ArgsArity [identX, identY]
 
 -- functions
 pzFunc :: WithPos PzVal
-pzFunc = withPos $ PzFunc $ Func M.empty (Just identCtx) Quote (ArgsVaria identArgs) $ BodyBuiltIn identFunc
+pzFunc = withPos $ PzFunc $ Func M.empty (Just $ withPos identCtx) (withPos Quote) (ArgsVaria $ withPos identArgs) $ BodyBuiltIn identFunc
 
 -- miscellaneous
 -- TODO
