@@ -7,13 +7,13 @@ import Text.Parsec.Pos ( newPos )
 import Types
 import Utils
 
--- Built-in context
 builtInPos :: Pos
 builtInPos = newPos "<built-in>" 0 0
 
 withPos :: a -> WithPos a
 withPos = WithPos builtInPos
 
+-- Built-in context
 builtInCtx :: Dict
 builtInCtx = M.fromList
     [
@@ -67,13 +67,19 @@ pzTrue :: WithPos PzVal
 pzTrue = withPos $ PzSymb symbTrue
 
 pzNot :: WithPos PzVal
-pzNot = withPos $ PzFunc $ Func M.empty Nothing (withPos Eval) (ArgsArity [withPos identX]) $ BodyBuiltIn identNot
+pzNot = withPos $ PzFunc $ Func M.empty None
+    (ArgsArity [withPos identX])
+    $ BodyBuiltIn identNot
 
 pzOr :: WithPos PzVal
-pzOr = withPos $ PzFunc $ Func M.empty Nothing (withPos Eval) (ArgsArity [withPos identX, withPos identY]) $ BodyBuiltIn identOr
+pzOr = withPos $ PzFunc $ Func M.empty None
+    (ArgsArity $ map withPos [identX, identY])
+    $ BodyBuiltIn identOr
 
 pzAnd :: WithPos PzVal
-pzAnd = withPos $ PzFunc $ Func M.empty Nothing (withPos Eval) (ArgsArity [withPos identX, withPos identY]) $ BodyBuiltIn identAnd
+pzAnd = withPos $ PzFunc $ Func M.empty None
+    (ArgsArity $ map withPos [identX, identY])
+    $ BodyBuiltIn identAnd
 
 -- lists
 -- TODO
@@ -83,7 +89,10 @@ pzAnd = withPos $ PzFunc $ Func M.empty Nothing (withPos Eval) (ArgsArity [withP
 
 -- functions
 pzFunc :: WithPos PzVal
-pzFunc = withPos $ PzFunc $ Func M.empty (Just $ withPos identCtx) (withPos Quote) (ArgsVaria $ withPos identArgs) $ BodyBuiltIn identFunc
+pzFunc = withPos $ PzFunc $ Func M.empty
+    (Both builtInPos (withPos Quote) (withPos identCtx))
+    (ArgsVaria $ withPos identArgs)
+    $ BodyBuiltIn identFunc
 
 -- miscellaneous
 -- TODO

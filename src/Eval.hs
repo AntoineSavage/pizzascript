@@ -10,7 +10,8 @@ import BuiltIns
 import Control.Monad ( forM_, liftM2 )
 import Data.Nat ( Nat(..) )
 import Types
-import Utils ( argPassToSymb, getArgPass, ident, symb, symbToArgPass, toForm )
+import Utils
+import Uneval
 
 type Result = Maybe (WithPos PzVal)
 type EvalResult = Either String Acc
@@ -196,11 +197,7 @@ invokeFuncBuiltIn ctx p args (Ident ps) frames =
         -- TODO
 
         -- functions
-        ["func"] -> do
-            es <- mapM (unquote.unevalExpr) args
-            fc <- evalFuncCustom es
-            let r = WithPos p $ PzFunc $ fromFuncCustom ctx fc
-            return $ Acc (Just r) ctx frames
+        ["func"] -> returnFrom frames $ _func p ctx args
 
         -- miscellaneous
         -- TODO
@@ -210,44 +207,21 @@ invokeFuncBuiltIn ctx p args (Ident ps) frames =
 returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
 returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) ctx frames
 
--- Uneval
-unevalExpr :: WithPos PzVal -> WithPos AstExpr
-unevalExpr val = flip fmap val $ \case
-    PzUnit -> AstList KindForm []
-    PzNum n -> AstNum n
-    PzStr s -> AstStr s
-    PzSymb s -> AstSymb s
-    PzList l -> AstList KindList $ map unevalExpr l
-    PzDict m -> AstList KindDict $ flip map (M.assocs m) $
-        \(k, v) -> withPos $ AstList KindForm [unevalExpr k, unevalExpr v]
-    PzFunc f ->
-        case toFuncCustom f of
-            Left ident -> AstSymb $ symb ident
-            Right fc -> AstList KindForm $ unevalFuncCustom fc
+_func :: Pos -> Dict -> [WithPos PzVal] -> FuncReturn
+_func p ctx args = do
+    es <- mapM (unquote.unevalExpr) args
+    fc <- evalFuncCustom es
+    return (ctx, WithPos p $ PzFunc $ fromFuncCustom ctx fc)
 
--- Eval / uneval func custom
-data FuncCustom
-    = FuncCustom FuncImpureArgs FuncArgs [WithPos AstExpr]
-    deriving (Show, Eq)
-
-toFuncCustom :: Func -> Either Ident FuncCustom
-toFuncCustom func =
-    case body func of
-        BodyBuiltIn ident -> Left ident
-        BodyCustom es -> return $ FuncCustom (impArgs func) (args func) es
-
-fromFuncCustom :: Dict -> FuncCustom -> Func
-fromFuncCustom ctx (FuncCustom impArgs args body) =
-    Func ctx impArgs args $ BodyCustom body
-
+-- Eval custom function
 evalFuncCustom :: [WithPos AstExpr] -> Either String FuncCustom
 evalFuncCustom es0 = do
-    (impArgs, es1) <- parseImpureArgs es0
-    (args, es2) <- parseArgs es1
+    (impArgs, es1) <- evalImpureArgs es0
+    (args, es2) <- evalArgs es1
     return $ FuncCustom impArgs args es2
 
-parseImpureArgs :: [WithPos AstExpr] -> Either String (FuncImpureArgs, [WithPos AstExpr])
-parseImpureArgs elems = case elems of
+evalImpureArgs :: [WithPos AstExpr] -> Either String (FuncImpureArgs, [WithPos AstExpr])
+evalImpureArgs elems = case elems of
     -- form starting with argument-passing behaviour symbol, followed by...
     WithPos p (AstList KindForm (WithPos p2 (AstSymb s@(Symb Z (Ident [_]))):xs)):es -> do
         argPass <- case symbToArgPass s of
@@ -268,8 +242,8 @@ parseImpureArgs elems = case elems of
             _ -> return (None, elems)
     _ -> return (None, elems)
 
-parseArgs :: [WithPos AstExpr] -> Either String (FuncArgs, [WithPos AstExpr])
-parseArgs elems =
+evalArgs :: [WithPos AstExpr] -> Either String (FuncArgs, [WithPos AstExpr])
+evalArgs elems =
     let toIdent e = case val e of
             AstIdent ident@(Ident [i]) -> return $ fmap (const ident) e
             _ -> Left $
@@ -285,11 +259,26 @@ parseArgs elems =
             ++ "\n - an form of arity unqualified identifiers"
             ++ "\n was: " ++ show (map val elems)
 
-unevalFuncCustom :: FuncCustom -> [WithPos AstExpr]
-unevalFuncCustom (FuncCustom impArgs args body) = unparseImpureArgs impArgs ++ unparseArgs args ++ body
+-- Uneval
+unevalExpr :: WithPos PzVal -> WithPos AstExpr
+unevalExpr val = flip fmap val $ \case
+    PzUnit -> AstList KindForm []
+    PzNum n -> AstNum n
+    PzStr s -> AstStr s
+    PzSymb s -> AstSymb s
+    PzList l -> AstList KindList $ map unevalExpr l
+    PzDict m -> AstList KindDict $ flip map (M.assocs m) $
+        \(k, v) -> withPos $ AstList KindForm [unevalExpr k, unevalExpr v]
+    PzFunc f ->
+        case toFuncCustom f of
+            Left ident -> AstSymb $ symb ident
+            Right fc -> AstList KindForm $ unevalFuncCustom fc
 
-unparseImpureArgs :: FuncImpureArgs -> [WithPos AstExpr]
-unparseImpureArgs impureArgs =
+unevalFuncCustom :: FuncCustom -> [WithPos AstExpr]
+unevalFuncCustom (FuncCustom impArgs args body) = unevalImpureArgs impArgs ++ unevalArgs args ++ body
+
+unevalImpureArgs :: FuncImpureArgs -> [WithPos AstExpr]
+unevalImpureArgs impureArgs =
     let toExpr = fmap $ AstSymb .argPassToSymb
         toForm p = WithPos p . AstList KindForm
     in case impureArgs of
@@ -297,8 +286,8 @@ unparseImpureArgs impureArgs =
         ArgPass p ap -> [ toForm p [toExpr ap] ]
         Both p ap ec -> [ toForm p [toExpr ap, fmap (AstSymb .symb) ec] ]
 
-unparseArgs :: FuncArgs -> [WithPos AstExpr]
-unparseArgs args =
+unevalArgs :: FuncArgs -> [WithPos AstExpr]
+unevalArgs args =
     case args of
         ArgsVaria ident -> [fmap AstIdent ident]
         ArgsArity is -> map (fmap AstIdent) is
