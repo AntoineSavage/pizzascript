@@ -1,6 +1,7 @@
 module Utils where
 
 import qualified Data.Map as M
+import qualified Data.Set as S
 
 import Data.Maybe ( fromMaybe )
 import Data.Nat ( Nat(..) )
@@ -43,6 +44,13 @@ getArgPass func = case impArgs func of
     None -> Eval 
     ArgPass _ ap -> val ap
     Both _ ap _ -> val ap
+
+getDuplicates :: Ord a => [a] -> [a]
+getDuplicates = go S.empty S.empty where
+    go s dups []     = S.toList dups
+    go s dups (x:xs) = if S.member x s
+        then go s (S.insert x dups) xs
+        else go (S.insert x s) dups xs
 
 invalidArityMsg :: Int -> [a] -> String
 invalidArityMsg n args = "Invalid number of arguments. Expected " ++ show n ++ ", got: " ++ show (length args)

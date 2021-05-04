@@ -80,6 +80,8 @@ evalForm result ctx p elems frames =
                     ++ "\n at: " ++ show p
                     ++ "\n" ++ show f
 
+-- TODO: Somehow keep track of the function name during invocation
+-- Can be <annonymous> for: ((func (x) x) 123)
 evalInvoc :: Result -> Dict -> Pos -> Func -> [WithPos PzVal] -> Maybe [WithPos AstExpr] -> [StackFrame] -> EvalResult
 evalInvoc result ctx p func as melems frames =
     case result of
@@ -105,7 +107,11 @@ evalInvoc result ctx p func as melems frames =
         Just r ->
             -- process result
             case melems of
-                Nothing ->
+                Just es -> 
+                    -- argument evaluation result
+                    return $ Acc Nothing $ Invoc ctx p func (r:as) (Just es) : frames
+
+                _ ->
                     -- function invocation result (pop frame)
                     case impArgs func of
                         Both {} -> case r of
@@ -121,10 +127,6 @@ evalInvoc result ctx p func as melems frames =
                                 ++ "\n was: " ++ show r
 
                         _ -> return $ Acc (Just r) frames
-
-                Just es -> 
-                    -- argument evaluation result
-                    return $ Acc Nothing $ Invoc ctx p func (r:as) (Just es) : frames
 
 evalExpr :: Dict -> WithPos AstExpr -> ArgPass -> [StackFrame] -> EvalResult
 evalExpr ctx e@(WithPos p v) eval frames = 
@@ -223,23 +225,58 @@ returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) $ setCtx ctx fram
 setCtx :: Dict -> [StackFrame] -> [StackFrame]
 setCtx ctx frames = case frames of
     [] -> []
-    (f:fs) -> (:fs) $ case f of
+    (frame:fs) -> (:fs) $ case frame of
         Block _ es -> Block ctx es
         Form _ p es-> Form ctx p es
         Invoc _ p f as es -> Invoc ctx p f as es
 
--- TODO handle explicit context
--- TODO handle args
 invokeFuncCustom :: Dict -> Pos -> [WithPos PzVal] -> Dict -> FuncImpureArgs -> FuncArgs -> [WithPos AstExpr] -> [StackFrame] -> EvalResult
-invokeFuncCustom ctx p as implCtx impArgs args es frames =
-    return $ Acc Nothing $ Block implCtx es : frames
+invokeFuncCustom explCtx p as implCtx impArgs args es frames =
+    let toExpr = fmap $ PzSymb .symb
+        explCtxPairs = case impArgs of
+            Both _ _ i -> [ (toExpr i, WithPos (pos i) $ PzDict explCtx) ]
+            _ -> []
+        
+        actLen = length as
+        (expLen, argPairs) = case args of
+            ArgsVaria i -> (actLen, [ (toExpr i, WithPos (pos i) $ PzList as) ])
+            ArgsArity is -> (length is, zip (map toExpr is) as)
+
+        pairs = explCtxPairs ++ argPairs
+        f acc (k, v) = M.insert k v acc
+        finalImplCtx = foldl f implCtx pairs
+
+    in if actLen == expLen
+            then return $ Acc Nothing $ Block finalImplCtx es : frames
+            else Left $ 
+                "Error: Invoking function with incorrect number of arguments:"
+                ++ "\n expected: " ++ show expLen
+                ++ "\n received: " ++ show actLen
+                ++ "\n at: " ++ show p
 
 -- Eval custom function
 evalFuncCustom :: [WithPos AstExpr] -> Either String FuncCustom
 evalFuncCustom es0 = do
     (impArgs, es1) <- evalImpureArgs es0
     (args, es2) <- evalArgs es1
+    validateNoDuplicateIdents impArgs args
     return $ FuncCustom impArgs args es2
+
+validateNoDuplicateIdents :: FuncImpureArgs -> FuncArgs -> Either String ()
+validateNoDuplicateIdents impArgs args =
+    let explCtxIdents = case impArgs of
+            Both _ _ i -> [i]
+            _ -> []
+        
+        argIdents = case args of
+            ArgsVaria i -> [i]
+            ArgsArity is -> is
+    
+        duplicates = getDuplicates $ explCtxIdents ++ argIdents
+    in if null duplicates
+        then return ()
+        else Left $
+            "Error: Duplicate identifiers in function definition: " ++ show duplicates
 
 evalImpureArgs :: [WithPos AstExpr] -> Either String (FuncImpureArgs, [WithPos AstExpr])
 evalImpureArgs elems = case elems of
@@ -299,10 +336,10 @@ unevalFuncCustom :: FuncCustom -> [WithPos AstExpr]
 unevalFuncCustom (FuncCustom impArgs args body) = unevalImpureArgs impArgs ++ unevalArgs args ++ body
 
 unevalImpureArgs :: FuncImpureArgs -> [WithPos AstExpr]
-unevalImpureArgs impureArgs =
+unevalImpureArgs impArgs =
     let toExpr = fmap $ AstSymb .argPassToSymb
         toForm p = WithPos p . AstList KindForm
-    in case impureArgs of
+    in case impArgs of
         None -> []
         ArgPass p ap -> [ toForm p [toExpr ap] ]
         Both p ap ec -> [ toForm p [toExpr ap, fmap (AstSymb .symb) ec] ]
