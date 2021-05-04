@@ -206,26 +206,17 @@ invokeFuncBuiltIn ctx p args (Ident ps) frames =
         -- TODO
 
         -- functions
-        ["func"] -> returnFrom frames $ _func ctx p args
+        ["func"] -> do
+            es <- mapM (unquote.unevalExpr) args
+            fc <- evalFuncCustom es
+            let r = WithPos p $ PzFunc $ fromFuncCustom ctx fc
+            return $ Acc (Just r) frames
 
         -- miscellaneous
         -- TODO
 
         _ -> Left $ "TODO: Implement built-in function: " ++ show ps
 
-_func :: Dict -> Pos -> [WithPos PzVal] -> FuncReturn
-_func ctx p args = do
-    es <- mapM (unquote.unevalExpr) args
-    fc <- evalFuncCustom es
-    return (ctx, WithPos p $ PzFunc $ fromFuncCustom ctx fc)
-
--- TODO handle explicit context
--- TODO handle args
-invokeFuncCustom :: Dict -> Pos -> [WithPos PzVal] -> Dict -> FuncImpureArgs -> FuncArgs -> [WithPos AstExpr] -> [StackFrame] -> EvalResult
-invokeFuncCustom ctx p as implCtx impArgs args es frames =
-    return $ Acc Nothing $ Block implCtx es : frames
-
--- Utils
 returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
 returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) $ setCtx ctx frames
 
@@ -236,6 +227,12 @@ setCtx ctx frames = case frames of
         Block _ es -> Block ctx es
         Form _ p es-> Form ctx p es
         Invoc _ p f as es -> Invoc ctx p f as es
+
+-- TODO handle explicit context
+-- TODO handle args
+invokeFuncCustom :: Dict -> Pos -> [WithPos PzVal] -> Dict -> FuncImpureArgs -> FuncArgs -> [WithPos AstExpr] -> [StackFrame] -> EvalResult
+invokeFuncCustom ctx p as implCtx impArgs args es frames =
+    return $ Acc Nothing $ Block implCtx es : frames
 
 -- Eval custom function
 evalFuncCustom :: [WithPos AstExpr] -> Either String FuncCustom

@@ -59,8 +59,6 @@ f2 args f = case args of [x, y] -> f x y; _ -> Left $ invalidArityMsg 2 args
 f3 :: [a] -> (a -> a -> a -> Either String b) -> Either String b
 f3 args f = case args of [x, y, z] -> f x y z; _ -> Left $ invalidArityMsg 3 args
 
-
-
 ----------------------
 -- Custom functions
 ----------------------
@@ -77,7 +75,6 @@ toFuncCustom func =
 fromFuncCustom :: Dict -> FuncCustom -> Func
 fromFuncCustom ctx (FuncCustom impArgs args body) =
     Func ctx impArgs args $ BodyCustom body
-
 
 -----------------
 -- Identifiers
