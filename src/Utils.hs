@@ -39,6 +39,11 @@ toForm p k =
         KindDict -> (identToExpr identDict:)
         KindForm -> id
 
+getIdent :: WithPos AstExpr -> Maybe (WithPos Ident)
+getIdent (WithPos p v) = case v of
+    AstIdent ident -> return $ WithPos p ident
+    _ -> Nothing
+
 getArgPass :: Func -> ArgPass
 getArgPass func = case impArgs func of
     None -> Eval 
@@ -51,6 +56,10 @@ getDuplicates = go S.empty S.empty where
     go s dups (x:xs) = if S.member x s
         then go s (S.insert x dups) xs
         else go (S.insert x s) dups xs
+
+addIdentAndPos :: Pos -> Maybe (WithPos Ident) -> String -> String
+addIdentAndPos p Nothing s  = s ++ "\n at:" ++ show p
+addIdentAndPos p (Just fi) s = s ++ "\n at " ++ show fi ++ ": " ++ show p
 
 invalidArityMsg :: Int -> [a] -> String
 invalidArityMsg n args = "Invalid number of arguments. Expected " ++ show n ++ ", got: " ++ show (length args)
