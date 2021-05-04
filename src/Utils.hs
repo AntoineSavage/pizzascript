@@ -39,10 +39,10 @@ toForm p k =
         KindForm -> id
 
 getArgPass :: Func -> ArgPass
-getArgPass func = 
-    val $ case impArgs func of
-        ArgPass _ ap -> ap
-        Both _ ap _ -> ap
+getArgPass func = case impArgs func of
+    None -> Eval 
+    ArgPass _ ap -> val ap
+    Both _ ap _ -> val ap
 
 invalidArityMsg :: Int -> [a] -> String
 invalidArityMsg n args = "Invalid number of arguments. Expected " ++ show n ++ ", got: " ++ show (length args)

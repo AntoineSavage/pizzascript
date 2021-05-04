@@ -11,7 +11,6 @@ import Control.Monad ( forM_, liftM2 )
 import Data.Nat ( Nat(..) )
 import Types
 import Utils
-import Uneval
 
 type Result = Maybe (WithPos PzVal)
 type EvalResult = Either String Acc
@@ -171,7 +170,8 @@ invokeFunc :: Dict -> Pos -> Func -> [WithPos PzVal] -> [StackFrame] -> EvalResu
 invokeFunc ctx p func args frames =
     case body func of
         BodyBuiltIn ident -> invokeFuncBuiltIn ctx p args ident frames
-        BodyCustom es -> Left $ "TODO: Invoke custom function: " ++ show es
+        BodyCustom es -> Left $
+            "TODO: Invoke custom function: " ++ show func
 
 invokeFuncBuiltIn :: Dict -> Pos -> [WithPos PzVal] -> Ident -> [StackFrame] -> EvalResult
 invokeFuncBuiltIn ctx p args (Ident ps) frames =

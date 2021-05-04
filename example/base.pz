@@ -42,7 +42,6 @@
 ))
 
 # lists
-(def list (func args args))
 (def map (func (f xs)
     (if (empty xs)
         xs

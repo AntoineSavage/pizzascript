@@ -34,7 +34,7 @@ builtInCtx = M.fromList
     , (withPos $ PzSymb $ symb identAnd, pzAnd)
 
     -- lists
-    -- TODO
+    , (withPos $ PzSymb $ symb identList, pzList)
 
     -- dictionaries
     -- TODO
@@ -82,7 +82,10 @@ pzAnd = withPos $ PzFunc $ Func M.empty None
     $ BodyBuiltIn identAnd
 
 -- lists
--- TODO
+pzList :: WithPos PzVal
+pzList = withPos $ PzFunc $ Func M.empty None
+    (ArgsVaria (withPos identArgs))
+    $ BodyCustom [withPos $ AstIdent identArgs]
 
 -- dictionaries
 -- TODO
