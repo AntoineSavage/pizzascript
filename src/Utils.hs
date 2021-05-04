@@ -38,12 +38,6 @@ toForm p k =
         KindDict -> (identToExpr identDict:)
         KindForm -> id
 
-toIdent :: WithPos AstExpr -> Either String (WithPos Ident)
-toIdent (WithPos p v) = case v of
-    AstIdent (Ident [i]) -> return $ WithPos p $ ident i
-    _ -> Left $ "Error: Function arity argument must be an unqualified identifier: " ++ show v
-        ++ "\n at: " ++ show p
-
 getArgPass :: Func -> ArgPass
 getArgPass func = 
     val $ case impArgs func of

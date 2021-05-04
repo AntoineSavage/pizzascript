@@ -10,7 +10,7 @@ import BuiltIns
 import Control.Monad ( forM_, liftM2 )
 import Data.Nat ( Nat(..) )
 import Types
-import Utils ( argPassToSymb, getArgPass, ident, symb, symbToArgPass, toForm, toIdent )
+import Utils ( argPassToSymb, getArgPass, ident, symb, symbToArgPass, toForm )
 
 type Result = Maybe (WithPos PzVal)
 type EvalResult = Either String Acc
@@ -74,7 +74,8 @@ evalForm result ctx p elems frames =
                     -- replace form with function invocation
                     return $ Acc Nothing ctx $ Invoc p func [] (Just elems) : frames
 
-                _ -> Left $ "Error: Malformed function invocation "
+                _ -> Left $
+                    "Error: Malformed function invocation "
                     ++ "(first form element must be a function)"
                     ++ "\n at: " ++ show p
                     ++ "\n" ++ show f
@@ -150,15 +151,17 @@ evalIdent ctx p ident = inner (withPos $ PzDict ctx) $ symbSplitImpl $ symb iden
                         case M.lookup (withPos $ PzSymb s) m of
                             Just v' -> inner v' ss
 
-                            Nothing -> Left $  "Error: Undefined identifier: " ++ show i
+                            Nothing -> Left $
+                                "Error: Undefined identifier: " ++ show i
                                 ++ "\n when evaluating (possibly qualified) identifier: " ++ show ident
                                 ++ "\n at: " ++ show p
                                 ++ "\n context keys: " ++ show (M.keys m)
 
-                    _ -> Left $  "Error: Non-dictionary context for identifier: " ++ show i
-                                ++ "\n when evaluating (possibly qualified) identifier: " ++ show ident
-                                ++ "\n at: " ++ show p
-                                ++ "\n non-dictionary context: " ++ show val_or_ctx
+                    _ -> Left $
+                        "Error: Non-dictionary context for identifier: " ++ show i
+                        ++ "\n when evaluating (possibly qualified) identifier: " ++ show ident
+                        ++ "\n at: " ++ show p
+                        ++ "\n non-dictionary context: " ++ show val_or_ctx
 
 -- TODO handle implicit context
 -- TODO handle explicit context
@@ -267,10 +270,17 @@ parseImpureArgs elems = case elems of
 
 parseArgs :: [WithPos AstExpr] -> Either String (FuncArgs, [WithPos AstExpr])
 parseArgs elems =
-    case elems of
-        WithPos p (AstIdent (Ident [i])):es -> return (ArgsVaria (WithPos p $ ident i), es)
-        WithPos p (AstList KindForm ies):es -> (,es) . ArgsArity <$> mapM toIdent ies where
-        _ -> Left $ "Error: Function arguments must be either:"
+    let toIdent e = case val e of
+            AstIdent ident@(Ident [i]) -> return $ fmap (const ident) e
+            _ -> Left $
+                "Error: Function arity argument must be an unqualified identifier: " ++ show (val e)
+                ++ "\n at: " ++ show (pos e)
+
+    in case elems of
+        WithPos p (AstIdent ident@(Ident [i])):es -> return (ArgsVaria (WithPos p ident), es)
+        WithPos p (AstList KindForm ies):es -> (,es) . ArgsArity <$> mapM toIdent ies
+        _ -> Left $
+            "Error: Function arguments must be either:"
             ++ "\n - a single varargs unqualified identifier"
             ++ "\n - an form of arity unqualified identifiers"
             ++ "\n was: " ++ show (map val elems)
