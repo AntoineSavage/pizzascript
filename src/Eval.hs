@@ -24,7 +24,7 @@ go (Acc result []) = putStrLn "Halting" -- no more frames: halt
 go (Acc result (frame:frames)) = do
     putStrLn "=========="
     putStrLn $ "Result: " ++ show result
-    putStrLn $ "Frame: " ++ prettyFrame 0 frame
+    putStrLn $ "Frame: " ++ pretty 0 frame
     putStrLn $ "Nbr additional frames: " ++ show (length frames)
     putStrLn "----------"
     case evalFrame result frame frames of
