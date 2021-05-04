@@ -44,6 +44,12 @@ toIdent (WithPos p v) = case v of
     _ -> Left $ "Error: Function arity argument must be an unqualified identifier: " ++ show v
         ++ "\n at: " ++ show p
 
+getArgPass :: Func -> ArgPass
+getArgPass func = 
+    val $ case impArgs func of
+        ArgPass _ ap -> ap
+        Both _ ap _ -> ap
+
 invalidArityMsg :: Int -> [a] -> String
 invalidArityMsg n args = "Invalid number of arguments. Expected " ++ show n ++ ", got: " ++ show (length args)
 

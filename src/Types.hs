@@ -52,12 +52,15 @@ data PzVal
 
 type Dict = M.Map (WithPos PzVal) (WithPos PzVal)
 data Func
-    = Func { implCtx :: FuncImplCtx, explCtx :: FuncExplCtx, argPass :: FuncArgPass, args :: FuncArgs, body :: FuncBody }
+    = Func { implCtx :: FuncImplCtx, impArgs :: FuncImpureArgs, args :: FuncArgs, body :: FuncBody }
     deriving (Show, Eq, Ord)
 
 type FuncImplCtx = Dict
-type FuncExplCtx = Maybe (WithPos Ident)
-type FuncArgPass = WithPos ArgPass
+data FuncImpureArgs
+    = None
+    | ArgPass Pos (WithPos ArgPass)
+    | Both Pos (WithPos ArgPass) (WithPos Ident)
+    deriving (Show, Eq, Ord)
 
 data ArgPass
     = Eval

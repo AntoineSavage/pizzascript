@@ -10,7 +10,7 @@ import BuiltIns
 import Control.Monad ( forM_, liftM2 )
 import Data.Nat ( Nat(..) )
 import Types
-import Utils ( argPassToSymb, ident, toForm, toIdent, symb, symbToArgPass )
+import Utils ( argPassToSymb, getArgPass, ident, symb, symbToArgPass, toForm, toIdent )
 
 type Result = Maybe (WithPos PzVal)
 type EvalResult = Either String Acc
@@ -97,7 +97,7 @@ evalInvoc result ctx p func as melems frames =
 
                 Just (e:es) ->
                     -- evaluate function argument
-                    case evalExpr ctx e (val $ argPass func) $ Invoc p func as (Just es) : frames of
+                    case evalExpr ctx e (getArgPass func) $ Invoc p func as (Just es) : frames of
                         Left s -> Left $ s ++ "\n at: " ++ show p
                         Right acc -> return acc
 
@@ -224,45 +224,46 @@ unevalExpr val = flip fmap val $ \case
 
 -- Eval / uneval func custom
 data FuncCustom
-    = FuncCustom FuncExplCtx FuncArgPass FuncArgs [WithPos AstExpr]
+    = FuncCustom FuncImpureArgs FuncArgs [WithPos AstExpr]
     deriving (Show, Eq)
 
 toFuncCustom :: Func -> Either Ident FuncCustom
 toFuncCustom func =
     case body func of
         BodyBuiltIn ident -> Left ident
-        BodyCustom es -> return $ FuncCustom (explCtx func) (argPass func) (args func) es
+        BodyCustom es -> return $ FuncCustom (impArgs func) (args func) es
 
 fromFuncCustom :: Dict -> FuncCustom -> Func
-fromFuncCustom ctx (FuncCustom explCtx argPass args es) =
-    Func ctx explCtx argPass args $ BodyCustom es
+fromFuncCustom ctx (FuncCustom impArgs args body) =
+    Func ctx impArgs args $ BodyCustom body
 
 evalFuncCustom :: [WithPos AstExpr] -> Either String FuncCustom
 evalFuncCustom es0 = do
-    (explCtx, argPass, es1) <- parseImpureArgs es0
+    (impArgs, es1) <- parseImpureArgs es0
     (args, es2) <- parseArgs es1
-    return $ FuncCustom explCtx argPass args es2
+    return $ FuncCustom impArgs args es2
 
-parseImpureArgs :: [WithPos AstExpr] -> Either String (FuncExplCtx, FuncArgPass, [WithPos AstExpr])
-parseImpureArgs elems =
-    let parseArgPass p s es = case symbToArgPass s of
-            Just r -> return r
-            Nothing -> Left $ "Invalid argument-passing symbol: " ++ show s
+parseImpureArgs :: [WithPos AstExpr] -> Either String (FuncImpureArgs, [WithPos AstExpr])
+parseImpureArgs elems = case elems of
+    -- form starting with argument-passing behaviour symbol, followed by...
+    WithPos p (AstList KindForm (WithPos p2 (AstSymb s@(Symb Z (Ident [_]))):xs)):es -> do
+        argPass <- case symbToArgPass s of
+            Just r -> return $ WithPos p2 r
+            Nothing -> Left $
+                "Error: Invalid argument-passing behaviour symbol: " ++ show s
                 ++ "\n at: " ++ show p
-    in
-    case elems of
-        -- arg-pass symbol first
-        WithPos p (AstSymb s@(Symb Z (Ident [_]))):es -> do
-            argPass <- parseArgPass p s es
-            return (Nothing, WithPos p argPass, es)
 
-        -- unqualified identifier followed by arg-pass symbol
-        WithPos p1 (AstIdent ec@(Ident [_])):WithPos p2 (AstSymb s@(Symb Z (Ident [ap]))):es -> do
-            argPass <- parseArgPass p1 s es
-            return (Just $ WithPos p1 ec, WithPos p2 argPass, es)
+        case xs of
+            -- nothing
+            [] -> return (ArgPass p argPass, es)
 
-        -- no match: assume no impure args
-        _ -> return (Nothing, withPos Eval, elems)
+            -- unqualified identifier
+            [ WithPos p3 (AstIdent ec@(Ident [_]))
+                ] -> return (Both p argPass $ WithPos p3 ec,es)
+
+    -- no match: assume no impure args
+            _ -> return (None, elems)
+    _ -> return (None, elems)
 
 parseArgs :: [WithPos AstExpr] -> Either String (FuncArgs, [WithPos AstExpr])
 parseArgs elems =
@@ -275,16 +276,16 @@ parseArgs elems =
             ++ "\n was: " ++ show (map val elems)
 
 unevalFuncCustom :: FuncCustom -> [WithPos AstExpr]
-unevalFuncCustom (FuncCustom explCtx argPass args body) = unparseImpureArgs explCtx argPass ++ unparseArgs args ++ body
+unevalFuncCustom (FuncCustom impArgs args body) = unparseImpureArgs impArgs ++ unparseArgs args ++ body
 
-unparseImpureArgs :: FuncExplCtx -> FuncArgPass -> [WithPos AstExpr]
-unparseImpureArgs explCtx argPass =
-    let argPassExpr = fmap (AstSymb . argPassToSymb) argPass in
-    case explCtx of
-        Just ident -> [ fmap AstIdent ident, argPassExpr ]
-        Nothing -> case argPass of
-            WithPos _ Eval -> []
-            _ -> [ argPassExpr ]
+unparseImpureArgs :: FuncImpureArgs -> [WithPos AstExpr]
+unparseImpureArgs impureArgs =
+    let toExpr = fmap $ AstSymb .argPassToSymb
+        toForm p = WithPos p . AstList KindForm
+    in case impureArgs of
+        None -> []
+        ArgPass p ap -> [ toForm p [toExpr ap] ]
+        Both p ap ec -> [ toForm p [toExpr ap, fmap (AstSymb .symb) ec] ]
 
 unparseArgs :: FuncArgs -> [WithPos AstExpr]
 unparseArgs args =
