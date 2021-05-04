@@ -641,6 +641,9 @@ parseManySpec = describe "parseMany" $ do
     it "parses no elems" $ do
         parseMany' ("$") `shouldBe` Right []
 
+    it "parses no elems with whitespace" $ do
+        parseMany' "   $" `shouldBe` Right []
+
     it "parses one elem" $ do
         property $ \e -> do
             parseMany' (unparseElem e ++ "$") `shouldBe` Right [e]

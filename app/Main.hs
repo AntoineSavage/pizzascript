@@ -8,7 +8,7 @@ import Text.Parsec.String ( parseFromFile )
 main :: IO ()
 main = do
     let parser = parseMany ignore (parseExpr ignore) eof
-    mes <- parseFromFile parser "example/base.pz"
+    mes <- parseFromFile parser "example/small.pz"
     case mes of
         Left err -> print err
         Right es -> evalMany es

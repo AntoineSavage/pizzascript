@@ -72,8 +72,15 @@ evalForm result ctx p mfi elems frames =
             -- process result (first form elem, should be func)
             case val f of
                 PzFunc func ->
-                    -- replace form with function invocation
-                    return $ Acc Nothing $ Invoc ctx p mfi func [] (Just elems) : frames
+
+                    -- handle 'func if needed (reduces number of built-in dependencies)
+                    if func == func
+                        then case invokeFuncSpecial ctx p elems frames of
+                            Left s -> Left $ addIdentAndPos p mfi s
+                            Right acc -> return acc
+
+                        -- replace form with function invocation
+                        else  return $ Acc Nothing $ Invoc ctx p mfi func [] (Just elems) : frames
 
                 _ -> Left $
                     "Error: Malformed function invocation (first form element must be a function)"
@@ -204,11 +211,7 @@ invokeFuncBuiltIn ctx p args (Ident ps) frames =
         -- TODO
 
         -- functions
-        ["func"] -> do
-            es <- mapM (unquote.unevalExpr) args
-            fc <- evalFuncCustom es
-            let r = WithPos p $ PzFunc $ fromFuncCustom ctx fc
-            return $ Acc (Just r) frames
+        -- TODO
 
         -- miscellaneous
         -- TODO
@@ -225,6 +228,12 @@ setCtx ctx frames = case frames of
         Block _ es -> Block ctx es
         Form _ p mfi es-> Form ctx p mfi es
         Invoc _ p mfi f as es -> Invoc ctx p mfi f as es
+
+invokeFuncSpecial :: Dict -> Pos -> [WithPos AstExpr] -> [StackFrame] -> EvalResult
+invokeFuncSpecial ctx p es frames = do
+    fc <- evalFuncCustom es
+    let r = WithPos p $ PzFunc $ fromFuncCustom ctx fc
+    return $ Acc (Just r) frames
 
 invokeFuncCustom :: Dict -> Pos -> [WithPos PzVal] -> Dict -> FuncImpureArgs -> FuncArgs -> [WithPos AstExpr] -> [StackFrame] -> EvalResult
 invokeFuncCustom explCtx p as implCtx impArgs args es frames =
@@ -307,7 +316,7 @@ evalArgs elems =
         WithPos p (AstIdent ident@(Ident [i])):es -> return (ArgsVaria (WithPos p ident), es)
         WithPos p (AstList KindForm ies):es -> (,es) . ArgsArity <$> mapM toIdent ies
         _ -> Left $
-            "Error: Function arguments must be either:"
+            "Error: Function argument definition must be either:"
             ++ "\n - a single varargs unqualified identifier"
             ++ "\n - an form of arity unqualified identifiers"
             ++ "\n was: " ++ show (map val elems)

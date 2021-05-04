@@ -34,7 +34,7 @@ builtInCtx = M.fromList
     , (withPos $ PzSymb $ symb identAnd, pzAnd)
 
     -- lists
-    , (withPos $ PzSymb $ symb identList, pzList)
+    -- TODO
 
     -- dictionaries
     -- TODO
@@ -82,17 +82,17 @@ pzAnd = withPos $ PzFunc $ Func M.empty None
     $ BodyBuiltIn identAnd
 
 -- lists
-pzList :: WithPos PzVal
-pzList = withPos $ PzFunc $ Func M.empty None
-    (ArgsVaria (withPos identArgs))
-    $ BodyCustom [withPos $ AstIdent identArgs]
+-- TODO
 
 -- dictionaries
 -- TODO
 
 -- functions
 pzFunc :: WithPos PzVal
-pzFunc = withPos $ PzFunc $ Func M.empty
+pzFunc = withPos $ PzFunc func
+
+func :: Func
+func = Func M.empty
     (Both builtInPos (withPos Quote) (withPos identCtx))
     (ArgsVaria $ withPos identArgs)
     $ BodyBuiltIn identFunc
@@ -145,7 +145,8 @@ _and ctx args = f2 args $ \x y -> return $ (ctx,) $
         (TrueReal , _)            -> y
 
 -- lists
--- TODO
+_list :: Pos -> Dict -> [WithPos PzVal] -> FuncReturn
+_list p ctx args = return (ctx, WithPos p $ PzList args)
 
 -- dictionaries
 -- TODO

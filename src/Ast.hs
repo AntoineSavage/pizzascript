@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 module Ast where
 
 import BuiltIns
@@ -137,7 +138,10 @@ getListEnd KindDict = '}'
 getListEnd KindForm = ')'
 
 parseMany :: Parser () -> Parser a -> Parser () -> Parser [a]
-parseMany ign elem end = flip manyTill end $ ign >> elem >>= \e -> ignore >> return e
+parseMany ign elem end = go [] where
+    go acc = ign >> optionMaybe end >>= \case
+        Just _ -> return $ reverse acc
+        Nothing -> elem >>= go . (:acc)
 
 unparseMany :: (a -> String) -> [a] -> String
 unparseMany f = unwords . map f
