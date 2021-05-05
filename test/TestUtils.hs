@@ -136,6 +136,28 @@ instance ArbWithDepth UnquoteValid where
 newtype UnquoteValids = UnquoteValids [WithPos AstExpr] deriving (Show, Eq)
 instance Arbitrary UnquoteValids where arbitrary = UnquoteValids <$> arbFew arbUnquoteValid
 
+newtype PzFalsish = PzFalsish (WithPos PzVal) deriving (Show, Eq)
+instance Arbitrary PzFalsish where
+    arbitrary = do
+        p <- arbitrary
+        fmap PzFalsish $ elements $ map (WithPos p) $
+            [ PzUnit
+            , PzNum 0
+            , PzStr ""
+            , PzList []
+            , PzDict M.empty
+            ]
+
+newtype PzTruish = PzTruish (WithPos PzVal) deriving (Show, Eq)
+instance Arbitrary PzTruish where
+    arbitrary = fmap PzTruish $ liftM2 WithPos arbitrary $ oneof
+        [ PzNum . getNonZero <$> arbitrary
+        , PzStr . getNonEmpty <$> arbitrary
+        , PzList . getNonEmpty <$> arbitrary
+        , fmap PzDict $ liftM3 M.insert arbitrary arbitrary arbitrary
+        , PzFunc <$> arbitrary
+        ]
+
 -- Arbitrary utils
 arbDepth :: ArbWithDepth a => Gen a
 arbDepth = chooseInt (0, 3) >>= arbWithDepth

@@ -11,7 +11,16 @@ import TestUtils
 
 spec :: Spec
 spec = do
+    _andSpec
+    _listSpec
     boolishSpec
+
+_andSpec :: Spec
+_andSpec = describe "_and" $ do
+    it "returns x for x=false, y=false" $ do
+        property $ \y -> do
+            let x = pzFalse
+            _and x y `shouldBe` x
 
 boolishSpec :: Spec
 boolishSpec = describe "boolish" $ do
@@ -26,6 +35,10 @@ boolishSpec = describe "boolish" $ do
             boolish (WithPos p $ PzStr "") `shouldBe` Falsish
             boolish (WithPos p $ PzList []) `shouldBe` Falsish
             boolish (WithPos p $ PzDict M.empty) `shouldBe` Falsish
+
+    it "converts falsish values (prop)" $ do
+        property $ \(PzFalsish v) -> do
+            boolish v `shouldBe` Falsish
     
     it "converts simple truish values" $ do
         property $ \p f -> do
@@ -36,11 +49,6 @@ boolishSpec = describe "boolish" $ do
             boolish (WithPos p $ PzDict $ M.fromList [(unit, unit)]) `shouldBe` Truish
             boolish (WithPos p $ PzFunc f) `shouldBe` Truish
     
-    it "converts truish values" $ do
-        property $ \p (NonZero n) (NonEmpty s) (NonEmpty l) d k v f -> do
-            let unit = WithPos p PzUnit
-            boolish (WithPos p $ PzNum n) `shouldBe` Truish
-            boolish (WithPos p $ PzStr s) `shouldBe` Truish
-            boolish (WithPos p $ PzList l) `shouldBe` Truish
-            boolish (WithPos p $ PzDict $ M.insert k v d) `shouldBe` Truish
-            boolish (WithPos p $ PzFunc f) `shouldBe` Truish
+    it "converts truish values (prop)" $ do
+        property $ \(PzTruish v) -> do
+            boolish v `shouldBe` Truish

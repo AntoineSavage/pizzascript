@@ -1,4 +1,3 @@
-{-# LANGUAGE TupleSections #-}
 module BuiltIns where
 
 import qualified Data.Map as M
@@ -117,36 +116,33 @@ symbSplitImpl :: Symb -> [Symb]
 symbSplitImpl (Symb n (Ident ps)) = flip map ps $ Symb n . Ident . (:[])
 
 -- booleans
-_not :: Dict -> [WithPos PzVal] -> FuncReturn
-_not ctx args = f1 args $ \x -> return $ (ctx,) $ case boolish x of
+_not :: WithPos PzVal -> WithPos PzVal
+_not x = case boolish x of
     FalseReal -> pzTrue
     Falsish -> pzTrue
     Truish -> pzFalse
     TrueReal -> pzFalse
 
-_or :: Dict -> [WithPos PzVal] -> FuncReturn
-_or ctx args = f2 args $ \x y -> return $ (ctx,) $
-    case (boolish x, boolish y) of
-        (TrueReal , _)            -> x
-        (Truish   , TrueReal)     -> y
-        (Truish   , _)            -> x
-        (Falsish  , FalseReal)    -> x
-        (Falsish  , _)            -> y
-        (FalseReal, _)            -> y
+_or :: WithPos PzVal -> WithPos PzVal -> WithPos PzVal
+_or x y = case (boolish x, boolish y) of
+    (TrueReal , _)            -> x
+    (Truish   , TrueReal)     -> y
+    (Truish   , _)            -> x
+    (Falsish  , FalseReal)    -> x
+    (Falsish  , _)            -> y
+    (FalseReal, _)            -> y
 
-_and :: Dict -> [WithPos PzVal] -> FuncReturn
-_and ctx args = f2 args $ \x y -> return $ (ctx,) $
-    case (boolish x, boolish y) of
-        (FalseReal, _)            -> x
-        (Falsish  , FalseReal)    -> y
-        (Falsish  , _)            -> x
-        (Truish   , TrueReal)     -> x
-        (Truish   , _)            -> y
-        (TrueReal , _)            -> y
+_and :: WithPos PzVal -> WithPos PzVal -> WithPos PzVal
+_and x y = case (boolish x, boolish y) of
+    (FalseReal, _)            -> x
+    (Falsish  , FalseReal)    -> y
+    (Falsish  , _)            -> x
+    (Truish   , TrueReal)     -> x
+    (Truish   , _)            -> y
+    (TrueReal , _)            -> y
 
 -- lists
-_list :: Pos -> Dict -> [WithPos PzVal] -> FuncReturn
-_list p ctx args = return (ctx, WithPos p $ PzList args)
+-- TODO
 
 -- dictionaries
 -- TODO

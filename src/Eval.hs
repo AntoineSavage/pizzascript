@@ -5,7 +5,7 @@ module Eval where
 import qualified Ast as A
 import qualified Data.Map as M
 
-import Ast ( quote, unquote )
+import Quote ( quote, unquote )
 import BuiltIns
 import Control.Monad ( forM_, liftM2 )
 import Data.Maybe
@@ -195,9 +195,9 @@ invokeFuncBuiltIn ctx p args (Ident ps) frames =
         -- TODO
 
         -- booleans
-        ["not"] -> returnFrom frames $ _not ctx args
-        ["or"] -> returnFrom frames $ _or ctx args
-        ["and"] -> returnFrom frames $ _and ctx args
+        ["not"] -> returnFrom frames $ f1 args $ \x -> fpure ctx $ _not x
+        ["or"] -> returnFrom frames $ f2 args $ \x y -> fpure ctx $ _or x y
+        ["and"] -> returnFrom frames $ f2 args $ \x y -> fpure ctx $ _and x y
 
         -- lists
         -- TODO

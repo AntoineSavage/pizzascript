@@ -78,6 +78,9 @@ f2 args f = case args of [x, y] -> f x y; _ -> Left $ invalidArityMsg 2 args
 f3 :: [a] -> (a -> a -> a -> Either String b) -> Either String b
 f3 args f = case args of [x, y, z] -> f x y z; _ -> Left $ invalidArityMsg 3 args
 
+fpure :: Dict -> a -> Either String (Dict, a)
+fpure ctx r = return (ctx, r)
+
 ----------------------
 -- Custom functions
 ----------------------
