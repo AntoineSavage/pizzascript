@@ -100,12 +100,28 @@ instance Arbitrary FuncArgs where arbitrary = oneof [ArgsVaria <$> arbitrary, Ar
 instance Arbitrary FuncBody where arbitrary = arbDepth
 instance ArbWithDepth FuncBody where arbWithDepth depth = oneof [BodyBuiltIn <$> arbitrary, BodyCustom <$> arbFew (arbWithDepth depth)]
 
+instance Arbitrary StackFrame where arbitrary = arbDepth
+instance ArbWithDepth StackFrame where
+    arbWithDepth depth = oneof
+        [liftM2 Block arbDepth arbDepth
+        , liftM4 Form arbDepth arbitrary arbitrary arbDepth
+        , do 
+            a <- arbDepth
+            b <- arbitrary
+            c <- arbDepth
+            d <- arbDepth
+            e <- arbDepth
+            f <- arbDepth
+            return $ Invoc a b c d e f
+        ]
+
 -- Test-only types
 newtype IdentPart = IdentPart String deriving (Show, Eq)
 instance Arbitrary IdentPart where arbitrary = fmap IdentPart $ liftM2 (:) (elements validFirsts) $ chooseInt (0, 5) >>= flip vectorOf (elements validNexts)
 arbIdentPart = do IdentPart s <- arbitrary; return s
 
 class Arbitrary a => ArbWithDepth a where arbWithDepth :: Int -> Gen a
+instance ArbWithDepth a => ArbWithDepth (Maybe a) where arbWithDepth depth = oneof [return Nothing, Just <$> arbWithDepth depth]
 
 newtype Elem = Elem Int deriving (Show, Eq)
 instance Arbitrary Elem where arbitrary = do Positive x <- arbitrary; return $ Elem x

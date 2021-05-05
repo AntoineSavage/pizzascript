@@ -145,14 +145,6 @@ invokeFunc ctx p (Func implCtx impArgs args body) as frames =
 returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
 returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) $ setCtx ctx frames
 
-setCtx :: Dict -> [StackFrame] -> [StackFrame]
-setCtx ctx frames = case frames of
-    [] -> []
-    (frame:fs) -> (:fs) $ case frame of
-        Block _ es -> Block ctx es
-        Form _ p mfi es-> Form ctx p mfi es
-        Invoc _ p mfi f as es -> Invoc ctx p mfi f as es
-
 invokeFuncSpecial :: Dict -> Pos -> [WithPos AstExpr] -> [StackFrame] -> EvalResult
 invokeFuncSpecial ctx p es frames = do
     fc <- evalFuncCustom es

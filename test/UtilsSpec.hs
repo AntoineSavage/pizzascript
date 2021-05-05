@@ -31,6 +31,7 @@ spec = do
     f2Spec
     f3Spec
     fpureSpec
+    setCtxSpec
     toFuncCustomSpec
     fromFuncCustomSpec
 
@@ -237,6 +238,27 @@ fpureSpec = describe "fpure" $ do
     it "wraps in a Right tuple" $ do
         property $ \(ArbDict ctx) r -> do
             fpure ctx r `shouldBe` Right (ctx, (r :: Int))
+
+setCtxSpec :: Spec
+setCtxSpec = describe "setCtx" $ do
+    it "returns empty list unchanged" $ do
+        setCtx undefined [] `shouldBe` []
+
+    it "sets context on block frame" $ do
+        property $ \(ArbDict ctx) (Few es) (Few fs) -> do
+            setCtx ctx (Block undefined es:fs) `shouldBe` (Block ctx es:fs)
+
+    it "sets context on form frame" $ do
+        property $ \(ArbDict ctx) p mfi (Few es) (Few fs) -> do
+            setCtx ctx (Form undefined p mfi es:fs) `shouldBe` (Form ctx p mfi es:fs)
+
+    it "sets context on invoc frame (with args left to eval)" $ do
+        property $ \(ArbDict ctx) p mfi f (Few as) (Few es) (Few fs) -> do
+            setCtx ctx (Invoc undefined p mfi f as (Just es):fs) `shouldBe` (Invoc ctx p mfi f as (Just es):fs)
+
+    it "sets context on invoc frame (with no args left to eval)" $ do
+        property $ \(ArbDict ctx) p mfi f (Few as) (Few fs) -> do
+            setCtx ctx (Invoc undefined p mfi f as Nothing:fs) `shouldBe` (Invoc ctx p mfi f as Nothing:fs)
 
 toFuncCustomSpec :: Spec
 toFuncCustomSpec = describe "toFuncCustom" $ do
