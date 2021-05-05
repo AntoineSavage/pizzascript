@@ -30,7 +30,7 @@ validFirsts = underscore : lettersUpper ++ lettersLower ++ accentChars
 invalidFirsts = digits ++ symbols ++ escapees
 validNexts = underscore : digits ++ lettersUpper ++ lettersLower ++ accentChars
 
-argPassSymbs = [ symbEval, symbQuote, symbUnquote, symbDeepQuote, symbDeepUnquote ]
+kinds = [ KindList, KindDict, KindForm ]
 
 -- Functions
 parseElem :: Parser Elem
@@ -42,7 +42,6 @@ unparseElem (Elem x) = show x
 -- Types and instances
 instance Arbitrary Ident where arbitrary = Ident <$> arbMany 1 5 arbIdentPart
 instance ArbWithDepth Ident where arbWithDepth _ = arbitrary
-arbIdentPart = liftM2 (:) (elements validFirsts) $ chooseInt (0, 5) >>= flip vectorOf (elements validNexts)
 
 instance Arbitrary Symb where arbitrary = liftM2 Symb arbitrary arbitrary
 instance Arbitrary SourcePos where arbitrary = liftM3 newPos arbitrary arbitrary arbitrary
@@ -99,6 +98,10 @@ instance Arbitrary FuncBody where arbitrary = arbDepth
 instance ArbWithDepth FuncBody where arbWithDepth depth = oneof [BodyBuiltIn <$> arbitrary, BodyCustom <$> arbFew (arbWithDepth depth)]
 
 -- Test-only types
+newtype IdentPart = IdentPart String deriving (Show, Eq)
+instance Arbitrary IdentPart where arbitrary = fmap IdentPart $ liftM2 (:) (elements validFirsts) $ chooseInt (0, 5) >>= flip vectorOf (elements validNexts)
+arbIdentPart = do IdentPart s <- arbitrary; return s
+
 class Arbitrary a => ArbWithDepth a where arbWithDepth :: Int -> Gen a
 
 newtype Elem = Elem Int deriving (Show, Eq)
