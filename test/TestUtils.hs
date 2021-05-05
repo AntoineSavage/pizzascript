@@ -74,11 +74,15 @@ instance ArbWithDepth PzVal where
         , PzSymb <$> liftM2 Symb arbitrary arbitrary
         ] ++
         (if depth <= 0 then [] else
-            [ fmap PzList $ arbFew $ arbWithDepth $ depth-1
-            , fmap PzDict $ arbDict depth
-            , PzFunc <$> liftM4 Func (arbDict depth) arbitrary arbitrary arbitrary
+            [ fmap PzList $ arbWithDepth depth
+            , fmap PzDict $ arbWithDepth depth
+            , PzFunc <$> arbWithDepth depth
             ]
         )
+
+instance Arbitrary Func where arbitrary = arbDepth
+instance ArbWithDepth Func where
+    arbWithDepth depth = liftM4 Func (arbWithDepth depth) arbitrary arbitrary (arbWithDepth depth)
 
 instance Arbitrary FuncImpureArgs where 
     arbitrary = oneof
@@ -91,7 +95,8 @@ instance Arbitrary ArgPass where arbitrary = elements [ Eval, Quote, Unquote, De
 instance ArbWithDepth ArgPass where arbWithDepth _ = arbitrary
 
 instance Arbitrary FuncArgs where arbitrary = oneof [ArgsVaria <$> arbitrary, ArgsArity <$> arbFew arbitrary]
-instance Arbitrary FuncBody where arbitrary = oneof [BodyBuiltIn <$> arbitrary, BodyCustom <$> arbFew arbitrary]
+instance Arbitrary FuncBody where arbitrary = arbDepth
+instance ArbWithDepth FuncBody where arbWithDepth depth = oneof [BodyBuiltIn <$> arbitrary, BodyCustom <$> arbFew (arbWithDepth depth)]
 
 -- Test-only types
 class Arbitrary a => ArbWithDepth a where arbWithDepth :: Int -> Gen a
@@ -107,8 +112,13 @@ instance (Eq a, Arbitrary a) => Arbitrary (Uniques a) where arbitrary = Uniques 
 
 newtype ArbDict = ArbDict Dict deriving (Show, Eq)
 instance Arbitrary ArbDict where arbitrary = arbDepth
-instance ArbWithDepth ArbDict where arbWithDepth depth = ArbDict <$> arbDict depth
-arbDict depth = let sub = arbWithDepth $ depth-1 in M.fromList <$> arbFew (liftM2 (,) sub sub)
+instance ArbWithDepth ArbDict where arbWithDepth depth = ArbDict <$> arbWithDepth depth
+
+instance ArbWithDepth a => ArbWithDepth [a] where arbWithDepth depth = arbFew $ arbWithDepth $ depth-1
+instance (Ord k, ArbWithDepth k, ArbWithDepth v) => ArbWithDepth (M.Map k v) where
+    arbWithDepth depth = fmap M.fromList $ arbFew $ liftM2 (,)
+        (arbWithDepth $ depth-1)
+        (arbWithDepth $ depth-1)
 
 newtype UnquoteValid = UnquoteValid (WithPos AstExpr) deriving (Show, Eq)
 instance Arbitrary UnquoteValid where arbitrary = arbDepth
