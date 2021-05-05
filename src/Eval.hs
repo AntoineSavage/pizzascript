@@ -156,7 +156,7 @@ evalExpr ctx e@(WithPos p v) eval frames =
         (_, DeepUnquote) -> evalExpr ctx e Unquote frames
 
 evalIdent :: Dict -> Pos -> Ident -> Either String (WithPos PzVal)
-evalIdent ctx p ident = inner (withPos $ PzDict ctx) $ symbSplitImpl $ symb ident where
+evalIdent ctx p ident = inner (withPos $ PzDict ctx) $ splitSymb $ symb ident where
     inner val_or_ctx symbs =
         case symbs of
             [] -> return val_or_ctx
