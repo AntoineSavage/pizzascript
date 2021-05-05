@@ -15,6 +15,7 @@ spec = do
     builtInCtxSpec
     constantsSpec
     funcSpec
+    ifThenElseSpec
     _notSpec
     _orSpec
     _andSpec
@@ -48,6 +49,25 @@ funcSpec = describe "func" $ do
         impArgs f `shouldBe` Both builtInPos (withPos Quote) (withPos identCtx)
         args f `shouldBe` ArgsVaria (withPos identArgs)
         body f `shouldBe` BodyBuiltIn identFunc
+
+ifThenElseSpec :: Spec
+ifThenElseSpec = describe "simulate if-then-else with not-or-and" $ do
+    let ifThenElse p_ t f = let p = _not $ _not p_ in _or (_and p t) (_and (_not p) f)
+    it "returns x when p is true" $ do
+        property $ \x -> do
+            ifThenElse pzTrue x undefined `shouldBe` x
+
+    it "returns x when p is truish" $ do
+        property $ \x (PzTruish p) -> do
+            ifThenElse p x undefined `shouldBe` x
+
+    it "returns y when p is falsish" $ do
+        property $ \y (PzFalsish p) -> do
+            ifThenElse p undefined y `shouldBe` y
+
+    it "returns y when p is false" $ do
+        property $ \y -> do
+            ifThenElse pzFalse undefined y `shouldBe` y
 
 _notSpec :: Spec
 _notSpec = describe "_not" $ do
