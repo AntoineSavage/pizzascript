@@ -41,6 +41,9 @@ toForm p k =
         KindDict -> (identToExpr identDict:)
         KindForm -> id
 
+splitSymb :: Symb -> [Symb]
+splitSymb (Symb n (Ident ps)) = flip map ps $ Symb n . Ident . (:[])
+
 getIdent :: WithPos AstExpr -> Maybe (WithPos Ident)
 getIdent (WithPos p v) = case v of
     AstIdent ident -> return $ WithPos p ident

@@ -20,6 +20,7 @@ spec = do
     argPassToSymbSpec
     symbToArgPassSpec
     toFormSpec
+    splitSymbSpec
     getIdentSpec
     getArgPassSpec
     getDuplicatesSpec
@@ -91,6 +92,13 @@ toFormSpec = describe "toForm" $ do
             toForm p KindList es `shouldBe` (WithPos p $ AstIdent $ identList) : es
             toForm p KindDict es `shouldBe` (WithPos p $ AstIdent $ identDict) : es
             toForm p KindForm es `shouldBe` es
+
+splitSymbSpec :: Spec
+splitSymbSpec = describe "splitSymb" $ do
+    it "splits symbol" $ do
+        property $ \n ps -> do
+            let symb = Symb n (Ident ps)
+            splitSymb symb `shouldBe` map (Symb n . Ident . (:[])) ps
 
 getIdentSpec :: Spec
 getIdentSpec = describe "getIdent" $ do

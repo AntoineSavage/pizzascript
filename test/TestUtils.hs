@@ -116,9 +116,10 @@ instance ArbWithDepth ArbDict where arbWithDepth depth = ArbDict <$> arbWithDept
 
 instance ArbWithDepth a => ArbWithDepth [a] where arbWithDepth depth = arbFew $ arbWithDepth $ depth-1
 instance (Ord k, ArbWithDepth k, ArbWithDepth v) => ArbWithDepth (M.Map k v) where
-    arbWithDepth depth = fmap M.fromList $ arbFew $ liftM2 (,)
-        (arbWithDepth $ depth-1)
-        (arbWithDepth $ depth-1)
+    arbWithDepth depth =
+        let sub :: ArbWithDepth a => Gen a
+            sub = arbWithDepth $ depth-1
+        in fmap M.fromList $ arbFew $ liftM2 (,) sub sub
 
 newtype UnquoteValid = UnquoteValid (WithPos AstExpr) deriving (Show, Eq)
 instance Arbitrary UnquoteValid where arbitrary = arbDepth
@@ -151,12 +152,12 @@ instance Arbitrary PzFalsish where
 newtype PzTruish = PzTruish (WithPos PzVal) deriving (Show, Eq)
 instance Arbitrary PzTruish where
     arbitrary = fmap PzTruish $ liftM2 WithPos arbitrary $ oneof
-        [ PzNum . getNonZero <$> arbitrary
-        , PzStr . getNonEmpty <$> arbitrary
-        , PzList . getNonEmpty <$> arbitrary
-        , fmap PzDict $ liftM3 M.insert arbitrary arbitrary arbitrary
-        , PzFunc <$> arbitrary
-        ]
+            [ PzNum . getNonZero <$> arbitrary
+            , PzStr . getNonEmpty <$> arbitrary
+            , PzList  <$> liftM2 (:) arbDepth (arbFew arbDepth)
+            , fmap PzDict $ liftM3 M.insert arbDepth arbDepth arbDepth
+            , PzFunc <$> arbitrary
+            ]
 
 -- Arbitrary utils
 arbDepth :: ArbWithDepth a => Gen a

@@ -6,21 +6,127 @@ import Test.Hspec
 import Test.QuickCheck
 
 import BuiltIns
-import Types
 import TestUtils
+import Types
+import Utils
 
 spec :: Spec
 spec = do
+    builtInCtxSpec
+    constantsSpec
+    funcSpec
+    _notSpec
+    _orSpec
     _andSpec
-    _listSpec
     boolishSpec
 
+builtInCtxSpec :: Spec
+builtInCtxSpec = describe "builtInCtx" $ do
+    it "contains the required keys" $ do
+        let keyIdents = [identFalse, identTrue, identNot, identOr, identAnd, identFunc]
+            keys = flip map keyIdents $ withPos . PzSymb . symb
+            values = [pzFalse, pzTrue, pzNot, pzOr, pzAnd, pzFunc]
+        builtInCtx `shouldBe` M.fromList (zip keys values)
+
+constantsSpec :: Spec
+constantsSpec = describe "constants" $ do
+    it "declares boolean constants" $ do
+        pzFalse `shouldBe` withPos (PzSymb symbFalse)
+        pzTrue `shouldBe` withPos (PzSymb symbTrue)
+        pzNot `shouldBe` withPos (PzFunc $ Func M.empty None (ArgsArity [withPos identX]) (BodyBuiltIn identNot))
+        pzOr `shouldBe` withPos (PzFunc $ Func M.empty None (ArgsArity [withPos identX, withPos identY]) (BodyBuiltIn identOr))
+        pzAnd `shouldBe` withPos (PzFunc $ Func M.empty None (ArgsArity [withPos identX, withPos identY]) (BodyBuiltIn identAnd))
+
+    it "declares function constants" $ do
+        pzFunc `shouldBe` withPos (PzFunc func)
+
+funcSpec :: Spec
+funcSpec = describe "func" $ do
+    it "returns func value" $ do
+        let f = func
+        implCtx f `shouldBe` M.empty
+        impArgs f `shouldBe` Both builtInPos (withPos Quote) (withPos identCtx)
+        args f `shouldBe` ArgsVaria (withPos identArgs)
+        body f `shouldBe` BodyBuiltIn identFunc
+
+_notSpec :: Spec
+_notSpec = describe "_not" $ do
+    it "returns true for false and vice-versa" $ do
+        _not pzFalse `shouldBe` pzTrue
+        _not pzTrue `shouldBe` pzFalse
+
+    it "returns true for falsish and vice-versa" $ do
+        property $ \(PzFalsish x) (PzTruish y) -> do
+            _not x `shouldBe` pzTrue
+            _not y `shouldBe` pzFalse
+
+_orSpec :: Spec
+_orSpec = describe "_or (truest wins)" $ do
+    it "returns x for x=true, y=*" $ do
+        property $ \y -> do
+            let x = pzTrue
+            _or x y `shouldBe` x
+
+    it "returns y for x=truish, y=true" $ do
+        property $ \(PzTruish x) -> do
+            let y = pzTrue
+            _or x y `shouldBe` y
+
+    it "returns x for x=truish, y=truish|falsish|false" $ do
+        property $ \(PzTruish x) (PzTruish y) (PzFalsish y') -> do
+            let y'' = pzFalse
+            _or x y `shouldBe` x
+            _or x y' `shouldBe` x
+            _or x y'' `shouldBe` x
+
+    it "returns x for x=falsish, y=false" $ do
+        property $ \(PzFalsish x) -> do
+            let y = pzFalse
+            _or x y `shouldBe` x
+
+    it "returns y for x=falsish, y=true|truish|falsish" $ do
+        property $ \(PzFalsish x) (PzTruish y') (PzFalsish y'') -> do
+            let y = pzTrue
+            _or x y `shouldBe` y
+            _or x y'' `shouldBe` y''
+
+    it "returns y for x=false, y=*" $ do
+        property $ \(PzFalsish x) y -> do
+            _or x y `shouldBe` y
+
 _andSpec :: Spec
-_andSpec = describe "_and" $ do
-    it "returns x for x=false, y=false" $ do
+_andSpec = describe "_and (falsest wins)" $ do
+    it "returns x for x=false, y=*" $ do
         property $ \y -> do
             let x = pzFalse
             _and x y `shouldBe` x
+
+    it "returns y for x=falsish, y=false" $ do
+        property $ \(PzFalsish x) -> do
+            let y = pzFalse
+            _and x y `shouldBe` y
+
+    it "returns x for x=falsish, y=falsish|truish|true" $ do
+        property $ \(PzFalsish x) (PzFalsish y) (PzTruish y') -> do
+            let y'' = pzTrue
+            _and x y `shouldBe` x
+            _and x y' `shouldBe` x
+            _and x y'' `shouldBe` x
+
+    it "returns x for x=truish, y=true" $ do
+        property $ \(PzTruish x) -> do
+            let y = pzTrue
+            _and x y `shouldBe` x
+
+    it "returns y for x=truish, y=false|falsish|truish" $ do
+        property $ \(PzTruish x) (PzFalsish y') (PzTruish y'') -> do
+            let y = pzFalse
+            _and x y `shouldBe` y
+            _and x y'' `shouldBe` y''
+
+    it "returns y for x=true, y=*" $ do
+        property $ \(PzTruish x) y -> do
+            _and x y `shouldBe` y
 
 boolishSpec :: Spec
 boolishSpec = describe "boolish" $ do

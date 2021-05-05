@@ -112,8 +112,7 @@ type FuncReturn = Either String (Dict, WithPos PzVal)
 -- TODO
 
 -- symbols
-symbSplitImpl :: Symb -> [Symb]
-symbSplitImpl (Symb n (Ident ps)) = flip map ps $ Symb n . Ident . (:[])
+-- TODO
 
 -- booleans
 _not :: WithPos PzVal -> WithPos PzVal
