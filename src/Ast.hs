@@ -122,7 +122,7 @@ parseList k ign p =
     char (getListStart k) >>
         parseMany ign p (void $ char $ getListEnd k)
 
-unparseList :: AstListKind ->  (a -> String) -> [a] -> String
+unparseList :: AstListKind ->  (Maybe a -> String) -> [a] -> String
 unparseList k f es = [getListStart k] ++ unparseMany f es ++ [getListEnd k]
 
 getListStart :: AstListKind -> Char
@@ -143,25 +143,27 @@ parseMany ign elem end = go [] where
         Just _ -> return $ reverse acc
         Nothing -> elem >>= go . (:acc)
 
-unparseMany :: (a -> String) -> [a] -> String
-unparseMany f = unwords . map f
+unparseMany :: (Maybe a -> String) -> [a] -> String
+unparseMany f = \case
+    []     -> f Nothing
+    (x:xs) -> f (Just x) ++ unparseMany f xs
 
 -- Expressions
-parseExpr :: Parser () -> Parser (WithPos AstExpr)
-parseExpr ign = liftM2 WithPos getPosition $
+parseExpr :: Parser () -> Parser (WithPos AstExpr) -> Parser (WithPos AstExpr)
+parseExpr ign p = liftM2 WithPos getPosition $
             AstNum <$> (parseNum <?> "number")
         <|> AstStr <$> (parseStr <?> "string")
         <|> AstIdent <$> (parseIdent <?> "identifier")
         <|> AstSymb <$> (parseSymb <?> "symbol")
-        <|> AstList KindList <$> (parseList KindList ign (parseExpr ign) <?> "list")
-        <|> AstList KindDict <$> (parseList KindDict ign (parseExpr ign) <?> "dictionary")
-        <|> AstList KindForm <$> (parseList KindForm ign (parseExpr ign) <?> "form")
+        <|> AstList KindList <$> (parseList KindList ign p <?> "list")
+        <|> AstList KindDict <$> (parseList KindDict ign p <?> "dictionary")
+        <|> AstList KindForm <$> (parseList KindForm ign p <?> "form")
 
-unparseExpr :: WithPos AstExpr -> String
-unparseExpr e =
+unparseExpr :: (Maybe (WithPos AstExpr) -> String) -> WithPos AstExpr -> String
+unparseExpr f e =
     case val e of
         AstNum n -> unparseNum n
         AstStr s -> unparseStr s
         AstIdent i -> unparseIdent i
         AstSymb s -> unparseSymb s
-        AstList k l -> unparseList k unparseExpr l
+        AstList k l -> unparseList k f l

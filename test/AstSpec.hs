@@ -569,19 +569,19 @@ parseListSpec = describe "parseList" $ do
 
         it "parses one elem" $ do
             property $ \e -> 
-                parseList' k ([start] ++ unparseElem e ++ [end]) `shouldBe` Right [e]
+                parseList' k ([start] ++ unparseElem' e ++ [end]) `shouldBe` Right [e]
 
         it "parses two elems" $ do
             property $ \e1 e2 -> 
-                parseList' k ([start] ++ unparseElem e1 ++ " " ++ unparseElem e2 ++ [end]) `shouldBe` Right [e1, e2]
+                parseList' k ([start] ++ unparseElem' e1 ++ unparseElem' e2 ++ [end]) `shouldBe` Right [e1, e2]
 
         it "parses three elems" $ do
             property $ \e1 e2 e3 -> 
-                parseList' k ([start] ++ unparseElem e1 ++ " " ++ unparseElem e2 ++ " " ++ unparseElem e3 ++ [end]) `shouldBe` Right [e1, e2, e3]
+                parseList' k ([start] ++ unparseElem' e1 ++ unparseElem' e2 ++ unparseElem' e3 ++ [end]) `shouldBe` Right [e1, e2, e3]
 
         it "parses n elems" $ do
             property $ \(Few es) -> 
-                parseList' k ([start] ++ unwords (map unparseElem es) ++ [end]) `shouldBe` Right es
+                parseList' k ([start] ++ concatMap unparseElem' es ++ [end]) `shouldBe` Right es
 
 unparseListSpec :: Spec
 unparseListSpec = describe "unparseList" $ do
@@ -593,19 +593,19 @@ unparseListSpec = describe "unparseList" $ do
 
         it "unparses one elem" $ do
             property $ \e -> do
-                unparseList' k [e] `shouldBe` [start] ++ unparseElem e ++ [end]
+                unparseList' k [e] `shouldBe` [start] ++ unparseElem' e ++ [end]
 
         it "unparses two elems" $ do
             property $ \e1 e2 -> do
-                unparseList' k [e1, e2] `shouldBe` [start] ++ unparseElem e1 ++ " " ++ unparseElem e2 ++ [end]
+                unparseList' k [e1, e2] `shouldBe` [start] ++ unparseElem' e1 ++ unparseElem' e2 ++ [end]
 
         it "unparses three elems" $ do
             property $ \e1 e2 e3  -> do
-                unparseList' k [e1, e2, e3] `shouldBe` [start] ++ unparseElem e1 ++ " " ++ unparseElem e2 ++ " " ++ unparseElem e3 ++ [end]
+                unparseList' k [e1, e2, e3] `shouldBe` [start] ++ unparseElem' e1 ++ unparseElem' e2 ++ unparseElem' e3 ++ [end]
 
         it "unparses n elems" $ do
             property $ \es  -> do
-                unparseList' k es `shouldBe` [start] ++ unwords (map unparseElem es) ++ [end]
+                unparseList' k es `shouldBe` [start] ++ concatMap unparseElem' es ++ [end]
 
 getListStartSpec :: Spec
 getListStartSpec = describe "getListStart" $ do
@@ -640,95 +640,103 @@ parseManySpec = describe "parseMany" $ do
 
     it "parses one elem" $ do
         property $ \e -> do
-            parseMany' (unparseElem e ++ "$") `shouldBe` Right [e]
+            parseMany' (unparseElem' e ++ "$") `shouldBe` Right [e]
 
     it "parses two elems" $ do
         property $ \e1 e2 -> do
-            parseMany' (unparseElem e1 ++ " " ++ unparseElem e2 ++ "$") `shouldBe` Right [e1, e2]
+            parseMany' (unparseElem' e1 ++ unparseElem' e2 ++ "$") `shouldBe` Right [e1, e2]
 
     it "parses three elems" $ do
         property $ \e1 e2 e3 -> do
-            parseMany' (unparseElem e1 ++ " " ++ unparseElem e2 ++ " " ++ unparseElem e3 ++ "$") `shouldBe` Right [e1, e2, e3]
+            parseMany' (unparseElem' e1 ++ unparseElem' e2 ++ unparseElem' e3 ++ "$") `shouldBe` Right [e1, e2, e3]
 
     it "parses n elems" $ do
         property $ \(Few es) -> do
-            parseMany' (unwords (map unparseElem es) ++ "$") `shouldBe` Right es
+            parseMany' (concatMap unparseElem' es ++ "$") `shouldBe` Right es
 
 unparseManySpec :: Spec
 unparseManySpec = describe "unparseMany" $ do
     it "unparses empty list" $ do
         unparseMany' [] `shouldBe` ""
+        unparseMany' [] `shouldBe` unparseElem Nothing
 
     it "unparses one elem" $ do
         property $ \e -> do
-            unparseMany' [e] `shouldBe` unparseElem e
+            unparseMany' [e] `shouldBe` unparseElem' e
 
     it "unparses two elems" $ do
         property $ \e1 e2 -> do
-            unparseMany' [e1, e2] `shouldBe` unparseElem e1 ++ " " ++ unparseElem e2
+            unparseMany' [e1, e2] `shouldBe` unparseElem' e1 ++ unparseElem' e2
 
     it "unparses three elems" $ do
         property $ \e1 e2 e3 -> do
-            unparseMany' [e1, e2, e3] `shouldBe` unparseElem e1 ++ " " ++ unparseElem e2 ++ " " ++ unparseElem e3
+            unparseMany' [e1, e2, e3] `shouldBe` unparseElem' e1 ++ unparseElem' e2 ++ unparseElem' e3
 
     it "unparses n elems" $ do
         property $ \(Few es) -> do
-            unparseMany' es `shouldBe` unwords (map unparseElem es)
+            unparseMany' es `shouldBe` concatMap unparseElem' es
 
 -- Expressions
 parseExprVsUnparseExprSpec :: Spec
 parseExprVsUnparseExprSpec = describe "parseExpr vs unparseExpr" $ do
     it "composes parseExpr and unparseExpr into id" $ do
+        let f Nothing = ""; f (Just e) = unparseExpr f e ++ " "
+            g = parseExpr ignore g
         property $ \e -> do
-            let s = unparseExpr e
-            parse (spaces >> parseExpr ignore) "tests" s `shouldBe` Right e
-            unparseExpr <$> parse (spaces >> parseExpr ignore) "tests" s `shouldBe` Right s
+            let s = unparseExpr f e
+            parse g "tests" s `shouldBe` Right e
+            unparseExpr f <$> parse g "tests" s `shouldBe` Right s
 
 parseExprSpec :: Spec
 parseExprSpec = describe "parseExpr" $ do
     it "parses num" $ do
         property $ \p n -> do
-            parse (parseExpr ignore) "tests" (unparseNum n) `shouldBe` Right (WithPos p $ AstNum n)
+            parse (parseExpr ignore undefined) "tests" (unparseNum n) `shouldBe` Right (WithPos p $ AstNum n)
 
     it "parses str" $ do
         property $ \p s -> do
-            parse (parseExpr ignore) "tests" (unparseStr s) `shouldBe` Right (WithPos p $ AstStr s)
+            parse (parseExpr ignore undefined) "tests" (unparseStr s) `shouldBe` Right (WithPos p $ AstStr s)
 
     it "parses ident" $ do
         property $ \p ident -> do
-            parse (parseExpr ignore) "tests" (unparseIdent ident) `shouldBe` Right (WithPos p $ AstIdent ident)
+            parse (parseExpr ignore undefined) "tests" (unparseIdent ident) `shouldBe` Right (WithPos p $ AstIdent ident)
 
     it "parses symb" $ do
         property $ \p n ident -> do
-            parse (parseExpr ignore) "tests" (unparseSymb $ Symb n ident) `shouldBe` Right (WithPos p $ AstSymb $ Symb n ident)
+            parse (parseExpr ignore undefined) "tests" (unparseSymb $ Symb n ident) `shouldBe` Right (WithPos p $ AstSymb $ Symb n ident)
 
     it "parses list" $ do
+        let f Nothing = ""; f (Just e) = unparseExpr f e ++ " "
+            g = parseExpr ignore g
         property $ \p (Few es) -> do
             forM_ kinds $ \k -> do
-                parse (parseExpr ignore) "tests" (unparseList k unparseExpr es) `shouldBe` Right (WithPos p $ AstList k es)
+                parse g "tests" (unparseList k f es) `shouldBe` Right (WithPos p $ AstList k es)
 
 unparseExprSpec :: Spec
 unparseExprSpec = describe "unparseExpr" $ do
     it "unparses num" $ do
         property $ \p n -> do
-            unparseExpr (WithPos p $ AstNum n) `shouldBe` unparseNum n
+            unparseExpr undefined (WithPos p $ AstNum n) `shouldBe` unparseNum n
 
     it "unparses str" $ do
         property $ \p s -> do
-            unparseExpr (WithPos p $ AstStr s) `shouldBe` unparseStr s
+            unparseExpr undefined (WithPos p $ AstStr s) `shouldBe` unparseStr s
 
     it "unparses ident" $ do
         property $ \p ident -> do
-            unparseExpr (WithPos p $ AstIdent ident) `shouldBe` unparseIdent ident
+            unparseExpr undefined (WithPos p $ AstIdent ident) `shouldBe` unparseIdent ident
 
     it "unparses symb" $ do
         property $ \p n ident -> do
-            unparseExpr (WithPos p $ AstSymb $ Symb n ident) `shouldBe` unparseSymb (Symb n ident)
+            unparseExpr undefined (WithPos p $ AstSymb $ Symb n ident) `shouldBe` unparseSymb (Symb n ident)
 
     it "unparses list" $ do
+        let f Nothing = ""; f (Just e) = unparseExpr f e
         property $ \p (Few es) -> do
             forM_ kinds $ \k -> do
-                unparseExpr (WithPos p $ AstList k es) `shouldBe` unparseList k unparseExpr es
+                unparseExpr f (WithPos p $ AstList k es) `shouldBe` unparseList k f es
+
+unparseElem' = unparseElem.Just
 
 parseList' k = parse (parseList k ignore parseElem) "tests"
 unparseList' k = unparseList k unparseElem

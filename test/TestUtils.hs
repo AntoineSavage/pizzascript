@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 module TestUtils where
 
 import qualified Data.Map as M
@@ -36,8 +37,10 @@ kinds = [ KindList, KindDict, KindForm ]
 parseElem :: Parser Elem
 parseElem = Elem . read <$> many1 digit
 
-unparseElem :: Elem -> String
-unparseElem (Elem x) = show x
+unparseElem :: Maybe Elem -> String
+unparseElem = \case
+    Nothing -> ""
+    Just (Elem x) -> show x ++ " "
 
 -- Types and instances
 instance Arbitrary Ident where arbitrary = Ident <$> arbMany 1 5 arbIdentPart
