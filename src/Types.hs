@@ -80,6 +80,7 @@ data FuncBody
     | BodyCustom [WithPos AstExpr]
     deriving (Show, Eq, Ord)
 
+-- Evaluator types
 type Result = Maybe (WithPos PzVal)
 data Acc
     = Acc Result [StackFrame]

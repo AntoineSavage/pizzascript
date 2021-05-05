@@ -1,4 +1,4 @@
-module AstSpec where
+module QuoteSpec where
 
 import Test.Hspec
 import Test.QuickCheck
