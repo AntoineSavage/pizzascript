@@ -6,18 +6,76 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Control.Monad
+import Data.List
+import Data.Nat
 import TestUtils
 import Types
 import Utils
 
 spec :: Spec
 spec = do
+    identSpec
+    symbSpec
+    argPassToSymbVsSymbToArgPassSpec
+    argPassToSymbSpec
+    symbToArgPassSpec
     toFormSpec
+    getIdentSpec
+    getArgPassSpec
+    getDuplicatesSpec
+    addIdentAndPosSpec
     invalidArityMsgSpec
     f0Spec
     f1Spec
     f2Spec
     f3Spec
+    toFuncCustomSpec
+    fromFuncCustomSpec
+
+identSpec :: Spec
+identSpec = describe "ident" $ do
+    it "converts string to ident" $ do
+        property $ \s -> do
+            ident s `shouldBe` Ident [s]
+
+symbSpec :: Spec
+symbSpec = describe "symb" $ do
+    it "converts ident to symb" $ do
+        property $ \i -> do
+            symb i `shouldBe` Symb Z i
+
+argPassToSymbVsSymbToArgPassSpec :: Spec
+argPassToSymbVsSymbToArgPassSpec = describe "argPassToSymb vs symbToArgPass" $ do
+    it "composes argPassToSymb and symbToArgPass into id" $ do
+        property $ \argPass -> do
+            let symb = argPassToSymb argPass
+            symbToArgPass symb `shouldBe` Just argPass
+            argPassToSymb <$> symbToArgPass symb `shouldBe` Just symb
+
+argPassToSymbSpec :: Spec
+argPassToSymbSpec = describe "argPassToSymb" $ do
+    it "converts known arg passes" $ do
+        argPassToSymb Eval `shouldBe` symbEval
+        argPassToSymb Quote `shouldBe` symbQuote
+        argPassToSymb Unquote `shouldBe` symbUnquote
+        argPassToSymb DeepQuote `shouldBe` symbDeepQuote
+        argPassToSymb DeepUnquote `shouldBe` symbDeepUnquote
+
+symbToArgPassSpec :: Spec
+symbToArgPassSpec = describe "symbToArgPass" $ do
+    it "converts known arg pass symbols" $ do
+        symbToArgPass symbEval `shouldBe` Just Eval
+        symbToArgPass symbQuote `shouldBe` Just Quote
+        symbToArgPass symbUnquote `shouldBe` Just Unquote
+        symbToArgPass symbDeepQuote `shouldBe` Just DeepQuote
+        symbToArgPass symbDeepUnquote `shouldBe` Just DeepUnquote
+
+    it "rejects unknown symbols" $ do
+        symbToArgPass (symb $ ident "ABC") `shouldBe` Nothing
+
+    it "rejects unknown symbols (prop)" $ do
+        property $ \s -> 
+            symbToArgPass (symb $ ident $ "_" ++ s) `shouldBe` Nothing
 
 toFormSpec :: Spec
 toFormSpec = describe "toForm" $ do
@@ -32,6 +90,81 @@ toFormSpec = describe "toForm" $ do
             toForm p KindList es `shouldBe` (WithPos p $ AstIdent $ identList) : es
             toForm p KindDict es `shouldBe` (WithPos p $ AstIdent $ identDict) : es
             toForm p KindForm es `shouldBe` es
+
+getIdentSpec :: Spec
+getIdentSpec = describe "getIdent" $ do
+    it "converts ident" $
+        property $ \p ident ->
+            getIdent (WithPos p $ AstIdent ident) `shouldBe` Just (WithPos p ident)
+
+    it "rejects number" $ do
+        property $ \p n ->
+            getIdent (WithPos p $ AstNum n) `shouldBe` Nothing
+
+    it "rejects string" $ do
+        property $ \p s ->
+            getIdent (WithPos p $ AstStr s) `shouldBe` Nothing
+
+    it "rejects symbol" $ do
+        property $ \p s ->
+            getIdent (WithPos p $ AstSymb s) `shouldBe` Nothing
+
+    it "rejects list" $ do
+        property $ \p k l ->
+            getIdent (WithPos p $ AstList k l) `shouldBe` Nothing
+
+getArgPassSpec :: Spec
+getArgPassSpec = describe "getArgPass" $ do
+    it "converts None to Eval" $ do
+        property $ \implCtx args body -> 
+            getArgPass (Func implCtx None args body) `shouldBe` Eval
+
+    it "converts ArgPass" $ do
+        property $ \p implCtx ap args body -> 
+            getArgPass (Func implCtx (ArgPass p $ WithPos p ap) args body) `shouldBe` ap
+
+    it "converts Both" $ do
+        property $ \p implCtx ap explCtx args body -> 
+            getArgPass (Func implCtx (Both p (WithPos p ap) explCtx) args body) `shouldBe` ap
+
+getDuplicatesSpec :: Spec
+getDuplicatesSpec = describe "getDuplicates" $ do
+    it "finds no duplicates in empty list" $ do
+        getDuplicates [] `shouldBe` ([] :: [Int])
+
+    it "finds no duplicates" $ do
+        property $ \(Uniques xs) -> do
+            getDuplicates xs `shouldBe` ([] :: [Int])
+
+    it "finds one duplicate" $ do
+        property $ \x (Uniques xs) -> do
+            getDuplicates (x:xs ++ [x]) `shouldBe` ([x] :: [Int])
+    
+    it "finds two duplicates" $ do
+        property $ \x y (Uniques xs) -> nub [x, y] == [x, y] ==> do
+            getDuplicates (x:y:xs ++ [x, y]) `shouldBe` (sort [x, y] :: [Int])
+    
+    it "finds three duplicates" $ do
+        property $ \x y z (Uniques xs) -> nub [x, y, z] == [x, y, z] ==> do
+            getDuplicates (x:y:z:xs ++ [x, y, z]) `shouldBe` (sort [x, y, z] :: [Int])
+    
+    it "finds N duplicates" $ do
+        property $ \(Uniques ds) (Uniques xs) -> do
+            getDuplicates (ds ++ xs ++ ds) `shouldBe` (sort ds :: [Int])
+    
+    it "finds only duplicates" $ do
+        property $ \(Uniques xs) -> do
+            getDuplicates (xs ++ xs) `shouldBe` (sort xs :: [Int])
+    
+addIdentAndPosSpec :: Spec
+addIdentAndPosSpec = describe "addIdentAndPos" $ do
+    it "adds position without identifier" $ do
+        property $ \p s ->
+            addIdentAndPos p Nothing s `shouldBe` s ++ "\n at:" ++ show p
+
+    it "adds position with identifier" $ do
+        property $ \p i s ->
+            addIdentAndPos p (Just i) s `shouldBe` s ++ "\n at " ++ show i ++ ": " ++ show p
 
 invalidArityMsgSpec :: Spec
 invalidArityMsgSpec = describe "invalidArityMsg" $ do
@@ -90,6 +223,26 @@ f3Spec = describe "f3" $ do
             f3 [v1,v2] undef3 `shouldBe` Left (invalidArityMsg 3 [v1,v2])
             f3 xs undef3 `shouldBe` Left (invalidArityMsg 3 xs)
 
+toFuncCustomSpec :: Spec
+toFuncCustomSpec = describe "toFuncCustom" $ do
+    it "rejects built-in function" $ do
+        property $ \impArgs args ident ->
+            toFuncCustom (Func undefined impArgs args $ BodyBuiltIn ident) `shouldBe` Left ident
+
+    it "converts custom function" $ do
+        property $ \impArgs args es ->
+            toFuncCustom (Func undefined impArgs args $ BodyCustom es) `shouldBe` Right (FuncCustom impArgs args es)
+
+fromFuncCustomSpec :: Spec
+fromFuncCustomSpec = describe "fromFuncCustom" $ do
+    it "converts to function (smallest)" $ do
+        fromFuncCustom M.empty (FuncCustom None (ArgsArity []) []) `shouldBe` Func M.empty None (ArgsArity []) (BodyCustom [])
+
+    it "converts to function (prop)" $ do
+        property $ \(ArbDict implCtx) impArgs args (Few es) -> do
+            fromFuncCustom implCtx (FuncCustom impArgs args es) `shouldBe` Func implCtx impArgs args (BodyCustom es)
+
+-- Utils
 undefinedOrResult0 :: Either String Int -> () -> Either String Int
 undefinedOrResult0 r _ = r
 

@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 module Utils where
 
 import qualified Data.Map as M
@@ -15,11 +16,12 @@ symb :: Ident -> Symb
 symb = Symb Z
 
 argPassToSymb :: ArgPass -> Symb
-argPassToSymb Eval = symbEval
-argPassToSymb Quote = symbQuote
-argPassToSymb Unquote = symbUnquote
-argPassToSymb DeepQuote = symbDeepQuote
-argPassToSymb DeepUnquote = symbDeepUnquote
+argPassToSymb = \case
+    Eval -> symbEval
+    Quote -> symbQuote
+    Unquote -> symbUnquote
+    DeepQuote -> symbDeepQuote
+    DeepUnquote -> symbDeepUnquote
 
 symbToArgPass :: Symb -> Maybe ArgPass
 symbToArgPass = flip M.lookup m where
@@ -90,8 +92,8 @@ toFuncCustom func =
         BodyCustom es -> return $ FuncCustom (impArgs func) (args func) es
 
 fromFuncCustom :: Dict -> FuncCustom -> Func
-fromFuncCustom ctx (FuncCustom impArgs args body) =
-    Func ctx impArgs args $ BodyCustom body
+fromFuncCustom implCtx (FuncCustom impArgs args es) =
+    Func implCtx impArgs args $ BodyCustom es
 
 -----------------
 -- Identifiers
