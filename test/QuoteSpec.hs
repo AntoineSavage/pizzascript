@@ -95,10 +95,10 @@ unquoteSpec = describe "unquote" $ do
         property $ \p (Few es) -> do
             let dictionary = AstList KindDict es
             unquote (WithPos p dictionary) `shouldBe`
-                Left ("Unquote: unexpected dictionary: " ++ unparseList KindDict unparseExpr es)
+                Left ("Unquote: unexpected dictionary: " ++ unparseList KindDict unparse es)
 
     it "rejects forms" $ do
         property $ \p (Few es) -> do
             let form = AstList KindForm es
             unquote (WithPos p form) `shouldBe`
-                Left ("Unquote: unexpected form: " ++ unparseList KindForm unparseExpr es)
+                Left ("Unquote: unexpected form: " ++ unparseList KindForm unparse es)

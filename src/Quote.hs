@@ -1,4 +1,4 @@
-module Quote (quote, unquote) where
+module Quote (quote, unquote, unparse) where
 
 import Ast ( unparseExpr, unparseIdent, unparseList )
 import Data.Nat ( Nat(..) )
@@ -51,5 +51,10 @@ unquote e@(WithPos p v) =
         AstList k es ->
             case k of
                 KindList -> withPos . AstList KindForm <$> mapM unquote es
-                KindDict -> Left $ "Unquote: unexpected dictionary: " ++ unparseList KindDict unparseExpr es
-                KindForm -> Left $ "Unquote: unexpected form: " ++ unparseList KindForm unparseExpr es
+                KindDict -> Left $ "Unquote: unexpected dictionary: " ++ unparseList KindDict unparse es
+                KindForm -> Left $ "Unquote: unexpected form: " ++ unparseList KindForm unparse es
+
+-- TODO Replace with pretty
+unparse :: Maybe (WithPos AstExpr) -> String
+unparse Nothing = ""
+unparse (Just e) = unparseExpr unparse e
