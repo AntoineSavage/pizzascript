@@ -32,6 +32,7 @@ invalidFirsts = digits ++ symbols ++ escapees
 validNexts = underscore : digits ++ lettersUpper ++ lettersLower ++ accentChars
 
 kinds = [ KindList, KindDict, KindForm ]
+argPasses = [ Eval, Quote, Unquote, DeepQuote, DeepUnquote ]
 
 -- Functions
 parseElem :: Parser Elem
@@ -93,7 +94,7 @@ instance Arbitrary FuncImpureArgs where
         , liftM3 Both arbitrary arbitrary arbIdentUnqual
         ]
 
-instance Arbitrary ArgPass where arbitrary = elements [ Eval, Quote, Unquote, DeepQuote, DeepUnquote ]
+instance Arbitrary ArgPass where arbitrary = elements argPasses
 instance ArbWithDepth ArgPass where arbWithDepth _ = arbitrary
 
 instance Arbitrary FuncArgs where arbitrary = oneof [ArgsVaria <$> arbIdentUnqual, liftM2 ArgsArity arbitrary $ arbFew arbIdentUnqual]

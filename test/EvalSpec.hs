@@ -7,7 +7,9 @@ import qualified Data.Map as M
 
 import Control.Monad
 import Data.Either
+import Data.Nat
 import Eval
+import Quote
 import Text.Parsec.Pos  
 import TestUtils
 import Types
@@ -15,6 +17,8 @@ import Utils
 
 spec :: Spec
 spec = do
+    -- TODO evalExpr vs unevalExpr
+    evalExprSpec
     unevalExprSpec
     evalFuncCustomVsUnevalFuncCustomSpec
     evalFuncCustomSpec
@@ -28,6 +32,115 @@ spec = do
     evalIdentSpec
     validateNoDuplicateIdentsSpec
 
+evalExprSpec :: Spec
+evalExprSpec = describe "evalExpr" $ do
+    it "evals numbers to themselves" $ do
+        property $ \(ArbDict ctx) p d (Few fs) -> do
+            forM_ argPasses $ \eval -> do
+                evalExpr ctx (WithPos p $ AstNum d) eval fs `shouldBe`
+                    Right (Acc (Just $ WithPos p $ PzNum d) fs)
+
+    it "evals strings to themselves" $ do
+        property $ \(ArbDict ctx) p s (Few fs) -> do
+            forM_ argPasses $ \eval -> do
+                evalExpr ctx (WithPos p $ AstStr s) eval fs `shouldBe`
+                    Right (Acc (Just $ WithPos p $ PzStr s) fs)
+
+    it "evals symbols (Eval) to themselves" $ do
+        property $ \(ArbDict ctx) p s (Few fs) -> do
+            evalExpr ctx (WithPos p $ AstSymb s) Eval fs `shouldBe`
+                Right (Acc (Just $ WithPos p $ PzSymb s) fs)
+
+    it "evals symbols (Quote or DeepQuote) as themselves with one more quote" $ do
+        property $ \(ArbDict ctx) p n i (Few fs) -> do
+            forM_ [Quote, DeepQuote] $ \eval -> do
+                evalExpr ctx (WithPos p $ AstSymb $ Symb n i) eval fs `shouldBe`
+                    Right (Acc (Just $ WithPos p $ PzSymb $ Symb (S n) i) fs)
+
+    it "evals symbols (Unquote or DeepUnquote) as themselves with one less quote" $ do
+        property $ \(ArbDict ctx) p n i (Few fs) -> do
+            forM_ [Unquote, DeepUnquote] $ \eval -> do
+                evalExpr ctx (WithPos p $ AstSymb $ Symb (S n) i) eval fs `shouldBe`
+                    Right (Acc (Just $ WithPos p $ PzSymb $ Symb n i) fs)
+
+    it "evals single-quoted symbols (Unquote or DeepUnquote) as the matching identifier, evaluated" $ do
+        property $ \(ArbDict c) p s v (Few fs) -> do
+            let sym = symb $ ident s
+                k = withPos $ PzSymb sym
+                ctx = M.insert k v c
+
+            forM_ [Unquote, DeepUnquote] $ \eval -> do
+                evalExpr ctx (WithPos p $ AstSymb sym) eval fs `shouldBe`
+                    Right (Acc (Just v) fs)
+
+    it "evals identifiers (Eval) as the associated value" $ do
+        property $ \(ArbDict c) p s v (Few fs) -> do
+            let i = ident s
+                k = withPos $ PzSymb $ symb i
+                ctx = M.insert k v c
+
+            evalExpr ctx (WithPos p $ AstIdent i) Eval fs `shouldBe`
+                Right (Acc (Just v) fs)
+
+    it "evals identifiers (Quote) as the corresponding symbol" $ do
+        property $ \(ArbDict ctx) p s (Few fs) -> do
+            let i = ident s
+                sym = symb i
+            evalExpr ctx (WithPos p $ AstIdent i) Quote fs `shouldBe`
+                Right (Acc (Just $ WithPos p $ PzSymb sym) fs)
+
+    it "rejects identifiers (Unquote)" $ do
+        property $ \(ArbDict ctx) p s (Few fs) -> do
+            let i = ident s
+            isLeft (evalExpr ctx (WithPos p $ AstIdent i) Unquote fs) `shouldBe` True
+
+    it "evals identifiers (DeepQuote) as the associated value, quoted" $ do
+        property $ \(ArbDict c) p p2 d s n i' (Few fs) -> do
+            let pairs =
+                    [ (PzNum d, PzNum d)
+                    , (PzStr s, PzStr s)
+                    , (PzSymb $ Symb n i', PzSymb $ Symb (S n) i')
+                    ]
+            forM_ pairs $ \(v, v') -> do
+                let i = ident s
+                    k = withPos $ PzSymb $ symb i
+                    ctx = M.insert k (WithPos p2 v) c
+
+                evalExpr ctx (WithPos p $ AstIdent i) DeepQuote fs `shouldBe`
+                    Right (Acc (Just $ WithPos p2 v') fs)
+
+    it "evals identifiers (DeepUnquote) as the associated value, unquoted" $ do
+        property $ \(ArbDict c) p p2 d s n i' (Few fs) -> do
+            let pairs =
+                    [ (PzNum d, PzNum d)
+                    , (PzStr s, PzStr s)
+                    , (PzSymb $ Symb (S n) i', PzSymb $ Symb n i')
+                    ]
+            forM_ pairs $ \(v', v) -> do
+                let i = ident s
+                    k = withPos $ PzSymb $ symb i
+                    ctx = M.insert k (WithPos p2 v') c
+
+                evalExpr ctx (WithPos p $ AstIdent i) DeepUnquote fs `shouldBe`
+                    Right (Acc (Just $ WithPos p2 v) fs)
+
+    it "evals lists (Eval) as the associated form" $ do
+        property $ \(ArbDict ctx) p k (Few es) (Few fs) -> do
+            evalExpr ctx (WithPos p $ AstList k es) Eval fs `shouldBe`
+                Right (Acc Nothing $ Form ctx p Nothing (toForm p k es) : fs)
+
+    it "evals lists (Quote and DeepQuote) as themselves, quoted" $ do
+        property $ \(ArbDict ctx) p k (Few es) (Few fs) -> do
+            forM_ [Quote, DeepQuote] $ \eval -> do
+                evalExpr ctx (WithPos p $ AstList k es) eval fs `shouldBe`
+                    evalExpr ctx (quote $ WithPos p $ AstList k es) Eval fs
+
+    it "evals lists (Unquote and DeepUnquote) as themselves, unquoted" $ do
+        property $ \(ArbDict ctx) p k (UnquoteValids es) (Few fs) -> do
+            forM_ [Unquote, DeepUnquote] $ \eval -> do
+                evalExpr ctx (WithPos p $ AstList k es) eval fs `shouldBe`
+                    (unquote (WithPos p $ AstList k es) >>= \e' -> evalExpr ctx e' Eval fs)
+
 unevalExprSpec :: Spec
 unevalExprSpec = describe "unevalExpr" $ do
     it "unevals unit to empty form" $ do
@@ -35,8 +148,8 @@ unevalExprSpec = describe "unevalExpr" $ do
             unevalExpr (WithPos p PzUnit) `shouldBe` WithPos p (AstList KindForm [])
 
     it "unevals number to itself" $ do
-        property $ \p n -> do
-            unevalExpr (WithPos p $ PzNum n) `shouldBe` WithPos p (AstNum n)
+        property $ \p d -> do
+            unevalExpr (WithPos p $ PzNum d) `shouldBe` WithPos p (AstNum d)
 
     it "unevals string to itself" $ do
         property $ \p s -> do
@@ -242,9 +355,9 @@ evalIdentSpec = describe "evalIdent" $ do
             evalIdent ctx p (Ident []) `shouldBe` Right (WithPos p $ PzDict ctx)
 
     it "evaluates one ident part" $ do
-        property $ \(ArbDict c) p s v -> do
+        property $ \(ArbDict c) s v -> do
             let ident = Ident [s]
-                k = WithPos p $ PzSymb $ symb ident
+                k = withPos $ PzSymb $ symb ident
                 ctx = flip (M.insert k) c v
             evalIdent ctx p' ident `shouldBe` Right v
 
@@ -267,9 +380,9 @@ evalIdentSpec = describe "evalIdent" $ do
             evalIdent ctx1 p' (Ident [s1, s2, s3]) `shouldBe` Right v
 
     it "evaluates one undefined ident part" $ do
-        property $ \(ArbDict c) p s -> do
+        property $ \(ArbDict c) s -> do
             let ident = Ident [s]
-                k = WithPos p $ PzSymb $ symb ident
+                k = withPos $ PzSymb $ symb ident
             isLeft (evalIdent (M.delete k c) p' ident) `shouldBe` True
 
     it "evaluates two undefined ident parts" $ do
@@ -295,9 +408,9 @@ evalIdentSpec = describe "evalIdent" $ do
             isLeft (evalIdent (M.delete k1 c1) p' ident) `shouldBe` True
 
     it "non-dictionary context" $ do
-        property $ \(ArbDict c) p s1 s2 -> do
+        property $ \(ArbDict c) s1 s2 -> do
             forM_ [PzUnit, PzNum 0, PzStr "", PzList []] $ \v -> do
-                let k = WithPos p $ PzSymb $ symb $ Ident [s1]
+                let k = withPos $ PzSymb $ symb $ Ident [s1]
                     ctx = flip (M.insert k) c $ withPos v
                 isLeft (evalIdent ctx p' (Ident [s1, s2])) `shouldBe` True
 
