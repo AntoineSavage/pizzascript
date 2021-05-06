@@ -17,7 +17,7 @@ import Utils
 
 spec :: Spec
 spec = do
-    -- TODO evalExpr vs unevalExpr
+    evalExprVsUnevalExprSpec
     evalExprSpec
     unevalExprSpec
     evalFuncCustomVsUnevalFuncCustomSpec
@@ -31,6 +31,30 @@ spec = do
     unevalArgsSpec
     evalIdentSpec
     validateNoDuplicateIdentsSpec
+
+evalExprVsUnevalExprSpec :: Spec
+evalExprVsUnevalExprSpec = describe "evalExpr vs unevalExpr (partial)" $ do
+    it "composes evalExpr and unevalExpr into id (numbers)" $ do
+        property $ \(ArbDict ctx) p d -> do
+            forM_ argPasses $ \eval -> do
+                let v = WithPos p $ PzNum d
+                evalExpr ctx (unevalExpr v) eval `shouldBe` Right (Evaled v)
+
+    it "composes evalExpr and unevalExpr into id (strings)" $ do
+        property $ \(ArbDict ctx) p s -> do
+            forM_ argPasses $ \eval -> do
+                let v = WithPos p $ PzStr s
+                evalExpr ctx (unevalExpr v) eval `shouldBe` Right (Evaled v)
+
+    it "composes evalExpr and unevalExpr into id (symbols, Eval)" $ do
+        property $ \(ArbDict ctx) p s -> do
+            let v = WithPos p $ PzSymb s
+            evalExpr ctx (unevalExpr v) Eval `shouldBe` Right (Evaled v)
+
+    -- TODO: Unit
+    -- TODO identifiers
+    -- TODO symbols (except Eval)
+    -- TODO lists
 
 evalExprSpec :: Spec
 evalExprSpec = describe "evalExpr" $ do
