@@ -15,6 +15,10 @@ import Utils
 
 spec :: Spec
 spec = do
+    unevalExprSpec
+    evalFuncCustomVsUnevalFuncCustomSpec
+    evalFuncCustomSpec
+    unevalFuncCustomSpec
     evalImpureArgsVsUnevalImpureArgsSpec
     evalImpureArgsSpec
     unevalImpureArgsSpec
@@ -23,6 +27,65 @@ spec = do
     unevalArgsSpec
     evalIdentSpec
     validateNoDuplicateIdentsSpec
+
+unevalExprSpec :: Spec
+unevalExprSpec = describe "unevalExpr" $ do
+    it "unevals unit to empty form" $ do
+        property $ \p -> do
+            unevalExpr (WithPos p PzUnit) `shouldBe` WithPos p (AstList KindForm [])
+
+    it "unevals number to itself" $ do
+        property $ \p n -> do
+            unevalExpr (WithPos p $ PzNum n) `shouldBe` WithPos p (AstNum n)
+
+    it "unevals string to itself" $ do
+        property $ \p s -> do
+            unevalExpr (WithPos p $ PzStr s) `shouldBe` WithPos p (AstStr s)
+
+    it "unevals symbol to itself" $ do
+        property $ \p s -> do
+            unevalExpr (WithPos p $ PzSymb s) `shouldBe` WithPos p (AstSymb s)
+
+    it "unevals list to itself" $ do
+        property $ \p (Few l) -> do
+            unevalExpr (WithPos p $ PzList l) `shouldBe` WithPos p (AstList KindList $ map unevalExpr l)
+
+    it "unevals dict to itself" $ do
+        property $ \p (ArbDict d) -> do
+            unevalExpr (WithPos p $ PzDict d) `shouldBe`
+                WithPos p (AstList KindDict $ flip map (M.assocs d) $ \(k, v) -> withPos $ AstList KindForm [unevalExpr k, unevalExpr v])
+
+    it "unevals built-in function to identifier" $ do
+        property $ \p (ArbDict implCtx) impArgs args ident -> do
+            unevalExpr (WithPos p $ PzFunc $ Func implCtx impArgs args $ BodyBuiltIn ident) `shouldBe` WithPos p (AstIdent ident)
+
+    it "unevals custom function to list" $ do
+        property $ \p (ArbDict implCtx) f@(FuncCustom impArgs args body) -> do
+            unevalExpr (WithPos p $ PzFunc $ Func implCtx impArgs args $ BodyCustom body) `shouldBe` WithPos p (AstList KindForm $ unevalFuncCustom f)
+
+evalFuncCustomVsUnevalFuncCustomSpec :: Spec
+evalFuncCustomVsUnevalFuncCustomSpec = describe "evalFuncCustom vs unevalFuncCustom" $ do
+    it "composes evalFuncCustom and unevalFuncCustom into id" $ do
+        property $ \func -> do
+            let elems = unevalFuncCustom func
+            evalFuncCustom elems `shouldBe` Right func
+            unevalFuncCustom <$> evalFuncCustom elems `shouldBe` Right elems
+
+evalFuncCustomSpec :: Spec
+evalFuncCustomSpec = describe "evalFuncCustom" $ do
+    it "evals custom function" $ do
+        property $ \func@(FuncCustom impArgs args body) -> do
+            let elems = unevalImpureArgs impArgs ++ unevalArgs args ++ body
+            evalFuncCustom elems `shouldBe` Right func
+
+    it "rejects empty elems" $ do
+        isLeft (evalFuncCustom []) `shouldBe` True
+
+unevalFuncCustomSpec :: Spec
+unevalFuncCustomSpec = describe "unevalFuncCustom" $ do
+    it "unevals custom function" $ do
+        property $ \func@(FuncCustom impArgs args body) -> do
+            unevalFuncCustom func `shouldBe` unevalImpureArgs impArgs ++ unevalArgs args ++ body
 
 evalImpureArgsVsUnevalImpureArgsSpec :: Spec
 evalImpureArgsVsUnevalImpureArgsSpec = describe "evalImpureArgs vs unevalImpureArgs" $ do

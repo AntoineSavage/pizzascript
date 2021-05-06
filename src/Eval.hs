@@ -52,15 +52,15 @@ unevalExpr val = flip fmap val $ \case
         \(k, v) -> withPos $ AstList KindForm [unevalExpr k, unevalExpr v]
     PzFunc f ->
         case toFuncCustom f of
-            Left ident -> AstSymb $ symb ident
+            Left ident -> AstIdent ident
             Right fc -> AstList KindForm $ unevalFuncCustom fc
 
 evalFuncCustom :: [WithPos AstExpr] -> Either String FuncCustom
 evalFuncCustom es0 = do
     (impArgs, es1) <- evalImpureArgs es0
-    (args, es2) <- evalArgs es1
+    (args, body) <- evalArgs es1
     validateNoDuplicateIdents impArgs args
-    return $ FuncCustom impArgs args es2
+    return $ FuncCustom impArgs args body
 
 unevalFuncCustom :: FuncCustom -> [WithPos AstExpr]
 unevalFuncCustom (FuncCustom impArgs args body) = unevalImpureArgs impArgs ++ unevalArgs args ++ body

@@ -34,6 +34,7 @@ spec = do
     f3Spec
     fpureSpec
     setCtxSpec
+    toFuncCustomVsFromFuncCustomSpec
     toFuncCustomSpec
     fromFuncCustomSpec
 
@@ -275,6 +276,14 @@ setCtxSpec = describe "setCtx" $ do
     it "sets context on invoc frame (with no args left to eval)" $ do
         property $ \(ArbDict ctx) p mfi f (Few as) (Few fs) -> do
             setCtx ctx (Invoc undefined p mfi f as Nothing:fs) `shouldBe` (Invoc ctx p mfi f as Nothing:fs)
+
+toFuncCustomVsFromFuncCustomSpec :: Spec
+toFuncCustomVsFromFuncCustomSpec = describe "toFuncCustom vs fromFuncCustom" $ do
+    it "composes toFuncCustom and fromFuncCustom into id" $ do
+        property $ \(ArbDict ctx) funcCustom -> do
+            let func = fromFuncCustom ctx funcCustom
+            toFuncCustom func `shouldBe` Right funcCustom
+            fromFuncCustom ctx <$> toFuncCustom func `shouldBe` Right func
 
 toFuncCustomSpec :: Spec
 toFuncCustomSpec = describe "toFuncCustom" $ do
