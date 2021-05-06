@@ -6,6 +6,7 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Control.Monad
+import Data.Either
 import Data.List
 import Data.Nat
 import TestUtils
@@ -22,6 +23,7 @@ spec = do
     toFormSpec
     splitSymbSpec
     getIdentSpec
+    getIdentUnqualSpec
     getArgPassSpec
     getDuplicatesSpec
     addIdentAndPosSpec
@@ -122,6 +124,20 @@ getIdentSpec = describe "getIdent" $ do
     it "rejects list" $ do
         property $ \p k l ->
             getIdent (WithPos p $ AstList k l) `shouldBe` Nothing
+
+getIdentUnqualSpec :: Spec
+getIdentUnqualSpec = describe "getIdentUnqual" $ do
+    it "returns unqualified ident" $ do
+        property $ \p s -> do
+            getIdentUnqual (WithPos p $ AstIdent $ ident s) `shouldBe` Right (WithPos p $ ident s)
+
+    it "rejects empty ident" $ do
+        property $ \p -> do
+            isLeft (getIdentUnqual (WithPos p $ AstIdent $ Ident [])) `shouldBe` True
+
+    it "rejects qualified ident" $ do
+        property $ \p s1 s2 ss -> do
+            isLeft (getIdentUnqual (WithPos p $ AstIdent $ Ident $ s1:s2:ss)) `shouldBe` True
 
 getArgPassSpec :: Spec
 getArgPassSpec = describe "getArgPass" $ do
@@ -273,7 +289,8 @@ toFuncCustomSpec = describe "toFuncCustom" $ do
 fromFuncCustomSpec :: Spec
 fromFuncCustomSpec = describe "fromFuncCustom" $ do
     it "converts to function (smallest)" $ do
-        fromFuncCustom M.empty (FuncCustom None (ArgsArity []) []) `shouldBe` Func M.empty None (ArgsArity []) (BodyCustom [])
+        property $ \p -> do
+            fromFuncCustom M.empty (FuncCustom None (ArgsArity p []) []) `shouldBe` Func M.empty None (ArgsArity p []) (BodyCustom [])
 
     it "converts to function (prop)" $ do
         property $ \(ArbDict implCtx) impArgs args (Few es) -> do

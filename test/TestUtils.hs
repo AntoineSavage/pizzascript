@@ -90,7 +90,7 @@ instance Arbitrary FuncImpureArgs where
     arbitrary = oneof
         [ return None
         , liftM2 ArgPass arbitrary arbitrary
-        , liftM3 Both arbitrary arbitrary arbitrary
+        , liftM3 Both arbitrary arbitrary arbIdentUnqual
         ]
 
 instance Arbitrary ArgPass where arbitrary = elements [ Eval, Quote, Unquote, DeepQuote, DeepUnquote ]

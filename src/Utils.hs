@@ -49,6 +49,11 @@ getIdent (WithPos p v) = case v of
     AstIdent ident -> return $ WithPos p ident
     _ -> Nothing
 
+getIdentUnqual :: WithPos AstExpr -> Either String (WithPos Ident)
+getIdentUnqual (WithPos p v) = case v of
+    AstIdent ident@(Ident [_]) -> return $ WithPos p ident
+    _ -> Left $ "Error: Must be an unqualified identifier: " ++ show v ++ "\n at: " ++ show p
+
 getArgPass :: Func -> ArgPass
 getArgPass func = case impArgs func of
     None -> Eval 

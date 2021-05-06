@@ -8,18 +8,114 @@ import qualified Data.Map as M
 import Control.Monad
 import Data.Either
 import Eval
-import Text.Parsec.Pos
+import Text.Parsec.Pos  
 import TestUtils
 import Types
 import Utils
 
 spec :: Spec
 spec = do
+    evalImpureArgsVsUnevalImpureArgsSpec
+    evalImpureArgsSpec
+    unevalImpureArgsSpec
     evalArgsVsUnevalArgsSpec
     evalArgsSpec
     unevalArgsSpec
     evalIdentSpec
     validateNoDuplicateIdentsSpec
+
+evalImpureArgsVsUnevalImpureArgsSpec :: Spec
+evalImpureArgsVsUnevalImpureArgsSpec = describe "evalImpureArgs vs unevalImpureArgs" $ do
+    it "composes evalImpureArgs and unevalImpureArgs into id" $ do
+        property $ \impArgs (Few es) -> do
+            let elems = unevalImpureArgs impArgs
+            evalImpureArgs (elems ++ es) `shouldBe` Right (impArgs, es)
+            unevalImpureArgs <$> fst <$> evalImpureArgs (elems ++ es) `shouldBe` Right elems
+
+evalImpureArgsSpec :: Spec
+evalImpureArgsSpec = describe "evalImpureArgs" $ do
+    it "evals mismatch to None" $ do
+        forM_ [ []
+                , [AstNum 0]
+                , [AstStr ""]
+                , [AstIdent $ ident ""]
+                , [AstSymb $ symb $ ident ""]
+                , [AstList KindList [withPos $ AstSymb $ symb $ ident ""]]
+                , [AstList KindDict [withPos $ AstSymb $ symb $ ident ""]]
+                , [AstList KindForm []]
+            ] $ \es -> do
+            let elems = map withPos es
+            evalImpureArgs elems `shouldBe` Right (None, elems)
+
+    it "evals singleton form to ArgPass" $ do
+        property $ \p p2 ap (Few es) -> do
+            let elems = (WithPos p $ AstList KindForm [
+                        WithPos p2 $ AstSymb $ argPassToSymb ap
+                    ]) : es
+            evalImpureArgs elems `shouldBe` Right (ArgPass p $ WithPos p2 ap, es)
+
+    it "evals size-2 form to Both" $ do
+        property $ \p p2 p3 ap s (Few es) -> do
+            let ec = Ident [s]
+                elems = (WithPos p $ AstList KindForm [
+                        WithPos p2 $ AstSymb $ argPassToSymb ap,
+                        WithPos p3 $ AstIdent ec
+                    ]) : es
+            evalImpureArgs elems `shouldBe` Right (Both p (WithPos p2 ap) (WithPos p3 ec), es)
+
+    it "rejects invalid arg-pass symbol" $ do
+        property $ \s (Few es) -> do
+            let elems = (withPos $ AstList KindForm [
+                        withPos $ AstSymb $ symb $ ident $ '_' : s
+                    ]) : es
+            isLeft (evalImpureArgs elems) `shouldBe` True
+
+    it "rejects empty identifier" $ do
+        property $ \ap (Few es) -> do
+            let ec = Ident []
+                elems = (withPos $ AstList KindForm [
+                        withPos $ AstSymb $ argPassToSymb ap,
+                        withPos $ AstIdent ec
+                    ]) : es
+            isLeft (evalImpureArgs elems) `shouldBe` True
+
+    it "rejects qualified identifier" $ do
+        property $ \ap s1 s2 ss (Few es) -> do
+            let ec = Ident $ s1:s2:ss
+                elems = (withPos $ AstList KindForm [
+                        withPos $ AstSymb $ argPassToSymb ap,
+                        withPos $ AstIdent ec
+                    ]) : es
+            isLeft (evalImpureArgs elems) `shouldBe` True
+
+    it "rejects size-3 (or more) form" $ do
+        property $ \ap s a (Few as) (Few es) -> do
+            let ec = Ident [s]
+                elems = (withPos $ AstList KindForm $ [
+                        withPos $ AstSymb $ argPassToSymb ap,
+                        withPos $ AstIdent ec
+                    ] ++ [a] ++ as) : es
+            isLeft (evalImpureArgs elems) `shouldBe` True
+
+unevalImpureArgsSpec :: Spec
+unevalImpureArgsSpec = describe "unevalImpureArgs" $ do
+    it "unevals None to empty list" $ do
+        unevalImpureArgs None `shouldBe` []
+
+    it "unevals ArgPass to singleton list" $ do
+        property $ \p p2 ap -> do
+            unevalImpureArgs (ArgPass p $ WithPos p2 ap) `shouldBe`
+                [WithPos p $ AstList KindForm [
+                    WithPos p2 $ AstSymb $ argPassToSymb ap
+                ]]
+
+    it "unevals Both to size-2 list" $ do
+        property $ \p p2 p3 ap ec -> do
+            unevalImpureArgs (Both p (WithPos p2 ap) $ WithPos p3 ec) `shouldBe`
+                [WithPos p $ AstList KindForm [
+                    WithPos p2 $ AstSymb $ argPassToSymb ap, 
+                    WithPos p3 $ AstIdent ec
+                ]]
 
 evalArgsVsUnevalArgsSpec :: Spec
 evalArgsVsUnevalArgsSpec = describe "evalArgs vs unevalArgs" $ do

@@ -68,23 +68,27 @@ unevalFuncCustom (FuncCustom impArgs args body) = unevalImpureArgs impArgs ++ un
 evalImpureArgs :: [WithPos AstExpr] -> Either String (FuncImpureArgs, [WithPos AstExpr])
 evalImpureArgs elems = case elems of
     -- form starting with argument-passing behaviour symbol, followed by...
-    WithPos p (AstList KindForm (WithPos p2 (AstSymb s@(Symb Z (Ident [_]))):xs)):es -> do
+    WithPos p (AstList KindForm (WithPos p2 (AstSymb s@(Symb Z (Ident [_]))):as)):es -> do
         argPass <- case symbToArgPass s of
             Just r -> return $ WithPos p2 r
             Nothing -> Left $
                 "Error: Invalid argument-passing behaviour symbol: " ++ show s
                 ++ "\n at: " ++ show p2
 
-        case xs of
-            -- nothing
+        case as of
+            -- nothing else
             [] -> return (ArgPass p argPass, es)
 
             -- unqualified identifier
-            [ WithPos p3 (AstIdent ec@(Ident [_]))
-                ] -> return (Both p argPass $ WithPos p3 ec,es)
+            [ e ] -> (, es) . Both p argPass <$> getIdentUnqual e
+
+            _ -> Left $
+                "Error: Impure function argument definition must be either:"
+                    ++ "\n - a valid argument-passsing behaviour symbol only"
+                    ++ "\n - a valid argument-passsing behaviour symbol, followed by an unqualified identifier"
+                    ++ "\n was: " ++ show (map val elems)
 
     -- no match: assume no impure args
-            _ -> return (None, elems)
     _ -> return (None, elems)
 
 unevalImpureArgs :: FuncImpureArgs -> [WithPos AstExpr]
@@ -94,24 +98,17 @@ unevalImpureArgs impArgs =
     in case impArgs of
         None -> []
         ArgPass p ap -> [ toForm p [toExpr ap] ]
-        Both p ap ec -> [ toForm p [toExpr ap, fmap (AstSymb .symb) ec] ]
+        Both p ap ec -> [ toForm p [toExpr ap, fmap AstIdent ec] ]
 
 evalArgs :: [WithPos AstExpr] -> Either String (FuncArgs, [WithPos AstExpr])
-evalArgs elems =
-    let toIdent e = case val <$> getIdent e of
-            Just ident@(Ident [i]) -> return $ WithPos (pos e) ident
-            _ -> Left $
-                "Error: Function arity argument must be an unqualified identifier: " ++ show (val e)
-                ++ "\n at: " ++ show (pos e)
-
-    in case elems of
-        ie@(WithPos _ (AstIdent (Ident [i]))):es -> (,es) . ArgsVaria <$> toIdent ie
-        WithPos p (AstList KindForm ies):es -> (,es) . ArgsArity p <$> mapM toIdent ies
-        _ -> Left $
-            "Error: Function argument definition must be either:"
-            ++ "\n - a single varargs unqualified identifier"
-            ++ "\n - an form of arity unqualified identifiers"
-            ++ "\n was: " ++ show (map val elems)
+evalArgs elems = case elems of
+    ie@(WithPos _ (AstIdent (Ident [_]))):es -> (,es) . ArgsVaria <$> getIdentUnqual ie
+    WithPos p (AstList KindForm ies):es -> (,es) . ArgsArity p <$> mapM getIdentUnqual ies
+    _ -> Left $
+        "Error: Function argument definition must be either:"
+        ++ "\n - a single varargs unqualified identifier"
+        ++ "\n - an form of arity unqualified identifiers"
+        ++ "\n was: " ++ show (map val elems)
 
 unevalArgs :: FuncArgs -> [WithPos AstExpr]
 unevalArgs args =
