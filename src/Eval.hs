@@ -12,34 +12,35 @@ import Data.Nat ( Nat(..) )
 import Types
 import Utils
 
-type EvalResult = Either String Acc
+data ExprEvalResult
+    = Evaled (WithPos PzVal)
+    | ExprForm Pos [WithPos AstExpr]
+    deriving (Show, Eq)
 
-evalExpr :: Dict -> WithPos AstExpr -> ArgPass -> [StackFrame] -> EvalResult
-evalExpr ctx e@(WithPos p v) eval frames = 
-    let setResult result = return $ Acc (Just result) frames
-        setResult' = setResult . WithPos p
-    in
+evalExpr :: Dict -> WithPos AstExpr -> ArgPass -> Either String ExprEvalResult
+evalExpr ctx e@(WithPos p v) eval = 
+    let evaled = return . Evaled . WithPos p in
     case (v, eval) of
         -- numbers and strings
-        (AstNum n, _) -> setResult' $ PzNum n
-        (AstStr s, _) -> setResult' $ PzStr s
+        (AstNum n, _) -> evaled $ PzNum n
+        (AstStr s, _) -> evaled $ PzStr s
 
         -- symbols
-        (AstSymb symb, Eval) -> setResult' $ PzSymb symb
+        (AstSymb symb, Eval) -> evaled $ PzSymb symb
 
         -- identifiers
-        (AstIdent ident, Eval) -> evalIdent ctx p ident >>= setResult
-        (AstIdent ident, DeepQuote) -> evalIdent ctx p ident >>= \r -> evalExpr ctx (unevalExpr r) Quote frames
-        (AstIdent ident, DeepUnquote) -> evalIdent ctx p ident >>= \r -> evalExpr ctx (unevalExpr r) Unquote frames
+        (AstIdent ident, Eval) -> Evaled <$> evalIdent ctx ident
+        (AstIdent ident, DeepQuote) -> evalIdent ctx ident >>= \r -> evalExpr ctx (unevalExpr r) Quote
+        (AstIdent ident, DeepUnquote) -> evalIdent ctx ident >>= \r -> evalExpr ctx (unevalExpr r) Unquote
 
         -- lists
-        (AstList k elems, Eval) -> return $ Acc Nothing $ Form ctx p Nothing (toForm p k elems) : frames
+        (AstList k elems, Eval) -> return $ ExprForm p $ toForm p k elems
 
         -- quote and unquote
-        (_, Quote) -> evalExpr ctx (quote e) Eval frames
-        (_, Unquote) -> unquote e >>= \e' -> evalExpr ctx e' Eval frames
-        (_, DeepQuote) -> evalExpr ctx e Quote frames
-        (_, DeepUnquote) -> evalExpr ctx e Unquote frames
+        (_, Quote) -> evalExpr ctx (quote e) Eval
+        (_, Unquote) -> unquote e >>= \e' -> evalExpr ctx e' Eval
+        (_, DeepQuote) -> evalExpr ctx e Quote
+        (_, DeepUnquote) -> evalExpr ctx e Unquote
 
 unevalExpr :: WithPos PzVal -> WithPos AstExpr
 unevalExpr val = flip fmap val $ \case
@@ -117,8 +118,8 @@ unevalArgs args =
         ArgsArity p is -> [WithPos p $ AstList KindForm $ map (fmap AstIdent) is]
 
 -- Utils
-evalIdent :: Dict -> Pos -> Ident -> Either String (WithPos PzVal)
-evalIdent ctx p ident = inner (withPos $ PzDict ctx) $ splitSymb $ symb ident where
+evalIdent :: Dict -> Ident -> Either String (WithPos PzVal)
+evalIdent ctx ident = inner (withPos $ PzDict ctx) $ splitSymb $ symb ident where
     inner val_or_ctx symbs =
         case symbs of
             [] -> return val_or_ctx

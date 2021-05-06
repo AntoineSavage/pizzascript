@@ -15,6 +15,8 @@ import Text.Parsec.String ( parseFromFile )
 import Types
 import Utils
 
+type EvalResult = Either String Acc
+
 main :: IO ()
 main = do
     let parser = parseMany ignore parse eof
@@ -39,6 +41,11 @@ go (Acc result (frame:frames)) = do
         Left s -> putStrLn s
         Right acc -> go acc
 
+toAcc :: Dict -> WithPos AstExpr -> [StackFrame] -> ExprEvalResult -> EvalResult
+toAcc ctx e frames r = case r of
+    Evaled v -> return $ Acc (Just v) frames
+    ExprForm p es -> return $ Acc Nothing $ Form ctx p (getIdent e) es : frames
+
 evalFrame :: Result -> StackFrame -> [StackFrame] -> EvalResult
 evalFrame result frame frames =
     case frame of
@@ -55,7 +62,7 @@ evalBlock result ctx es frames =
         
         e:es ->
             -- evaluate next block expression
-            evalExpr ctx e Eval $ Block ctx es : frames
+            evalExpr ctx e Eval >>= toAcc ctx e (Block ctx es : frames)
 
 evalForm :: Result -> Dict -> Pos -> Maybe (WithPos Ident) -> [WithPos AstExpr] -> [StackFrame] -> EvalResult
 evalForm result ctx p mfi elems frames =
@@ -69,7 +76,7 @@ evalForm result ctx p mfi elems frames =
         
                 e:es ->
                     -- evaluate first form element (should be func)
-                    evalExpr ctx e Eval $ Form ctx p (getIdent e) es : frames
+                    evalExpr ctx e Eval >>= toAcc ctx e (Form ctx p mfi es : frames)
         
         Just f ->
             -- process result (first form elem, should be func)
@@ -109,7 +116,7 @@ evalInvoc result ctx p mfi func as melems frames =
 
                 Just (e:es) ->
                     -- evaluate function argument according to argument-passing behaviour
-                    case evalExpr ctx e (getArgPass func) $ Invoc ctx p mfi func as (Just es) : frames of
+                    case evalExpr ctx e (getArgPass func) >>= toAcc ctx e (Invoc ctx p mfi func as (Just es) : frames) of
                         Left s -> Left $ addIdentAndPos p mfi s
                         Right acc -> return acc
 
