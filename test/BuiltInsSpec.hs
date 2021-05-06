@@ -34,9 +34,9 @@ constantsSpec = describe "constants" $ do
     it "declares boolean constants" $ do
         pzFalse `shouldBe` withPos (PzSymb symbFalse)
         pzTrue `shouldBe` withPos (PzSymb symbTrue)
-        pzNot `shouldBe` withPos (PzFunc $ Func M.empty None (ArgsArity [withPos identX]) (BodyBuiltIn identNot))
-        pzOr `shouldBe` withPos (PzFunc $ Func M.empty None (ArgsArity [withPos identX, withPos identY]) (BodyBuiltIn identOr))
-        pzAnd `shouldBe` withPos (PzFunc $ Func M.empty None (ArgsArity [withPos identX, withPos identY]) (BodyBuiltIn identAnd))
+        pzNot `shouldBe` withPos (PzFunc $ Func M.empty None (ArgsArity builtInPos [withPos identX]) (BodyBuiltIn identNot))
+        pzOr `shouldBe` withPos (PzFunc $ Func M.empty None (ArgsArity builtInPos [withPos identX, withPos identY]) (BodyBuiltIn identOr))
+        pzAnd `shouldBe` withPos (PzFunc $ Func M.empty None (ArgsArity builtInPos [withPos identX, withPos identY]) (BodyBuiltIn identAnd))
 
     it "declares function constants" $ do
         pzFunc `shouldBe` withPos (PzFunc func)

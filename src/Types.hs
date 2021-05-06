@@ -72,7 +72,7 @@ data ArgPass
 
 data FuncArgs
     = ArgsVaria (WithPos Ident)
-    | ArgsArity [WithPos Ident]
+    | ArgsArity Pos [WithPos Ident]
     deriving (Show, Eq, Ord)
 
 data FuncBody

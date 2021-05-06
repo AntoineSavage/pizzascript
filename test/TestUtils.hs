@@ -96,7 +96,7 @@ instance Arbitrary FuncImpureArgs where
 instance Arbitrary ArgPass where arbitrary = elements [ Eval, Quote, Unquote, DeepQuote, DeepUnquote ]
 instance ArbWithDepth ArgPass where arbWithDepth _ = arbitrary
 
-instance Arbitrary FuncArgs where arbitrary = oneof [ArgsVaria <$> arbitrary, ArgsArity <$> arbFew arbitrary]
+instance Arbitrary FuncArgs where arbitrary = oneof [ArgsVaria <$> arbIdentUnqual, liftM2 ArgsArity arbitrary $ arbFew arbIdentUnqual]
 instance Arbitrary FuncBody where arbitrary = arbDepth
 instance ArbWithDepth FuncBody where arbWithDepth depth = oneof [BodyBuiltIn <$> arbitrary, BodyCustom <$> arbFew (arbWithDepth depth)]
 
@@ -199,3 +199,6 @@ arbMany min max me = chooseInt (min, max) >>= flip vectorOf me
 
 arbUnquoteValid :: Gen (WithPos AstExpr)
 arbUnquoteValid = do UnquoteValid e <- arbitrary; return e
+
+arbIdentUnqual :: Gen (WithPos Ident)
+arbIdentUnqual = liftM2 WithPos arbitrary $ Ident . (:[]) <$> arbIdentPart

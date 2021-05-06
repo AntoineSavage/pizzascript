@@ -161,7 +161,7 @@ invokeFuncCustom explCtx p as implCtx impArgs args es frames =
         actLen = length as
         (expLen, argPairs) = case args of
             ArgsVaria i -> (actLen, [ (toExpr i, WithPos (pos i) $ PzList as) ])
-            ArgsArity is -> (length is, zip (map toExpr is) as)
+            ArgsArity _ is -> (length is, zip (map toExpr is) as)
 
         pairs = explCtxPairs ++ argPairs
         f acc (k, v) = M.insert k v acc

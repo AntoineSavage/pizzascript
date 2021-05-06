@@ -105,8 +105,8 @@ evalArgs elems =
                 ++ "\n at: " ++ show (pos e)
 
     in case elems of
-        WithPos p (AstIdent ident@(Ident [i])):es -> return (ArgsVaria (WithPos p ident), es)
-        WithPos p (AstList KindForm ies):es -> (,es) . ArgsArity <$> mapM toIdent ies
+        ie@(WithPos _ (AstIdent (Ident [i]))):es -> (,es) . ArgsVaria <$> toIdent ie
+        WithPos p (AstList KindForm ies):es -> (,es) . ArgsArity p <$> mapM toIdent ies
         _ -> Left $
             "Error: Function argument definition must be either:"
             ++ "\n - a single varargs unqualified identifier"
@@ -117,7 +117,7 @@ unevalArgs :: FuncArgs -> [WithPos AstExpr]
 unevalArgs args =
     case args of
         ArgsVaria ident -> [fmap AstIdent ident]
-        ArgsArity is -> map (fmap AstIdent) is
+        ArgsArity p is -> [WithPos p $ AstList KindForm $ map (fmap AstIdent) is]
 
 -- Utils
 evalIdent :: Dict -> Pos -> Ident -> Either String (WithPos PzVal)
@@ -149,7 +149,7 @@ validateNoDuplicateIdents impArgs args =
         
         argIdents = case args of
             ArgsVaria i -> [i]
-            ArgsArity is -> is
+            ArgsArity _ is -> is
     
         duplicates = getDuplicates $ explCtxIdents ++ argIdents
     in if null duplicates

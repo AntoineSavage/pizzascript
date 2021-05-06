@@ -15,8 +15,66 @@ import Utils
 
 spec :: Spec
 spec = do
+    evalArgsVsUnevalArgsSpec
+    evalArgsSpec
+    unevalArgsSpec
     evalIdentSpec
     validateNoDuplicateIdentsSpec
+
+evalArgsVsUnevalArgsSpec :: Spec
+evalArgsVsUnevalArgsSpec = describe "evalArgs vs unevalArgs" $ do
+    it "composes evalArgs and unevalArgs into id" $ do
+        property $ \args (Few es) -> do
+            let elems = unevalArgs args
+            evalArgs (elems ++ es) `shouldBe` Right (args, es)
+            unevalArgs <$> fst <$> evalArgs (elems ++ es) `shouldBe` Right elems
+
+evalArgsSpec :: Spec
+evalArgsSpec = describe "evalArgs" $ do
+    let toAstIdent p s = WithPos p $ AstIdent $ ident s
+        toIdent p s = WithPos p $ ident s
+
+    it "evals variadic args ident" $ do
+        property $ \p s (Few es) -> do
+            let elems = toAstIdent p s : es
+            evalArgs elems `shouldBe` Right (ArgsVaria $ toIdent p s, es)
+
+    it "evals arity args idents" $ do
+        property $ \p ps (Few es) -> do
+            let elems = WithPos p (AstList KindForm $ map (uncurry toAstIdent) ps) : es
+            evalArgs elems `shouldBe` Right (ArgsArity p $ map (uncurry toIdent) ps, es)
+
+    it "rejects qualified variadic args ident" $ do
+        property $ \s1 s2 (Few es) -> do
+            let elems = withPos (AstIdent $ Ident [s1, s2]) : es
+            isLeft (evalArgs elems) `shouldBe` True
+
+    it "rejects qualified arity args idents" $ do
+        property $ \s1 s2 (Few es) -> do
+            let elems = withPos (AstList KindForm [withPos $ AstIdent $ Ident [s1, s2]]) : es
+            isLeft (evalArgs elems) `shouldBe` True
+
+    it "rejects empty list" $ do
+        isLeft (evalArgs []) `shouldBe` True
+
+    it "rejects non-ident and non-form list" $ do
+        property $ \(Few es) -> do
+            forM_   [ AstNum 0, AstStr ""
+                    , AstSymb $ symb $ ident ""
+                    , AstList KindList []
+                    , AstList KindDict []
+                    ] $ \e ->
+                isLeft (evalArgs $ withPos e:es) `shouldBe` True
+
+unevalArgsSpec :: Spec
+unevalArgsSpec = describe "unevalArgs" $ do
+    it "unevals variadic args ident" $ do
+        property $ \i -> do
+            unevalArgs (ArgsVaria i) `shouldBe` [fmap AstIdent i]
+
+    it "unevals arity args idents" $ do
+        property $ \p is -> do
+            unevalArgs (ArgsArity p is) `shouldBe` [WithPos p (AstList KindForm $ flip map is $ fmap AstIdent)]
 
 evalIdentSpec :: Spec
 evalIdentSpec = describe "evalIdent" $ do
@@ -87,14 +145,15 @@ evalIdentSpec = describe "evalIdent" $ do
 validateNoDuplicateIdentsSpec :: Spec
 validateNoDuplicateIdentsSpec = describe "validateNoDuplicateIdents" $ do
     it "accepts zero args" $ do
-        forM_ [none, form] $ \impArgs -> do
-            validateNoDuplicateIdents impArgs (ArgsArity []) `shouldBe` Right ()
-            validateNoDuplicateIdents impArgs (ArgsArity []) `shouldBe` Right ()
+        property $ \p -> do
+            forM_ [none, form] $ \impArgs -> do
+                validateNoDuplicateIdents impArgs (ArgsArity p []) `shouldBe` Right ()
+                validateNoDuplicateIdents impArgs (ArgsArity p []) `shouldBe` Right ()
 
     it "accepts one arg (impure args)" $ do
-        property $ \c -> do
+        property $ \p c -> do
             let ctx = withPos $ ident c
-            validateNoDuplicateIdents (both ctx) (ArgsArity []) `shouldBe` Right ()
+            validateNoDuplicateIdents (both ctx) (ArgsArity p []) `shouldBe` Right ()
 
     it "accepts one arg (varia)" $ do
         property $ \v -> do
@@ -103,10 +162,10 @@ validateNoDuplicateIdentsSpec = describe "validateNoDuplicateIdents" $ do
                 validateNoDuplicateIdents impArgs (ArgsVaria varargs) `shouldBe` Right ()
 
     it "accepts one arg (arity)" $ do
-        property $ \a -> do
+        property $ \p a -> do
             let arg = withPos $ ident a
             forM_ [none, form] $ \impArgs -> do
-                validateNoDuplicateIdents impArgs (ArgsArity [arg]) `shouldBe` Right ()
+                validateNoDuplicateIdents impArgs (ArgsArity p [arg]) `shouldBe` Right ()
 
     it "accepts two args (impure+varia)" $ do
         property $ \c' v -> do
@@ -115,25 +174,25 @@ validateNoDuplicateIdentsSpec = describe "validateNoDuplicateIdents" $ do
             validateNoDuplicateIdents (both ctx) (ArgsVaria varargs) `shouldBe` Right ()
 
     it "accepts two args (impure+arity)" $ do
-        property $ \c' a -> do
+        property $ \p c' a -> do
             let c = differentThan c' [a]
                 [ctx, arg] = map (withPos.ident) [c, a]
-            validateNoDuplicateIdents (both ctx) (ArgsArity [arg]) `shouldBe` Right ()
+            validateNoDuplicateIdents (both ctx) (ArgsArity p [arg]) `shouldBe` Right ()
 
     it "accepts two args (arity)" $ do
-        property $ \a1' a2' -> do
+        property $ \p a1' a2' -> do
             let a1 = differentThan a1' []
                 a2 = differentThan a2' [a1]
                 [arg1, arg2] = map (withPos.ident) [a1, a2]
             forM_ [none, form] $ \impArgs -> do
-                validateNoDuplicateIdents impArgs (ArgsArity [arg1, arg2]) `shouldBe` Right ()
+                validateNoDuplicateIdents impArgs (ArgsArity p [arg1, arg2]) `shouldBe` Right ()
 
     it "accepts N+1 args (impure+arity)" $ do
-        property $ \c' (Uniques as) -> do
+        property $ \p c' (Uniques as) -> do
             let c = differentThan c' as
                 ctx = withPos $ ident c
                 args = map (withPos.ident) as
-            validateNoDuplicateIdents (both ctx) (ArgsArity args) `shouldBe` Right ()
+            validateNoDuplicateIdents (both ctx) (ArgsArity p args) `shouldBe` Right ()
 
     it "rejects two args (impure+varia)" $ do
         property $ \x -> do
@@ -143,19 +202,19 @@ validateNoDuplicateIdentsSpec = describe "validateNoDuplicateIdents" $ do
     it "rejects two args (impure+arity)" $ do
         property $ \x -> do
             let [ctx, arg] = map (withPos.ident) [x, x]
-            isLeft (validateNoDuplicateIdents (both ctx) (ArgsArity [arg])) `shouldBe` True
+            isLeft (validateNoDuplicateIdents (both ctx) (ArgsArity p' [arg])) `shouldBe` True
 
     it "rejects two args (arity)" $ do
         property $ \x -> do
             let [arg1, arg2] = map (withPos.ident) [x, x]
             forM_ [none, form] $ \impArgs -> do
-                isLeft (validateNoDuplicateIdents none (ArgsArity [arg1, arg2])) `shouldBe` True
+                isLeft (validateNoDuplicateIdents none (ArgsArity p' [arg1, arg2])) `shouldBe` True
 
     it "rejects N+1 args (impure+arity)" $ do
         property $ \x (Uniques as) -> do
             let ctx = withPos $ ident x
                 args = map (withPos.ident) (x:as)
-            isLeft (validateNoDuplicateIdents (both ctx) (ArgsArity args)) `shouldBe` True
+            isLeft (validateNoDuplicateIdents (both ctx) (ArgsArity p' args)) `shouldBe` True
 
 p' = newPos "tests" 0 0
 withPos = WithPos p'

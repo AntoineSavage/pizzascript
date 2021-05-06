@@ -67,17 +67,17 @@ pzTrue = withPos $ PzSymb symbTrue
 
 pzNot :: WithPos PzVal
 pzNot = withPos $ PzFunc $ Func M.empty None
-    (ArgsArity [withPos identX])
+    (ArgsArity builtInPos [withPos identX])
     $ BodyBuiltIn identNot
 
 pzOr :: WithPos PzVal
 pzOr = withPos $ PzFunc $ Func M.empty None
-    (ArgsArity $ map withPos [identX, identY])
+    (ArgsArity builtInPos $ map withPos [identX, identY])
     $ BodyBuiltIn identOr
 
 pzAnd :: WithPos PzVal
 pzAnd = withPos $ PzFunc $ Func M.empty None
-    (ArgsArity $ map withPos [identX, identY])
+    (ArgsArity builtInPos $ map withPos [identX, identY])
     $ BodyBuiltIn identAnd
 
 -- lists
