@@ -5,17 +5,20 @@ import Test.QuickCheck
 
 import Ast
 import Control.Monad
+import Data.Char
 import Data.Either
 import Data.List
 import Data.Nat
+import Numeric
 import TestUtils
 import Text.Parsec
 import Types
 
 spec :: Spec
 spec = do
-    -- Ignore
+    -- Ignore & comment
     ignoreSpec
+    commentSpec
 
     -- Numbers
     parseNumVsUnparseNumSpec
@@ -29,6 +32,7 @@ spec = do
     parseCharVsUnparseCharSpec
     parseCharSpec
     unparseCharSpec
+    parseHexCodepointSpec
 
     -- Identifiers
     parseIdentVsUnparseIdentSpec
@@ -93,7 +97,9 @@ ignoreSpec = describe "ignore" $ do
         parse ignore "tests" s `shouldBe` Right ()
 
     it "parses whitespace and comments" $ do
-        let s =" \n\t\r\n\v# # 123 \" a ' [ ( ] ) { < } >\n" ++ " \n\t\r\n\v# # 123 \" a ' [ ( ] ) { < } >\r\n" ++ " \n\t\r\n\v# # 123 \" a ' [ ( ] ) { < } >"
+        let s =     " \n\t\r\n\v# # 123 \" a ' [ ( ] ) { < } >\n"
+                ++  " \n\t\r\n\v# # 123 \" a ' [ ( ] ) { < } >\r\n"
+                ++  " \n\t\r\n\v# # 123 \" a ' [ ( ] ) { < } >"
         parse ignore "tests" s `shouldBe` Right ()
 
     it "stops at/rejects non-whitespace, non-comment" $ do
@@ -117,6 +123,52 @@ ignoreSpec = describe "ignore" $ do
 
         parse ignore "tests" "(" `shouldBe` Right ()
         isLeft (parse (ignore >> eof) "tests" "(") `shouldBe` True
+
+commentSpec :: Spec
+commentSpec = describe "comment" $ do
+    it "rejects empty string" $ do
+        isLeft (parse comment "tests" "") `shouldBe` True
+
+    it "rejects unprintable string" $ do
+        let s = "\0\1\2\3\4\5\6\7\8\9\10\11\12\13\14\15\16\17\18\19\20\21\22\23\24\25\26\27\28\29\30\31\32\127"
+        isLeft (parse comment "tests" s) `shouldBe` True
+
+    it "rejects whitespace" $ do
+        let s = " \n\t\r\n\v"
+        isLeft (parse comment "tests" s) `shouldBe` True
+
+    it "rejects non-comment" $ do
+        isLeft (parse comment "tests" "123") `shouldBe` True
+        isLeft (parse comment "tests" "\"") `shouldBe` True
+        isLeft (parse comment "tests" "a") `shouldBe` True
+        isLeft (parse comment "tests" "'") `shouldBe` True
+        isLeft (parse comment "tests" "[") `shouldBe` True
+        isLeft (parse comment "tests" "{") `shouldBe` True
+        isLeft (parse comment "tests" "(") `shouldBe` True
+
+    it "parses comment hash (lf)" $ do
+        let s = "#\n"
+        parse comment "tests" s `shouldBe` Right ()
+
+    it "parses comment hash (crlf)" $ do
+        let s = "#\r\n"
+        parse comment "tests" s `shouldBe` Right ()
+
+    it "parses comment hash (eof)" $ do
+        let s = "#"
+        parse comment "tests" s `shouldBe` Right ()
+
+    it "parses single comment (lf)" $ do
+        let s = "# # 123 \" a ' [ ( ] ) { < } > \n"
+        parse comment "tests" s `shouldBe` Right ()
+
+    it "parses single comment (crlf)" $ do
+        let s = "# # 123 \" a ' [ ( ] ) { < } > \r\n"
+        parse comment "tests" s `shouldBe` Right ()
+
+    it "parses single comment (eof)" $ do
+        let s = "# # 123 \" a ' [ ( ] ) { < } >"
+        parse comment "tests" s `shouldBe` Right ()
 
 -- Numbers
 parseNumVsUnparseNumSpec :: Spec
@@ -215,12 +267,12 @@ parseStrSpec = describe "parseStr" $ do
         parse parseStr "tests" "\"\\u{5}\"" `shouldBe` Right "\5"
         parse parseStr "tests" "\"\\u{6}\"" `shouldBe` Right "\6"
         parse parseStr "tests" "\"\\u{7}\"" `shouldBe` Right "\7"
-        -- \b
-        -- \t
-        -- \n
+        parse parseStr "tests" "\"\\u{8}\"" `shouldBe` Right "\8"
+        parse parseStr "tests" "\"\\u{9}\"" `shouldBe` Right "\9"
+        parse parseStr "tests" "\"\\u{a}\"" `shouldBe` Right "\10"
         parse parseStr "tests" "\"\\u{b}\"" `shouldBe` Right "\11"
-        -- \f
-        -- \r
+        parse parseStr "tests" "\"\\u{c}\"" `shouldBe` Right "\12"
+        parse parseStr "tests" "\"\\u{d}\"" `shouldBe` Right "\13"
         parse parseStr "tests" "\"\\u{e}\"" `shouldBe` Right "\14"
         parse parseStr "tests" "\"\\u{f}\"" `shouldBe` Right "\15"
         parse parseStr "tests" "\"\\u{10}\"" `shouldBe` Right "\16"
@@ -270,12 +322,12 @@ unparseStrSpec = describe "unparseStr" $ do
         unparseStr "\5" `shouldBe` "\"\\u{5}\""
         unparseStr "\6" `shouldBe` "\"\\u{6}\""
         unparseStr "\7" `shouldBe` "\"\\u{7}\""
-        -- \b
-        -- \t
-        -- \n
+        unparseStr "\8" `shouldBe` "\"\\b\""
+        unparseStr "\9" `shouldBe` "\"\\t\""
+        unparseStr "\10" `shouldBe` "\"\\n\""
         unparseStr "\11" `shouldBe` "\"\\u{b}\""
-        -- \f
-        -- \r
+        unparseStr "\12" `shouldBe` "\"\\f\""
+        unparseStr "\13" `shouldBe` "\"\\r\""
         unparseStr "\14" `shouldBe` "\"\\u{e}\""
         unparseStr "\15" `shouldBe` "\"\\u{f}\""
         unparseStr "\16" `shouldBe` "\"\\u{10}\""
@@ -341,12 +393,12 @@ parseCharSpec = describe "parseChar" $ do
         parse parseChar "tests" "\\u{5}" `shouldBe` Right '\5'
         parse parseChar "tests" "\\u{6}" `shouldBe` Right '\6'
         parse parseChar "tests" "\\u{7}" `shouldBe` Right '\7'
-        -- \b
-        -- \t
-        -- \n
+        parse parseChar "tests" "\\u{8}" `shouldBe` Right '\8'
+        parse parseChar "tests" "\\u{9}" `shouldBe` Right '\9'
+        parse parseChar "tests" "\\u{a}" `shouldBe` Right '\10'
         parse parseChar "tests" "\\u{b}" `shouldBe` Right '\11'
-        -- \f
-        -- \r
+        parse parseChar "tests" "\\u{c}" `shouldBe` Right '\12'
+        parse parseChar "tests" "\\u{d}" `shouldBe` Right '\13'
         parse parseChar "tests" "\\u{e}" `shouldBe` Right '\14'
         parse parseChar "tests" "\\u{f}" `shouldBe` Right '\15'
         parse parseChar "tests" "\\u{10}" `shouldBe` Right '\16'
@@ -403,12 +455,12 @@ unparseCharSpec = describe "unparseChar" $ do
         unparseChar '\5' `shouldBe` "\\u{5}"
         unparseChar '\6' `shouldBe` "\\u{6}"
         unparseChar '\7' `shouldBe` "\\u{7}"
-        -- \b
-        -- \t
-        -- \n
+        unparseChar '\8' `shouldBe` "\\b"
+        unparseChar '\9' `shouldBe` "\\t"
+        unparseChar '\10' `shouldBe` "\\n"
         unparseChar '\11' `shouldBe` "\\u{b}"
-        -- \f
-        -- \r
+        unparseChar '\12' `shouldBe` "\\f"
+        unparseChar '\13' `shouldBe` "\\r"
         unparseChar '\14' `shouldBe` "\\u{e}"
         unparseChar '\15' `shouldBe` "\\u{f}"
         unparseChar '\16' `shouldBe` "\\u{10}"
@@ -428,6 +480,61 @@ unparseCharSpec = describe "unparseChar" $ do
         unparseChar '\30' `shouldBe` "\\u{1e}"
         unparseChar '\31' `shouldBe` "\\u{1f}"
         unparseChar '\127' `shouldBe` "\\u{7f}"
+
+parseHexCodepointSpec :: Spec
+parseHexCodepointSpec = describe "parseHexCodepoint" $ do
+    forM_ [id, map toUpper] $ \f -> do
+        it "parses hex codepoint" $ do
+            parse (parseHexCodepoint $ return $ f "0") "tests" "" `shouldBe` Right (f "0")
+            parse (parseHexCodepoint $ return $ f "1") "tests" "" `shouldBe` Right (f "1")
+            parse (parseHexCodepoint $ return $ f "2") "tests" "" `shouldBe` Right (f "2")
+            parse (parseHexCodepoint $ return $ f "3") "tests" "" `shouldBe` Right (f "3")
+            parse (parseHexCodepoint $ return $ f "4") "tests" "" `shouldBe` Right (f "4")
+            parse (parseHexCodepoint $ return $ f "5") "tests" "" `shouldBe` Right (f "5")
+            parse (parseHexCodepoint $ return $ f "6") "tests" "" `shouldBe` Right (f "6")
+            parse (parseHexCodepoint $ return $ f "7") "tests" "" `shouldBe` Right (f "7")
+            parse (parseHexCodepoint $ return $ f "8") "tests" "" `shouldBe` Right (f "8")
+            parse (parseHexCodepoint $ return $ f "9") "tests" "" `shouldBe` Right (f "9")
+            parse (parseHexCodepoint $ return $ f "a") "tests" "" `shouldBe` Right (f "a")
+            parse (parseHexCodepoint $ return $ f "b") "tests" "" `shouldBe` Right (f "b")
+            parse (parseHexCodepoint $ return $ f "c") "tests" "" `shouldBe` Right (f "c")
+            parse (parseHexCodepoint $ return $ f "d") "tests" "" `shouldBe` Right (f "d")
+            parse (parseHexCodepoint $ return $ f "e") "tests" "" `shouldBe` Right (f "e")
+            parse (parseHexCodepoint $ return $ f "f") "tests" "" `shouldBe` Right (f "f")
+            parse (parseHexCodepoint $ return $ f "10") "tests" "" `shouldBe` Right (f "10")
+            parse (parseHexCodepoint $ return $ f "11") "tests" "" `shouldBe` Right (f "11")
+            parse (parseHexCodepoint $ return $ f "12") "tests" "" `shouldBe` Right (f "12")
+            parse (parseHexCodepoint $ return $ f "13") "tests" "" `shouldBe` Right (f "13")
+            parse (parseHexCodepoint $ return $ f "14") "tests" "" `shouldBe` Right (f "14")
+            parse (parseHexCodepoint $ return $ f "15") "tests" "" `shouldBe` Right (f "15")
+            parse (parseHexCodepoint $ return $ f "16") "tests" "" `shouldBe` Right (f "16")
+            parse (parseHexCodepoint $ return $ f "17") "tests" "" `shouldBe` Right (f "17")
+            parse (parseHexCodepoint $ return $ f "18") "tests" "" `shouldBe` Right (f "18")
+            parse (parseHexCodepoint $ return $ f "19") "tests" "" `shouldBe` Right (f "19")
+            parse (parseHexCodepoint $ return $ f "1a") "tests" "" `shouldBe` Right (f "1a")
+            parse (parseHexCodepoint $ return $ f "1b") "tests" "" `shouldBe` Right (f "1b")
+            parse (parseHexCodepoint $ return $ f "1c") "tests" "" `shouldBe` Right (f "1c")
+            parse (parseHexCodepoint $ return $ f "1d") "tests" "" `shouldBe` Right (f "1d")
+            parse (parseHexCodepoint $ return $ f "1e") "tests" "" `shouldBe` Right (f "1e")
+            parse (parseHexCodepoint $ return $ f "1f") "tests" "" `shouldBe` Right (f "1f")
+            parse (parseHexCodepoint $ return $ f "7f") "tests" "" `shouldBe` Right (f "7f")
+
+            parse (parseHexCodepoint $ return $ f "10fffe") "tests" "" `shouldBe` Right (f "10fffe")
+            parse (parseHexCodepoint $ return $ f "10ffff") "tests" "" `shouldBe` Right (f "10ffff")
+
+        it "parses hex codepoint (prop)" $ do
+            property $ \(ValidCodepoint i) -> do
+                let s = showHex i ""
+                parse (parseHexCodepoint $ return $ f s) "tests" "" `shouldBe` Right (f s)
+
+        it "rejects out-of-bounds" $ do
+            isLeft (parse (parseHexCodepoint $ return "110000") "tests" "") `shouldBe` True
+            isLeft (parse (parseHexCodepoint $ return "110001") "tests" "") `shouldBe` True
+
+        it "rejects out-of-bounds (prop)" $ do
+            property $ \(InvalidCodepoint i) -> do
+                let s = showHex i ""
+                isLeft (parse (parseHexCodepoint $ return $ f s) "tests" "") `shouldBe` True
 
 -- Identifiers
 parseIdentVsUnparseIdentSpec :: Spec

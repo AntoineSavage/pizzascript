@@ -116,6 +116,12 @@ instance ArbWithDepth StackFrame where
         ]
 
 -- Test-only types
+newtype ValidCodepoint = ValidCodepoint Int deriving (Show, Eq)
+instance Arbitrary ValidCodepoint where arbitrary = ValidCodepoint <$> chooseInt (0, 0x10FFFF)
+
+newtype InvalidCodepoint = InvalidCodepoint Int deriving (Show, Eq)
+instance Arbitrary InvalidCodepoint where arbitrary = InvalidCodepoint <$> chooseInt (0x110000, maxBound)
+
 newtype IdentPart = IdentPart String deriving (Show, Eq)
 instance Arbitrary IdentPart where arbitrary = fmap IdentPart $ liftM2 (:) (elements validFirsts) $ chooseInt (0, 5) >>= flip vectorOf (elements validNexts)
 arbIdentPart = do IdentPart s <- arbitrary; return s

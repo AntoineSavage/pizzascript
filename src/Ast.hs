@@ -12,18 +12,17 @@ import Types ( AstExpr(..), AstListKind(..), Ident(..), Symb(..), WithPos(..) )
 
 -- Ignore
 ignore :: Parser () 
-ignore = void $ many (comment <|> many1 space <|> many1 (satisfy isControl))
+ignore = void $ many (comment <|> void (many1 space) <|> void (many1 $ satisfy isControl))
 
-comment :: Parser String
-comment = char '#' >>= fmap reverse . go . (:[]) where
-    go :: String -> Parser String
-    go acc = do
+comment :: Parser ()
+comment = char '#' >> go where 
+    go = do
         meof <- optionMaybe eof
         mnl <- optionMaybe newline
         case (meof, mnl) of
-            (Just _, _) -> return acc
-            (_, Just nl) -> return $ nl : acc
-            (_, _) -> anyChar >>= (go . (:acc))
+            (Just _, _) -> return ()
+            (_, Just nl) -> return ()
+            (_, _) -> anyChar >> go
 
 -- Numbers
 parseNum :: Parser Double
@@ -70,13 +69,6 @@ parseChar = do
                 'u' -> read . ("'\\x"++) . (++"'") <$> between (char '{') (char '}' ) (parseHexCodepoint $ many1 hexDigit)
                 _ -> parserFail $ "Unsupported escape sequence: " ++ ['\\', escaped]
 
-parseHexCodepoint :: Parser String -> Parser String
-parseHexCodepoint p = do
-    s <- p
-    let [(i, "")] = readHex s
-    if i <= 0x10FFFF then return s else
-        parserFail $ "Hex codepoint out of range: " ++ s
-
 unparseChar :: Char -> String
 unparseChar c =
     case c of
@@ -92,6 +84,13 @@ unparseChar c =
             then [c]
             else let digits = showHex (ord c) ""
                  in "\\u{" ++ digits ++ "}"
+
+parseHexCodepoint :: Parser String -> Parser String
+parseHexCodepoint p = do
+    s <- p
+    let [(i, "")] = readHex s
+    if i <= 0x10FFFF then return s else
+        parserFail $ "Hex codepoint out of range: " ++ s
 
 -- Identifiers
 parseIdent :: Parser Ident
