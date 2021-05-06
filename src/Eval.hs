@@ -138,7 +138,7 @@ evalIdent ctx p ident = inner (withPos $ PzDict ctx) $ splitSymb $ symb ident wh
 
                     _ -> Left $
                         "Error: Non-dictionary context for identifier: " ++ show i
-                        ++ "\n when evaluating (possibly qualified) identifier: " ++ show ident
+                        ++ "\n when evaluating qualified identifier: " ++ show ident
                         ++ "\n non-dictionary context: " ++ show val_or_ctx
 
 validateNoDuplicateIdents :: FuncImpureArgs -> FuncArgs -> Either String ()

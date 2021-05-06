@@ -3,6 +3,8 @@ module EvalSpec where
 import Test.Hspec
 import Test.QuickCheck
 
+import qualified Data.Map as M
+
 import Control.Monad
 import Data.Either
 import Eval
@@ -13,7 +15,74 @@ import Utils
 
 spec :: Spec
 spec = do
+    evalIdentSpec
     validateNoDuplicateIdentsSpec
+
+evalIdentSpec :: Spec
+evalIdentSpec = describe "evalIdent" $ do
+    it "evaluates zero ident parts" $ do
+        property $ \(ArbDict ctx) p -> do
+            evalIdent ctx p (Ident []) `shouldBe` Right (WithPos p $ PzDict ctx)
+
+    it "evaluates one ident part" $ do
+        property $ \(ArbDict c) p s v -> do
+            let ident = Ident [s]
+                k = WithPos p $ PzSymb $ symb ident
+                ctx = flip (M.insert k) c v
+            evalIdent ctx p' ident `shouldBe` Right v
+
+    it "evaluates two ident parts" $ do
+        property $ \(ArbDict c1) (ArbDict c2) p1 p2 s1 s2 v -> do
+            let k1 = WithPos p1 $ PzSymb $ symb $ Ident [s1]
+                k2 = WithPos p2 $ PzSymb $ symb $ Ident [s2]
+                ctx2 = flip (M.insert k2) c2 v
+                ctx1 = flip (M.insert k1) c1 $ withPos $ PzDict ctx2
+            evalIdent ctx1 p' (Ident [s1, s2]) `shouldBe` Right v
+
+    it "evaluates three ident parts" $ do
+        property $ \(ArbDict c1) (ArbDict c2) (ArbDict c3) p1 p2 p3 s1 s2 s3 v -> do
+            let k1 = WithPos p1 $ PzSymb $ symb $ Ident [s1]
+                k2 = WithPos p2 $ PzSymb $ symb $ Ident [s2]
+                k3 = WithPos p3 $ PzSymb $ symb $ Ident [s3]
+                ctx3 = flip (M.insert k3) c3 v
+                ctx2 = flip (M.insert k2) c2 $ withPos $ PzDict ctx3
+                ctx1 = flip (M.insert k1) c1 $ withPos $ PzDict ctx2
+            evalIdent ctx1 p' (Ident [s1, s2, s3]) `shouldBe` Right v
+
+    it "evaluates one undefined ident part" $ do
+        property $ \(ArbDict c) p s -> do
+            let ident = Ident [s]
+                k = WithPos p $ PzSymb $ symb ident
+            isLeft (evalIdent (M.delete k c) p' ident) `shouldBe` True
+
+    it "evaluates two undefined ident parts" $ do
+        property $ \(ArbDict c1) (ArbDict c2) p1 p2 s1 s2 -> do
+            let ident = Ident [s1, s2]
+                k1 = WithPos p1 $ PzSymb $ symb $ Ident [s1]
+                k2 = WithPos p2 $ PzSymb $ symb $ Ident [s2]
+                ctx = flip (M.insert k1) c1 $ withPos $ PzDict $ M.delete k2 c2
+            isLeft (evalIdent ctx p' ident) `shouldBe` True
+            isLeft (evalIdent (M.delete k1 c1) p' ident) `shouldBe` True
+
+    it "evaluates three undefined ident parts" $ do
+        property $ \(ArbDict c1) (ArbDict c2) (ArbDict c3) p1 p2 p3 s1 s2 s3 -> do
+            let ident = Ident [s1, s2, s3]
+                k1 = WithPos p1 $ PzSymb $ symb $ Ident [s1]
+                k2 = WithPos p2 $ PzSymb $ symb $ Ident [s2]
+                k3 = WithPos p3 $ PzSymb $ symb $ Ident [s3]
+                ctx1 = flip (M.insert k1) c1 $ withPos $ PzDict $
+                        flip (M.insert k2) c2 $ withPos $ PzDict $ M.delete k3 c3
+                ctx2 = flip (M.insert k1) c1 $ withPos $ PzDict $ M.delete k2 c2
+            isLeft (evalIdent ctx1 p' ident) `shouldBe` True
+            isLeft (evalIdent ctx2 p' ident) `shouldBe` True
+            isLeft (evalIdent (M.delete k1 c1) p' ident) `shouldBe` True
+
+    it "non-dictionary context" $ do
+        property $ \(ArbDict c) p s1 s2 -> do
+            forM_ [PzUnit, PzNum 0, PzStr "", PzList []] $ \v -> do
+                let k = WithPos p $ PzSymb $ symb $ Ident [s1]
+                    ctx = flip (M.insert k) c $ withPos v
+                isLeft (evalIdent ctx p' (Ident [s1, s2])) `shouldBe` True
 
 validateNoDuplicateIdentsSpec :: Spec
 validateNoDuplicateIdentsSpec = describe "validateNoDuplicateIdents" $ do
@@ -88,11 +157,11 @@ validateNoDuplicateIdentsSpec = describe "validateNoDuplicateIdents" $ do
                 args = map (withPos.ident) (x:as)
             isLeft (validateNoDuplicateIdents (both ctx) (ArgsArity args)) `shouldBe` True
 
-p = newPos "tests" 0 0
-withPos = WithPos p
+p' = newPos "tests" 0 0
+withPos = WithPos p'
 
 none = None
-form = ArgPass p $ withPos Eval
-both = Both p (withPos Eval)
+form = ArgPass p' $ withPos Eval
+both = Both p' (withPos Eval)
 
 differentThan x xs = if any (==x) xs then '_':concat xs else x
