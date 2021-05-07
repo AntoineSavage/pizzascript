@@ -4,7 +4,7 @@ import qualified Ast as A
 import qualified Data.Map as M
 
 import Ast ( parseExpr, parseMany, ignore )
-import BuiltIns ( FuncReturn, builtInCtx, _not, _or, _and )
+import BuiltIns ( FuncReturn, builtInCtx, func, _not, _or, _and )
 import Control.Monad ( forM_, liftM2 )
 import Data.Maybe ( fromMaybe )
 import Data.Nat ( Nat(..) )
@@ -24,27 +24,19 @@ main = do
     mes <- parseFromFile parser "example/small.pz"
     case mes of
         Left err -> print err
-        Right es -> evalMany es
-
-evalMany :: [WithPos AstExpr] -> IO ()
-evalMany es = go $ Acc Nothing [Block builtInCtx es]
+        Right es -> go $ Acc Nothing [Block builtInCtx es]
 
 go :: Acc -> IO ()
 go (Acc result []) = putStrLn "Halting" -- no more frames: halt
 go (Acc result (frame:frames)) = do
     putStrLn "=========="
     putStrLn $ "Result: " ++ show result
-    putStrLn $ "Frame: TODO"
+    putStrLn $ "Frame: " ++ show frame
     putStrLn $ "Nbr additional frames: " ++ show (length frames)
     putStrLn "----------"
     case evalFrame result frame frames of
         Left s -> putStrLn s
         Right acc -> go acc
-
-toAcc :: Dict -> WithPos AstExpr -> [StackFrame] -> ExprEvalResult -> EvalResult
-toAcc ctx e frames r = case r of
-    Evaled v -> return $ Acc (Just v) frames
-    ExprForm p es -> return $ Acc Nothing $ Form ctx p (getIdent e) es : frames
 
 evalFrame :: Result -> StackFrame -> [StackFrame] -> EvalResult
 evalFrame result frame frames =
@@ -75,22 +67,22 @@ evalForm result ctx p mfi elems frames =
                     return $ Acc (Just $ WithPos p PzUnit) frames
         
                 e:es ->
-                    -- evaluate first form element (should be func)
+                    -- evaluate first form element (should be a function)
                     evalExpr ctx e Eval >>= toAcc ctx e (Form ctx p mfi es : frames)
         
         Just f ->
-            -- process result (first form elem, should be func)
+            -- process result (first form elem, should be a function)
             case val f of
-                PzFunc func ->
+                PzFunc f ->
 
                     -- handle 'func if needed (reduces number of built-in dependencies)
-                    if func == func
+                    if f == func
                         then case invokeFuncSpecial ctx p elems frames of
                             Left s -> Left $ addIdentAndPos p mfi s
                             Right acc -> return acc
 
                         -- replace form with function invocation
-                        else  return $ Acc Nothing $ Invoc ctx p mfi func [] (Just elems) : frames
+                        else  return $ Acc Nothing $ Invoc ctx p mfi f [] (Just elems) : frames
 
                 _ -> Left $
                     "Error: Malformed function invocation (first form element must be a function)"
@@ -99,24 +91,24 @@ evalForm result ctx p mfi elems frames =
                     ++ "\n" ++ show f
 
 evalInvoc :: Result -> Dict -> Pos -> Maybe (WithPos Ident) -> Func -> [WithPos PzVal] -> Maybe [WithPos AstExpr] -> [StackFrame] -> EvalResult
-evalInvoc result ctx p mfi func as melems frames =
+evalInvoc result ctx p mfi f as melems frames =
     case result of
         Nothing ->
             -- no result to process yet 
             case melems of
                 Nothing -> 
                     -- marked for invocation: invoke function
-                    case invokeFunc ctx p func as frames of
+                    case invokeFunc ctx p f as frames of
                         Left s -> Left $ addIdentAndPos p mfi s
                         Right acc -> return acc
 
                 Just [] -> 
                     -- all args evaluated: mark for invocation
-                    return $ Acc Nothing $ Invoc ctx p mfi func (reverse as) Nothing : frames
+                    return $ Acc Nothing $ Invoc ctx p mfi f (reverse as) Nothing : frames
 
                 Just (e:es) ->
                     -- evaluate function argument according to argument-passing behaviour
-                    case evalExpr ctx e (getArgPass func) >>= toAcc ctx e (Invoc ctx p mfi func as (Just es) : frames) of
+                    case evalExpr ctx e (getArgPass f) >>= toAcc ctx e (Invoc ctx p mfi f as (Just es) : frames) of
                         Left s -> Left $ addIdentAndPos p mfi s
                         Right acc -> return acc
 
@@ -125,11 +117,11 @@ evalInvoc result ctx p mfi func as melems frames =
             case melems of
                 Just es -> 
                     -- argument evaluation result
-                    return $ Acc Nothing $ Invoc ctx p mfi func (r:as) (Just es) : frames
+                    return $ Acc Nothing $ Invoc ctx p mfi f (r:as) (Just es) : frames
 
                 _ ->
                     -- function invocation result (pop frame)
-                    case impArgs func of
+                    case impArgs f of
                         Both {} -> case r of
                             -- Impure functions: handle explicit output context
                             WithPos _ (PzList [WithPos _ (PzDict ctx'), r']) ->
@@ -143,20 +135,17 @@ evalInvoc result ctx p mfi func as melems frames =
 
                         _ -> return $ Acc (Just r) frames
 
-invokeFunc :: Dict -> Pos -> Func -> [WithPos PzVal] -> [StackFrame] -> EvalResult
-invokeFunc ctx p (Func implCtx impArgs args body) as frames =
-    case body of
-        BodyBuiltIn ident -> invokeFuncBuiltIn ctx p as ident frames
-        BodyCustom es -> invokeFuncCustom ctx p as implCtx impArgs args es frames
-
-returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
-returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) $ setCtx ctx frames
-
 invokeFuncSpecial :: Dict -> Pos -> [WithPos AstExpr] -> [StackFrame] -> EvalResult
 invokeFuncSpecial ctx p es frames = do
     fc <- evalFuncCustom es
     let r = WithPos p $ PzFunc $ fromFuncCustom ctx fc
     return $ Acc (Just r) frames
+
+invokeFunc :: Dict -> Pos -> Func -> [WithPos PzVal] -> [StackFrame] -> EvalResult
+invokeFunc ctx p (Func implCtx impArgs args body) as frames =
+    case body of
+        BodyBuiltIn ident -> invokeFuncBuiltIn ctx p as ident frames
+        BodyCustom es -> invokeFuncCustom ctx p as implCtx impArgs args es frames
 
 invokeFuncCustom :: Dict -> Pos -> [WithPos PzVal] -> Dict -> FuncImpureArgs -> FuncArgs -> [WithPos AstExpr] -> [StackFrame] -> EvalResult
 invokeFuncCustom explCtx p as implCtx impArgs args es frames =
@@ -181,7 +170,17 @@ invokeFuncCustom explCtx p as implCtx impArgs args es frames =
                 ++ "\n expected: " ++ show expLen
                 ++ "\n received: " ++ show actLen
 
+-- Utils
+toAcc :: Dict -> WithPos AstExpr -> [StackFrame] -> ExprEvalResult -> EvalResult
+toAcc ctx e frames r = case r of
+    Evaled v -> return $ Acc (Just v) frames
+    ExprForm p es -> return $ Acc Nothing $ Form ctx p (getIdent e) es : frames
+
+returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
+returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) $ setCtx ctx frames
+
 -- Built-in functions
+-- See module BuiltIns for implementations
 invokeFuncBuiltIn :: Dict -> Pos -> [WithPos PzVal] -> Ident -> [StackFrame] -> EvalResult
 invokeFuncBuiltIn ctx p args (Ident ps) frames =
     case ps of
