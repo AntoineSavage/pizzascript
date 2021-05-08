@@ -21,7 +21,7 @@ main :: IO ()
 main = do
     let parser = parseMany ignore parse eof
         parse = parseExpr ignore parse
-    mes <- parseFromFile parser "example/small.pz"
+    mes <- parseFromFile parser "example/main.pz"
     case mes of
         Left err -> print err
         Right es -> go $ Acc Nothing [Block builtInCtx es]
