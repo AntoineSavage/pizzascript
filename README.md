@@ -93,7 +93,7 @@ Some simple string literals:
 ```
 ""                  # empty string
 "abc123ACB_ !@#$%?" # some ASCII printable characters
-"àéèïîôöù"          # Unicode printable characters
+"àéèïîôöù"          # unicode printable characters
 ```
 
 Certain codepoints must be escaped:
@@ -145,29 +145,6 @@ All symbols have type `'symb`, which corresponds to the following function `symb
 (symb x)        # -> raise error
 ```
 
-Symbols can be combined into *qualified* symbols (ex: `'Symb1.symb_2`)
-
-Here are a few qualified symbols:
-```
-'Module.function
-''Package.Module.function
-'''Package.Module.SubModule
-''''my_dict.my_key1.my_key2
-```
-
-The following functions are used to manipulate symbols:
-```
-(split 'foo)         # -> ['foo]
-(split 'foo.bar.baz) # -> ['foo 'bar 'baz]
-
-(join 'foo)               # -> 'foo
-(join 'foo 'bar 'baz)     # -> 'foo.bar.baz
-
-# Number of quotes must match
-(join ''foo ''bar ''baz)  # -> ''foo.bar.baz
-(join 'foo ''bar '''baz)  # -> error
-```
-
 The number of quotes of a symbol can be obtained like this:
 ```
 (nbr_quotes 'foo)           # -> 1
@@ -187,7 +164,7 @@ Symbols have a close relationship with identifiers. An identifier is a symbol, b
 
 An identifier is just a name representing a previously defined value. In particular, an identifier is **not** a literal of any kind, or is **not** itself a value of any kind. In order to obtain the value associated to the identifier, it must be evaluated. For example, in the following:
 ```
-# 'def associates an identifier to a value
+# function 'def associates an identifier to a value
 (def my_value "hello world")
 ```
 We can say that identifier `my_value` represents the value `"hello world"`, and its matching symbol looks like `'my_value`. When evaluating identifier `my_value`, it will produce value `"hello world"`
@@ -198,16 +175,6 @@ a b c
 abc
 _foo BAR99 B4Z
 true false
-```
-
-Like symbols, identifiers can be *qualified*, to represent a hierarchy of values
-
-Here are some qualified identifiers:
-```
-Module.function
-Package.Module.function
-Package.Module.SubModule
-my_dict.my_key1.my_key2
 ```
 
 Any identifier can be converted into a symbol by *quoting* it, i.e. adding one or more leading quote
@@ -245,7 +212,7 @@ Boolean operations (`not`, `or`, `and`) are actually applicable to all types. Th
   - `"abc"`: any non-empty string
   - `'xyz`: any non-`'true` or non-`'false` symbol
   - `[0]`: any non-empty list, regardless of contents
-  - `{(0 0)}`: any non-empty dictionary, regardless of contents
+  - `{[0 0]}`: any non-empty dictionary, regardless of contents
   - `(func (x) x)`: any function whatsoever
 
 The following truth table applies for the `not` operation:
@@ -326,48 +293,61 @@ The following functions are used to manipulate lists:
 (size [])      # -> 0
 (size [1 2 3]) # -> 3
 
+(cons 1 [])    # -> [1]
+(cons 1 [2 3]) # -> [1 2 3]
+
 (head [])      # -> error
 (head [1 2 3]) # -> 1
 
 (tail [])      # -> error
 (tail [1 2 3]) # -> [2 3]
-
-(cons 1 [])    # -> [1]
-(cons 1 [2 3]) # -> [1 2 3]
 ```
 
 # Dictionaries
 
-Dictionaries are immutable and heterogenous containers of key/value pairs. Values of any types can be keys in dictionaries, because there is a strict ordering across all data types, regardless of type (yes, even functions)
+Dictionaries are immutable and heterogenous containers of key/value pairs (i.e. size-2 lists). Values of any types can be keys in dictionaries, because there is a strict ordering across all data types, regardless of type (yes, even functions)
 
 Here are some dictionary literals:
 ```
 {}
-{ (1 2) (3 4) }
+{ [1 2] [3 4] }
 {
-    (() 0)
-    (0 "")
-    ("" 'dict)
-    ('dict [])
-    ([] {})
-    ({} (func () ()))
-    ((func () ()) ())
+    [() 0]
+    [0 ""]
+    ["" 'dict]
+    ['dict []]
+    [[] {}]
+    [{} (func () ())]
+    [(func () ()) ()]
 }
 ```
 
 The preceding examples can also be expressed using the `dict` function:
 ```
 (dict)
-(dict (1 2) (3 4) )
+(dict [1 2] [3 4] )
 (dict
-    (() 0)
-    (0 "")
-    ("" 'dict)
-    ('dict [])
-    ([] {})
-    ({} (func () ()))
-    ((func () ()) ())
+    [() 0]
+    [0 ""]
+    ["" 'dict]
+    ['dict []]
+    [[] {}]
+    [{} (func () ())]
+    [(func () ()) ()]
 )
+```
+
+Note that dictionary entries are just lists that must have exactly 2 elements, otherwise an error is thrown. Identifiers associated to size-2 lists can also be used in dictionary literals:
+```
+(def p1 [() 0])
+(def p2 [0 ""])
+(def p3 ["" 'dict])
+(def p4 ['dict []])
+(def p5 [[] {}])
+(def p6 [{} (func () ())])
+(def p7 [(func () ()) ()])
+{ p1 p2 p3 p4 p5 p6 p7 }
+(dict p1 p2 p3 p4 p5 p6 p7)
 ```
 
 The curly brace notation (i.e. using `{` and `}` ) is useful for cleaning-up the source code, while the `dict` function is useful to represent a dictionary as a form, which simplifies quoting and unquoting dictionaries
@@ -377,51 +357,30 @@ All dictionaries have type `'dict`, which corresponds to the previously mentione
 The following functions are used to manipulate dictionaries:
 ```
 (is_empty {})                      # -> 'true
-(is_empty {("my_key" 'my_value)})  # -> 'false
+(is_empty {["my_key" 'my_value]})  # -> 'false
 
 (size {})                      # -> 0
-(size {("my_key" 'my_value)})  # -> 1
+(size {["my_key" 'my_value]})  # -> 1
 
 (keys {})                      # -> []
-(keys {("my_key" 'my_value)})  # -> ["my_key"]
+(keys {["my_key" 'my_value]})  # -> ["my_key"]
 
-(contains "my_key" {})                      # -> 'false
-(contains "my_key" {("my_key" 'my_value)})  # -> 'true
+(assocs {})                      # -> []
+(assocs {["my_key" 'my_value]})  # -> [["my_key", 'my_value]]
 
-(get "my_key" {})                      # -> (), i.e. absent
-(get "my_key" {("my_key" 'my_value)})  # -> 'my_value, i.e. present
+(contains {} "my_key")                      # -> 'false
+(contains {["my_key" 'my_value]} "my_key")  # -> 'true
 
-(put "my_key" 'my_value {})                      # -> {("my_key" 'my_value)}, i.e. adds key/value pair
-(put "my_key" 'my_value {("my_key" 123)})        # -> {("my_key" 'my_value)}, i.e. replaces key/value pair
-(put "my_key" 'my_value {("my_key" 'my_value)})  # -> {("my_key" 'my_value)}, i.e. no change
+(get {} "my_key")                      # -> (), i.e. absent
+(get {["my_key" 'my_value]} "my_key")  # -> 'my_value, i.e. present
 
-(del "my_key" {})                # -> {}, i.e. no change
-(del "my_key" {("my_key" 123)})  # -> {}, i.e. removes key/value pair
+(put 'my_value {} "my_key")                      # -> {["my_key" 'my_value]}, i.e. adds key/value pair
+(put 'my_value {["my_key" 123]} "my_key")        # -> {["my_key" 'my_value]}, i.e. replaces key/value pair
+(put 'my_value {["my_key" 'my_value]} "my_key")  # -> {["my_key" 'my_value]}, i.e. no change
+
+(del {} "my_key")                # -> {}, i.e. no change
+(del {["my_key" 123]} "my_key")  # -> {}, i.e. removes key/value pair
 ```
-
-## Dictionaries and qualified identifiers
-
-Dictionaries have a special relationship with qualified identifiers. If a dictionary contains a key that is an unqualified, single-quoted symbol (ex: `'foo`, `'bar`), then it can be accessed by evaluating the matching identifier, *qualified* with the dictionary identifier. If no such key exists in the dictionary, an error will be raised
-
-Such unqualified, single-quoted symbol keys are also called *fields*
-
-For example:
-```
-# single key 'my_field (an unqualified, single-quoted symbol)
-# single value "my_value" (a string)
-(def my_dict {('my_field "my_value)}
-
-# obtain value of symbol key
-# simply evaluate the matching key identifier,
-# qualified with the dictionary identifier
-my_dict.my_field # -> "my_value"
-
-# updating value of symbol key
-# returns a new dictionary with the updated key/value pair
-(set my_dict.my_field 123) # -> {('my_field 123)}
-```
-
-Note that `set` only works with qualified identifier, and raises an error if the matching symbol does not exist in the dictionary. In order to work with keys of any type, and/or add and remove keys, use `get`, `put` and `del` instead (see above)
 
 # Functions
 
@@ -683,8 +642,8 @@ Quoting adheres to the following rules:
     - see below on how to quote forms
 
 - quoting a dictionary literal instead quotes the corresponding form. Ex:
-  - quoting `{(() 0) ("" 'a) ([] {}) ((func () ()) (fac 5))}` instead quotes:
-    - `(dict (() 0) ("" 'a) ([] {}) ((func () ()) (fac 5)))`
+  - quoting `{[() 0] ["" 'a] [[] {}] [(func () ()) (fac 5)]}` instead quotes:
+    - `(dict [() 0] ["" 'a] [[] {}] [(func () ()) (fac 5)])`
     - see below on how to quote forms
 
 - quoting a form produces a list of each elements, quoted recursively. Parentheses are replaced with square brackets during this process. Ex:
@@ -699,7 +658,7 @@ Quoting adheres to the following rules:
     - `['list [] 0 "" ''a ['list] ['dict] ['func [] []] ['fac 5]]`
     - notice how `(fac 5)` is not evaluated by this process
 
-  - quoting `(dict (() 0) ("" 'a) ([] {}) ((func () ()) (fac 5)))` produces:
+  - quoting `(dict [() 0] ["" 'a] [[] {}] [(func () ()) (fac 5)])` produces:
     - `['dict [[] 0] ["" ''a] [['list] ['dict]] [['func [] []] ['fac 5]]]`
     - notice how `(fac 5)` is not evaluated by this process
 
@@ -741,38 +700,27 @@ Unquoting adheres to the following rules:
 
   - unquoting `['dict [[] 0] ["" ''a] [['list] ['dict]] [['func [] []] ['fac 5]]]` produces:
     - `(dict (() 0) ("" 'a) ([] {}) ((func () ()) (fac 5)))`
-    - which evaluates to `{(() 0) ("" 'a) ([] {}) ((func () ()) 120)}`
+    - which evaluates to `{[() 0] ["" 'a] [[] {}] [(func () ()) 120]}`
     - notice how `(fac 5)` is evaluated by this process
 
 ## Functions and contexts
 
 Any function has access to an implicit context. Impure functions (see below) have access to an additional, explicit context
 
-A context is a dictionary made up of unqualified, single-quoted symbol keys (ex: `'foo`, `'bar`) each associated to a given value. Such values can be of any type. This context dictionary is initialized at the beginning of a module evaluation, and can be used and modified by impure functions
-
-A context is said to be implicit when its keys can be referenced without being qualified by the context identifier, as simple identifiers. Conversely, a context is said to be explicit when its keys must be qualified with the context identifier, resulting in a qualified identifier. Refer to the dictionary section for the syntax used to evaluate unqualified, single-quoted symbol keys in a dictionary
-
-Another way to think about implicit contexts is like this:
-- pretend that there exists a context named `this` or `self` that refers to the current module (not unlike class instances in OOP)
-- all unqualified identifiers are implicitely qualified with this `this` or `self` identifier
-- for example, unqualified identifier `fac` can be thought of as `this.fac`
+A context is a dictionary made up of single-quoted symbol keys (ex: `'foo`, `'bar`) each associated to a given value. Such values can be of any type. This context dictionary is initialized at the beginning of a module evaluation, and can be used and modified by impure functions
 
 For example:
 ```
 # add and get key 'zero in implicit context
-# key 'zero is not qualified
 (def zero 0)
 (print zero)
 
 # ctx is an explicit context
-(def ctx {(zero 0)})
+(def ctx {['zero 0]})
 
 # get key 'zero from explicit context
-# key 'ctx.zero is qualified with the context
-(print ctx.zero)
+(print (get 'zero ctx))
 ```
-
-In order for an explicit context to be accessible, it must be present in the current implicit context
 
 ### The function implicit context
 
@@ -801,10 +749,10 @@ A function's implicit context can be accessed like this:
 
 # when getting the implicit context
 (get_impl_ctx double_plus_one)
-# -> {('add (func (x y) (add x y 1)))}
+# -> {['add (func (x y) (add x y 1))]}
 
 # setting implicit context
-(def double_plus_one_logged (set_impl_ctx {('add add_plus_one_logged)} double_plus_one))
+(def double_plus_one_logged (set_impl_ctx double_plus_one {['add add_plus_one_logged]}))
 ```
 
 Keep in mind that manipulating the implicit context can cause the resulting function to misbehave, for example if a key of the implicit context is removed or is replaced with an incompatible value
@@ -841,13 +789,13 @@ Note that all examples used identifier `ctx` to refer to the additional context 
 
 An impure function receives an additional context argument, called the *function explicit context*
 
-This *function explicit context* is the context of all definitions available to the *caller* of the function. For this reason, the *function explicit context* can also be called the function *caller context*. Since it is an explicit context, all of its keys must be qualified with the context identifier
+This *function explicit context* is the context of all definitions available to the *caller* of the function. For this reason, the *function explicit context* can also be called the function *caller context*
 
 Here is an example of receiving (but not modifying) the explicit context:
 ```
 def my_func (func ('eval ctx) (x y z)
-  (print ctx.zero)
-  (print ctx.hello)
+  (print (get 'zero ctx)
+  (print (get 'hello ctx)
 
   [ ctx         # unchanged
     (add x y z) # return value
@@ -872,12 +820,12 @@ def my_func (func ('eval ctx) (x y z)
 Here is an example of performing an impure action by modifying the explicit context:
 ```
 def my_func (func ('eval ctx) (x y z)
-  (print ctx.n)
-  (print ctx.hello)
+  (print (get ctx 'n))
+  (print (get ctx 'hello))
 
   # updated explicit context
   # contexts are just dictionaries
-  (def out_ctx (set ctx.n (add ctx.n 1)))
+  (def out_ctx (put ctx 'n (add ctx.n 1)))
 
   [ out_ctx     # updated
     (add x y z) # return value
@@ -953,7 +901,7 @@ Here is an example of implementing a prompt functionality:
 
 # prompt 3/3: process user string response
 (def prompt3 (func 'eval ()
-  [ (del ctx.__RESPONSE_IO__)
+  [ (del ctx '__RESPONSE_IO__)
     ctx.__RESPONSE_IO__
   ]
 ))
@@ -975,11 +923,11 @@ Here is an example of implementing a prompt functionality:
 
 The *function explicit context* can be used to get other module definition contexts (i.e. the final context after a module has finished evaluating). This allows the implementation of features like:
 - importing all or a subset of another module's definition
-- aliasing, qualifying or hiding a subset of another module's definition
+- aliasing or hiding a subset of another module's definition
 
-Assume an impure function `F`. Once `F` finishes its invocation, the interpreter will search the resulting explicit context for the key `'__REQUEST_MODULE_CTX__`. If found with a fully-qualified, single-quoted symbol `S`, the interpreter will do the following:
+Assume an impure function `F`. Once `F` finishes its invocation, the interpreter will search the resulting explicit context for the key `'__REQUEST_MODULE_CTX__`. If found with a list of single-quoted symbol `S`, the interpreter will do the following:
 - remove this key from the explicit context
-- search the module directory for the module `M` matching symbol `S`
+- search the module directory for the module `M` matching symbols in `S`
 - if module `M` is already evaluated, denote its final context as `C`
 - if module `M` is not evaluated, evaluate it now, denoting its final context as `C`
   - see below for full module evaluation order
@@ -990,7 +938,7 @@ Assume an impure function `F`. Once `F` finishes its invocation, the interpreter
 Here is an example of implementing an import functionality:
 ```
 # import 1/2: send request
-(def import1 (func ('eval ctx) (module)
+(def import1 (func ('quote ctx) module
   [ (put ctx '__REQUEST_MODULE_CTX__  module)
     ()
   ]
@@ -998,12 +946,12 @@ Here is an example of implementing an import functionality:
 
 # import 2/2: process response
 (def import2 (func ('eval ctx) ()
-  [ (del ctx.__RESPONSE_MODULE_CTX__)
-    ctx.__RESPONSE_MODULE_CTX__
+  [ (del ctx '__RESPONSE_MODULE_CTX__)
+    (get ctx '__RESPONSE_MODULE_CTX__)
   ]
 ))
 
-(import1 'data.list)
+(import1 data list)
 (import2)
 # returns: context for module Data.List
 ```
@@ -1086,25 +1034,25 @@ Here is an example of aborting and resuming evaluation:
 
 # Modules
 
-Source code can be split in multiple files. Each file corresponds to a module, and the path of a file corresponds to the module identifier. In particular, the relative path from the source root of any given file corresponds to the fully-qualified identifier of the corresponding module. For example, the following file structure and associated module identifiers:
+Source code can be split in multiple files. Each file corresponds to a module, and the path of a file corresponds to the module identifier. The following file structures demonstrates examples of module identifiers:
 ```
 src/
-  main.pz       # module 'main
-  Ast.Ast       # module 'data
+  main.pz       # module ['main]
+  Ast.Ast       # module ['data]
   data/
-    set.pz      # module 'data.set
-    list.pz     # module 'data.list
+    set.pz      # module ['data 'set]
+    list.pz     # module ['data 'list]
     list/
-      lazy.pz   # module 'data.list.lazy
+      lazy.pz   # module ['data 'list 'lazy]
 ```
 
 ## Module evaluation order
 
 The program evaluation algorithm is as follows:
 1. let `modules` be `{}`, such that:
-  - each key is a module's fully-qualified, single-quoted symbol. Ex:
-    - `'main`
-    - `'data.list.lazy`
+  - each key is a list of a module's single-quoted symbol. Ex:
+    - `['main]`
+    - `['data 'list 'lazy]`
 
   - each value is a module's context dictionary. Ex:
     - `{}` 
@@ -1136,132 +1084,30 @@ This algorithm ensures that:
   - circular dependencies are allowed and will not cause an infinite recursion
     - they MAY cause undefined identifier errors, ex:
       - module `A` imports module `B`, in which module `B` imports module `A`
-      - mdoule `B` will not have access to identifiers of `A` defined after its module `A`'s `(import B)` statement
+      - mdoule `B` will not have access to identifiers of `A` defined after its module `A`'s `import B` statement
       - this is because evaluation of `A` is paused until module `B` finishes evaluating
 
     - this can be fixed by doing one of the following:
       - creating a `friend zone` in A and B, where code required for both to evaluate correctly comes before the import statement of the other
       - moving dependencies to a new module
 
-# Roadmap
-
-The preceding only touches upon built-in primitives of the language. The goal is that more advanced features can be implemented in the language itself using those primitives
-
-## Doc
-
-(def
-"function id returns its argument unchanged"
-"Example: "
-">> (id 123)"
-"123"
-id (func (x) x)
-)
-
-## Error Handling
-
-(try (try_statement)
-  (recover e (recover_statement)) # optional if 'finally is present
-  (finally (finally statement))   # optional if 'recover is present
-)
-
-## Modules and imports
-
-In order for a module to use identifiers defined by another module, it first needs to `import` those identifiers. The operation for importing identifiers from a module requires the fully-qualified identifier of the module to import, and simply creates a dictionary structure in the current context to hold the new identifiers
-
-Here are some example of imports and symbol manipulations:
-```
-# import a module
-(import data.list)
-(data.list.concat [1 2 3] [4 5 6]) # -> [1 2 3 4 5 6]
-(data.list.zip [1 2 3] [4 5 6]) # -> [[1 4] [2 5] [3 6]]
-
-# define alias
-(def list data.list)
-(list.concat [1 2 3] [4 5 6]) # -> [1 2 3 4 5 6]
-(list.zip [1 2 3] [4 5 6]) # -> [[1 4] [2 5] [3 6]]
-
-# expose specific identifiers
-(def zip list.zip)
-(list.concat [1 2 3] [4 5 6]) # -> [1 2 3 4 5 6]
-(zip [1 2 3] [4 5 6]) # -> [[1 4] [2 5] [3 6]]
-```
-
-### Exports and private identifiers
-
-By default, every definition in a module `F` will be exported (i.e. made available to all other modules importing `F`). This includes identifiers defined in the module itself, as well as those imported from other modules (transitive imports, or re-exports)
-
-In other words, if module `A` defines identifier `a`, and if module `B` defines identifier `b` and imports module `A`, and if module `C` imports module `B` only and defines nothing itself, then module `C` will have access to identifiers `a` and `b`
-
-It is possible to prevent re-exporting identifiers by deleting their symbols from the current context at the end of the module. This can be done using `get_curr_ctx` and `set_curr_ctx`, which are implemented using the *function explicit context*, like this:
-```
-# main.pz
-
-# a private definition, should be made available
-(def _private "I'm private!")
-
-# a public definition, should be made available
-(def public_func (func () _private))
-
-# ...
-
-# get the current context, i.e. a dictionary
-(def ctx (get_curr_ctx))
-
-# delete '_private to make it unavailable
-# this does not impact any previous use of '_private
-(def new_ctx (del ctx '_private)_
-
-# this will be forgotten by next statement
-(def forgotten "This will be forgotten!")
-
-# overwrite the current context
-(set_curr_ctx new_ctx)
-```
-
-### The `builtin` module
+## The `builtin` module
 
 There exists a module named `builtin`, that contains all functions which are implemented natively by the interpreter. Examples of such functions are:
 - the `func` function itself
 - functions `add`, `sub`, etc, for manipulating numbers
 - functions `head`, `tail`, `const`, etc, for manipulating lists
 
-Since these functions cannot be deep-unquoted unto valid pizzascript, they are simply deep-unquoted as themselves. For example:
+Since these functions cannot be deep-unquoted into reasonable values, they are simply deep-unquoted as themselves. For example:
 - deep-unquoting `func` produces `'func`
 - deep-unquoting `add`, `sub`, etc, produces `'add`, `'sub`, etc
 - deep-unquoting `head`, `tail`, `cons`, etc, produces `'head`, `'tail`, `'cons` etc
 
 This preserves the property that `(compose deep_unquote deep_quote)` is equivalent to `id` for those functions as well
 
-### The `base` module
+## The `base` module
 
-There exists a module named `base`, of which all identifiers are automatically accessible to all modules. This module contains identifiers that are widely used and have no other dependencies than themselves. Think of it like if every module started with the following:
-```
-
-# this makes (base.add 1 2) possible
-# i.e. base is a dictionary
-(import base)
-
-# obtain current context
-# contexts are dictionaries
-(def ctx (get_curr_ctx))
-
-# add all base keys to current context
-# this makes (add 1 2) possible
-# also (base.add 1 2) is still possible if needed
-(def new_ctx (merge ctx base)
-
-# overwrite current context
-(set_curr_ctx new_ctx)
-```
-
-## Defining custom structs
-
-A struct is just a dictionary with a special field `'__STRUCT__` that contains the type of the struct
-
-Redefine `'typeof` to check this field
-
-Operations like `'defstruct` and `'struct` will read and update context key `'__STRUCTS__`, which contains the types, fields, etc, of structs that are defined in the current context
-
-## Protocols
-
-Operations like `'protocol` and `'impl` will read and update context key `'__PROTOCOLS__`, which contains the types, functions, implementations of protocols that are defined in the current context. Protocol (i.e. abstract) functions will check this to find the appropriate implementation
+There exists a module named `base`, of which all identifiers are automatically accessible to all modules. This module contains identifiers that are widely used and have no other dependencies than themselves. Examples of such functions are:
+- functions `def`, `defun`, etc, for manipulating identifiers
+- functions `if`, `cond`, etc, for control structures
+- functions `list`, `dict`, etc
