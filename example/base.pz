@@ -3,13 +3,12 @@
 # define 'def manually
 # immediately invoke an anonymous function
 ((func ('eval ctx) () [
-    (put 'def
+    (put ctx 'def
         # This is the 'def definition
         (func ('quote ctx) (k v) [   
-            (put k ((func ('deep_unquote) (x) x) v) ctx)
+            (put ctx k ((func ('deep_unquote) (x) x) v))
             () # 'def returns nothing
         ])
-        ctx
     )
     () # this anonymous function returns nothing
 ]))
@@ -18,9 +17,9 @@
 (def id (func (x) x))
 (def flip (func (f x y) (f y x)))
 
-(def quote (func ('quote) (x) x))
-(def unquote (func ('unquote) (x) x))
-(def deep_quote (func ('deep_quote) (x) x))
+(def quote        (func ('quote)        (x) x))
+(def unquote      (func ('unquote)      (x) x))
+(def deep_quote   (func ('deep_quote)   (x) x))
 (def deep_unquote (func ('deep_unquote) (x) x))
 
 # control structures
@@ -43,7 +42,7 @@
 
 # lists
 (def map (func (f xs)
-    (if (empty xs)
+    (if (is_empty xs)
         xs
         (cons
             (f (head xs))
