@@ -9,9 +9,6 @@ import Data.Nat ( Nat(..) )
 import Types
 import Text.Parsec.Pos ( newPos )
 
-ident :: String -> Ident
-ident = Ident . (:[])
-
 symb :: Ident -> Symb
 symb = Symb Z
 
@@ -41,18 +38,12 @@ toForm p k =
         KindDict -> (identToExpr identDict:)
         KindForm -> id
 
-splitSymb :: Symb -> [Symb]
-splitSymb (Symb n (Ident ps)) = flip map ps $ Symb n . Ident . (:[])
-
-getIdent :: WithPos AstExpr -> Maybe (WithPos Ident)
+getIdent :: WithPos AstExpr -> Either String (WithPos Ident)
 getIdent (WithPos p v) = case v of
     AstIdent ident -> return $ WithPos p ident
-    _ -> Nothing
-
-getIdentUnqual :: WithPos AstExpr -> Either String (WithPos Ident)
-getIdentUnqual (WithPos p v) = case v of
-    AstIdent ident@(Ident [_]) -> return $ WithPos p ident
-    _ -> Left $ "Error: Must be an unqualified identifier: " ++ show v ++ "\n at: " ++ show p
+    _ -> Left $ "Expected identifier"
+        ++ "\n was: " ++ show v
+        ++ "\n at: " ++ show p
 
 getArgPass :: Func -> ArgPass
 getArgPass func = case impArgs func of
@@ -129,44 +120,44 @@ fromFuncCustom implCtx (FuncCustom impArgs args es) =
 
 -- booleans
 identFalse :: Ident
-identFalse = ident "false"
+identFalse = Ident "false"
 
 identTrue :: Ident
-identTrue = ident "true"
+identTrue = Ident "true"
 
 identNot :: Ident
-identNot = ident "not"
+identNot = Ident "not"
 
 identOr :: Ident
-identOr = ident "or"
+identOr = Ident "or"
 
 identAnd :: Ident
-identAnd = ident "and"
+identAnd = Ident "and"
 
 -- lists
 identList :: Ident
-identList = ident "list"
+identList = Ident "list"
 
 -- dictionaries
 identDict :: Ident
-identDict = ident "dict"
+identDict = Ident "dict"
 
 -- functions
 identFunc :: Ident
-identFunc = ident "func"
+identFunc = Ident "func"
 
 -- miscellaneous
 identCtx :: Ident
-identCtx = ident "ctx"
+identCtx = Ident "ctx"
 
 identArgs :: Ident
-identArgs = ident "args"
+identArgs = Ident "args"
 
 identX :: Ident
-identX = ident "x"
+identX = Ident "x"
 
 identY :: Ident
-identY = ident "y"
+identY = Ident "y"
 
 -------------
 -- Symbols
@@ -196,19 +187,19 @@ symbTrue = symb identTrue
 
 -- functions
 symbEval :: Symb
-symbEval = symb $ ident "eval"
+symbEval = symb $ Ident "eval"
 
 symbQuote :: Symb
-symbQuote = symb $ ident "quote"
+symbQuote = symb $ Ident "quote"
 
 symbUnquote :: Symb
-symbUnquote = symb $ ident "unquote"
+symbUnquote = symb $ Ident "unquote"
 
 symbDeepQuote :: Symb
-symbDeepQuote = symb $ ident "deep_quote"
+symbDeepQuote = symb $ Ident "deep_quote"
 
 symbDeepUnquote :: Symb
-symbDeepUnquote = symb $ ident "deep_unquote"
+symbDeepUnquote = symb $ Ident "deep_unquote"
 
 -- miscellaneous
 -- TODO

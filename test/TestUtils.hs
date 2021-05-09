@@ -44,7 +44,7 @@ unparseElem = \case
     Just (Elem x) -> show x ++ " "
 
 -- Types and instances
-instance Arbitrary Ident where arbitrary = Ident <$> arbMany 1 5 arbIdentPart
+instance Arbitrary Ident where arbitrary = fmap Ident $ liftM2 (:) (elements validFirsts) $ chooseInt (0, 10) >>= flip vectorOf (elements validNexts)
 instance ArbWithDepth Ident where arbWithDepth _ = arbitrary
 
 instance Arbitrary Symb where arbitrary = liftM2 Symb arbitrary arbitrary
@@ -139,10 +139,6 @@ instance Arbitrary ValidCodepoint where arbitrary = ValidCodepoint <$> chooseInt
 newtype InvalidCodepoint = InvalidCodepoint Int deriving (Show, Eq)
 instance Arbitrary InvalidCodepoint where arbitrary = InvalidCodepoint <$> chooseInt (0x110000, maxBound)
 
-newtype IdentPart = IdentPart String deriving (Show, Eq)
-instance Arbitrary IdentPart where arbitrary = fmap IdentPart $ liftM2 (:) (elements validFirsts) $ chooseInt (0, 5) >>= flip vectorOf (elements validNexts)
-arbIdentPart = do IdentPart s <- arbitrary; return s
-
 class Arbitrary a => ArbWithDepth a where arbWithDepth :: Int -> Gen a
 instance ArbWithDepth a => ArbWithDepth (Maybe a) where arbWithDepth depth = oneof [return Nothing, Just <$> arbWithDepth depth]
 
@@ -218,4 +214,4 @@ arbUnquoteValid :: Gen (WithPos AstExpr)
 arbUnquoteValid = do UnquoteValid e <- arbitrary; return e
 
 arbIdentUnqual :: Gen (WithPos Ident)
-arbIdentUnqual = liftM2 WithPos arbitrary $ Ident . (:[]) <$> arbIdentPart
+arbIdentUnqual = liftM2 WithPos arbitrary arbitrary

@@ -174,7 +174,9 @@ invokeFuncCustom explCtx p as implCtx impArgs args es frames =
 toAcc :: Dict -> WithPos AstExpr -> [StackFrame] -> ExprEvalResult -> EvalResult
 toAcc ctx e frames r = case r of
     Evaled v -> return $ Acc (Just v) frames
-    ExprForm p es -> return $ Acc Nothing $ Form ctx p (getIdent e) es : frames
+    ExprForm p es ->
+        let mfi = case getIdent e of Left _ -> Nothing; Right fi -> Just fi in
+        return $ Acc Nothing $ Form ctx p mfi es : frames
 
 returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
 returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) $ setCtx ctx frames
@@ -182,8 +184,8 @@ returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) $ setCtx ctx fram
 -- Built-in functions
 -- See module BuiltIns for implementations
 invokeFuncBuiltIn :: Dict -> Pos -> [WithPos PzVal] -> Ident -> [StackFrame] -> EvalResult
-invokeFuncBuiltIn ctx p args (Ident ps) frames =
-    case ps of
+invokeFuncBuiltIn ctx p args (Ident s) frames =
+    case s of
         -- numbers
         -- TODO
 
@@ -194,9 +196,9 @@ invokeFuncBuiltIn ctx p args (Ident ps) frames =
         -- TODO
 
         -- booleans
-        ["not"] -> returnFrom frames $ f1 args $ \x -> fpure ctx $ _not x
-        ["or"] -> returnFrom frames $ f2 args $ \x y -> fpure ctx $ _or x y
-        ["and"] -> returnFrom frames $ f2 args $ \x y -> fpure ctx $ _and x y
+        "not" -> returnFrom frames $ f1 args $ \x -> fpure ctx $ _not x
+        "or" -> returnFrom frames $ f2 args $ \x y -> fpure ctx $ _or x y
+        "and" -> returnFrom frames $ f2 args $ \x y -> fpure ctx $ _and x y
 
         -- lists
         -- TODO
@@ -210,4 +212,4 @@ invokeFuncBuiltIn ctx p args (Ident ps) frames =
         -- miscellaneous
         -- TODO
 
-        _ -> Left $ "TODO: Implement built-in function: " ++ show ps
+        _ -> Left $ "TODO: Implement built-in function: " ++ show s

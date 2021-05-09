@@ -94,19 +94,12 @@ parseHexCodepoint p = do
 
 -- Identifiers
 parseIdent :: Parser Ident
-parseIdent = Ident <$> liftM2 (:) parseIdentPart (many $ char '.' >> parseIdentPart)
+parseIdent =
+    let us = char '_' in
+    fmap Ident $ liftM2 (:) (letter <|> us) $ many $ alphaNum <|> us
 
 unparseIdent :: Ident -> String
-unparseIdent (Ident ps) = intercalate "." $ map unparseIdentPart ps
-
-parseIdentPart :: Parser String
-parseIdentPart = liftM2 (:)
-    (letter <|> underscore)
-    (many $ alphaNum  <|> underscore) where
-        underscore = char '_'
-
-unparseIdentPart :: String -> String
-unparseIdentPart p = p
+unparseIdent (Ident s) = s
 
 -- Symbols
 parseSymb :: Parser Symb

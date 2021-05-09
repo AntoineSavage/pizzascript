@@ -69,7 +69,7 @@ unevalFuncCustom (FuncCustom impArgs args body) = unevalImpureArgs impArgs ++ un
 evalImpureArgs :: [WithPos AstExpr] -> Either String (FuncImpureArgs, [WithPos AstExpr])
 evalImpureArgs elems = case elems of
     -- form starting with argument-passing behaviour symbol, followed by...
-    WithPos p (AstList KindForm (WithPos p2 (AstSymb s@(Symb Z (Ident [_]))):as)):es -> do
+    WithPos p (AstList KindForm ((WithPos p2 (AstSymb s@(Symb Z _))):as)):es -> do
         argPass <- case symbToArgPass s of
             Just r -> return $ WithPos p2 r
             Nothing -> Left $
@@ -80,13 +80,13 @@ evalImpureArgs elems = case elems of
             -- nothing else
             [] -> return (ArgPass p argPass, es)
 
-            -- unqualified identifier
-            [ e ] -> (, es) . Both p argPass <$> getIdentUnqual e
+            -- identifier
+            [ e ] -> (,es) . Both p argPass <$> getIdent e
 
             _ -> Left $
                 "Error: Impure function argument definition must be either:"
                     ++ "\n - a valid argument-passsing behaviour symbol only"
-                    ++ "\n - a valid argument-passsing behaviour symbol, followed by an unqualified identifier"
+                    ++ "\n - a valid argument-passsing behaviour symbol, followed by an identifier"
                     ++ "\n was: " ++ show (map val elems)
 
     -- no match: assume no impure args
@@ -103,12 +103,12 @@ unevalImpureArgs impArgs =
 
 evalArgs :: [WithPos AstExpr] -> Either String (FuncArgs, [WithPos AstExpr])
 evalArgs elems = case elems of
-    ie@(WithPos _ (AstIdent (Ident [_]))):es -> (,es) . ArgsVaria <$> getIdentUnqual ie
-    WithPos p (AstList KindForm ies):es -> (,es) . ArgsArity p <$> mapM getIdentUnqual ies
+    ie@(WithPos _ (AstIdent _)):es -> (,es) . ArgsVaria <$> getIdent ie
+    WithPos p (AstList KindForm ies):es -> (,es) . ArgsArity p <$> mapM getIdent ies
     _ -> Left $
         "Error: Function argument definition must be either:"
-        ++ "\n - a single varargs unqualified identifier"
-        ++ "\n - an form of arity unqualified identifiers"
+        ++ "\n - a single varargs identifier"
+        ++ "\n - an form of arity identifiers"
         ++ "\n was: " ++ show (map val elems)
 
 unevalArgs :: FuncArgs -> [WithPos AstExpr]
@@ -119,25 +119,11 @@ unevalArgs args =
 
 -- Utils
 evalIdent :: Dict -> Ident -> Either String (WithPos PzVal)
-evalIdent ctx ident = inner (withPos $ PzDict ctx) $ splitSymb $ symb ident where
-    inner val_or_ctx symbs =
-        case symbs of
-            [] -> return val_or_ctx
-            s@(Symb _ i):ss ->
-                case val val_or_ctx of
-                    PzDict m ->
-                        case M.lookup (withPos $ PzSymb s) m of
-                            Just v' -> inner v' ss
-
-                            Nothing -> Left $
-                                "Error: Undefined identifier: " ++ show i
-                                ++ "\n when evaluating (possibly qualified) identifier: " ++ show ident
-                                ++ "\n context keys: " ++ show (M.keys m)
-
-                    _ -> Left $
-                        "Error: Non-dictionary context for identifier: " ++ show i
-                        ++ "\n when evaluating qualified identifier: " ++ show ident
-                        ++ "\n non-dictionary context: " ++ show val_or_ctx
+evalIdent ctx ident = case M.lookup (withPos $ PzSymb $ symb ident) ctx of
+    Just v -> Right v
+    Nothing -> Left $
+        "Error: Undefined identifier: " ++ show ident
+        ++ "\n context keys: " ++ show (M.keys ctx)
 
 validateNoDuplicateIdents :: FuncImpureArgs -> FuncArgs -> Either String ()
 validateNoDuplicateIdents impArgs args =

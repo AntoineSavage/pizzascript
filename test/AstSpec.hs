@@ -38,9 +38,6 @@ spec = do
     parseIdentVsUnparseIdentSpec
     parseIdentSpec
     unparseIdentSpec
-    parseIdentPartVsUnparseIdentPartSpec
-    parseIdentPartSpec
-    unparseIdentPartSpec
 
     -- Symbols
     parseSymbVsUnparseSymbSpec
@@ -547,77 +544,21 @@ parseIdentVsUnparseIdentSpec = describe "parseIdent vs unparseIdent" $ do
 
 parseIdentSpec :: Spec
 parseIdentSpec = describe "parseIdent" $ do
-    it "rejects empty string" $ do
-        isLeft (parse parseIdent "tests" "") `shouldBe` True
-
-    it "parses one part" $ do
-        property $ \(IdentPart p) -> do
-            parse parseIdent "tests" p `shouldBe` Right (Ident [p])
-
-    it "parses two parts" $ do
-        property $ \(IdentPart p1) (IdentPart p2) -> do
-            let s = p1 ++ "." ++ p2
-            parse parseIdent "tests" s `shouldBe` Right (Ident [p1, p2])
-
-    it "parses two parts" $ do
-        property $ \(IdentPart p1) (IdentPart p2) (IdentPart p3) -> do
-            let s = p1 ++ "." ++ p2 ++ "." ++ p3
-            parse parseIdent "tests" s `shouldBe` Right (Ident [p1, p2, p3])
-
-    it "parses n parts" $ do
-        property $ \(Ident ps) -> do
-            let s = intercalate "." ps
-            parse parseIdent "tests" s `shouldBe` Right (Ident ps)
-
-unparseIdentSpec :: Spec
-unparseIdentSpec = describe "unparseIdent" $ do
-    it "returns empty string for empty list" $ do
-        unparseIdent (Ident []) `shouldBe` ""
-
-    it "intercalates no dots for single part" $ do
-        property $ \(IdentPart p) -> do
-            unparseIdent (Ident [p]) `shouldBe` p
-
-    it "intercalates dots between two parts" $ do
-        property $ \(IdentPart p1) (IdentPart p2) -> do
-            let s = p1 ++ "." ++ p2
-            unparseIdent (Ident [p1, p2]) `shouldBe` s
-
-    it "intercalates dots between three parts" $ do
-        property $ \(IdentPart p1) (IdentPart p2) (IdentPart p3) -> do
-            let s = p1 ++ "." ++ p2 ++ "." ++ p3
-            unparseIdent (Ident [p1, p2, p3]) `shouldBe` s
-
-    it "intercalates dots between n parts" $ do
-        property $ \(Ident ps) -> do
-            let s = intercalate "." ps
-            unparseIdent (Ident ps) `shouldBe` s
-
-parseIdentPartVsUnparseIdentPartSpec :: Spec
-parseIdentPartVsUnparseIdentPartSpec = describe "parseIdentPart vs unparseIdentPart" $ do
-    it "composes parseIdentPart and unparseIdentPart into id into id" $ do
-        property $ \(Ident (p:_)) -> do
-            let s = unparseIdentPart p
-            parse parseIdentPart "tests" s `shouldBe` Right p
-            unparseIdentPart <$> parse parseIdentPart "tests" s `shouldBe` Right s
-
-parseIdentPartSpec :: Spec
-parseIdentPartSpec = describe "parseIdentPart" $ do
     it "rejects invalid first" $ do
         forM_ invalidFirsts $ \f -> do
             let s = f : validNexts
-            isLeft (parse parseIdentPart "tests" s) `shouldBe` True
+            isLeft (parse parseIdent "tests" s) `shouldBe` True
 
     it "parses successfully" $ do
         forM_ validFirsts $ \f -> do
             let s = f : validNexts
-            parse parseIdentPart "tests" s `shouldBe` Right s
+            parse parseIdent "tests" s `shouldBe` Right (Ident s)
 
-unparseIdentPartSpec :: Spec
-unparseIdentPartSpec = describe "unparseIdentPart" $ do
-    it "returns the input ident part" $ do
+unparseIdentSpec :: Spec
+unparseIdentSpec = describe "unparseIdent" $ do
+    it "returns input string" $ do
         property $ \s -> do
-            unparseIdentPart s `shouldBe` s
+            unparseIdent (Ident s) `shouldBe` s
 
 -- Symbols
 parseSymbVsUnparseSymbSpec :: Spec

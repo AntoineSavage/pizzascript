@@ -88,8 +88,8 @@ evalExprSpec = describe "evalExpr" $ do
                     Right (Evaled $ WithPos p $ PzSymb $ Symb n i)
 
     it "evals single-quoted symbols (Unquote or DeepUnquote) as the matching identifier, evaluated" $ do
-        property $ \(ArbDict c) p s v -> do
-            let sym = symb $ ident s
+        property $ \(ArbDict c) p i v -> do
+            let sym = symb i
                 k = withPos $ PzSymb sym
                 ctx = M.insert k v c
 
@@ -98,24 +98,21 @@ evalExprSpec = describe "evalExpr" $ do
                     Right (Evaled v)
 
     it "evals identifiers (Eval) as the associated value" $ do
-        property $ \(ArbDict c) p s v -> do
-            let i = ident s
-                k = withPos $ PzSymb $ symb i
+        property $ \(ArbDict c) p i v -> do
+            let k = withPos $ PzSymb $ symb i
                 ctx = M.insert k v c
 
             evalExpr ctx (WithPos p $ AstIdent i) Eval `shouldBe`
                 Right (Evaled v)
 
     it "evals identifiers (Quote) as the corresponding symbol" $ do
-        property $ \(ArbDict ctx) p s -> do
-            let i = ident s
-                sym = symb i
+        property $ \(ArbDict ctx) p i -> do
+            let sym = symb i
             evalExpr ctx (WithPos p $ AstIdent i) Quote `shouldBe`
                 Right (Evaled $ WithPos p $ PzSymb sym)
 
     it "rejects identifiers (Unquote)" $ do
-        property $ \(ArbDict ctx) p s -> do
-            let i = ident s
+        property $ \(ArbDict ctx) p i -> do
             isLeft (evalExpr ctx (WithPos p $ AstIdent i) Unquote) `shouldBe` True
 
     it "evals identifiers (DeepQuote) as the associated value, quoted" $ do
@@ -126,7 +123,7 @@ evalExprSpec = describe "evalExpr" $ do
                     , (PzSymb $ Symb n i', PzSymb $ Symb (S n) i')
                     ]
             forM_ pairs $ \(v, v') -> do
-                let i = ident s
+                let i = Ident s
                     k = withPos $ PzSymb $ symb i
                     ctx = M.insert k (WithPos p2 v) c
 
@@ -141,7 +138,7 @@ evalExprSpec = describe "evalExpr" $ do
                     , (PzSymb $ Symb (S n) i', PzSymb $ Symb n i')
                     ]
             forM_ pairs $ \(v', v) -> do
-                let i = ident s
+                let i = Ident s
                     k = withPos $ PzSymb $ symb i
                     ctx = M.insert k (WithPos p2 v') c
 
@@ -238,10 +235,10 @@ evalImpureArgsSpec = describe "evalImpureArgs" $ do
         forM_ [ []
                 , [AstNum 0]
                 , [AstStr ""]
-                , [AstIdent $ ident ""]
-                , [AstSymb $ symb $ ident ""]
-                , [AstList KindList [withPos $ AstSymb $ symb $ ident ""]]
-                , [AstList KindDict [withPos $ AstSymb $ symb $ ident ""]]
+                , [AstIdent $ Ident ""]
+                , [AstSymb $ symb $ Ident ""]
+                , [AstList KindList [withPos $ AstSymb $ symb $ Ident ""]]
+                , [AstList KindDict [withPos $ AstSymb $ symb $ Ident ""]]
                 , [AstList KindForm []]
             ] $ \es -> do
             let elems = map withPos es
@@ -266,32 +263,13 @@ evalImpureArgsSpec = describe "evalImpureArgs" $ do
     it "rejects invalid arg-pass symbol" $ do
         property $ \s (Few es) -> do
             let elems = (withPos $ AstList KindForm [
-                        withPos $ AstSymb $ symb $ ident $ '_' : s
-                    ]) : es
-            isLeft (evalImpureArgs elems) `shouldBe` True
-
-    it "rejects empty identifier" $ do
-        property $ \ap (Few es) -> do
-            let ec = Ident []
-                elems = (withPos $ AstList KindForm [
-                        withPos $ AstSymb $ argPassToSymb ap,
-                        withPos $ AstIdent ec
-                    ]) : es
-            isLeft (evalImpureArgs elems) `shouldBe` True
-
-    it "rejects qualified identifier" $ do
-        property $ \ap s1 s2 ss (Few es) -> do
-            let ec = Ident $ s1:s2:ss
-                elems = (withPos $ AstList KindForm [
-                        withPos $ AstSymb $ argPassToSymb ap,
-                        withPos $ AstIdent ec
+                        withPos $ AstSymb $ symb $ Ident $ '_' : s
                     ]) : es
             isLeft (evalImpureArgs elems) `shouldBe` True
 
     it "rejects size-3 (or more) form" $ do
-        property $ \ap s a (Few as) (Few es) -> do
-            let ec = Ident [s]
-                elems = (withPos $ AstList KindForm $ [
+        property $ \ap ec a (Few as) (Few es) -> do
+            let elems = (withPos $ AstList KindForm $ [
                         withPos $ AstSymb $ argPassToSymb ap,
                         withPos $ AstIdent ec
                     ] ++ [a] ++ as) : es
@@ -327,8 +305,8 @@ evalArgsVsUnevalArgsSpec = describe "evalArgs vs unevalArgs" $ do
 
 evalArgsSpec :: Spec
 evalArgsSpec = describe "evalArgs" $ do
-    let toAstIdent p s = WithPos p $ AstIdent $ ident s
-        toIdent p s = WithPos p $ ident s
+    let toAstIdent p s = WithPos p $ AstIdent $ Ident s
+        toIdent p s = WithPos p $ Ident s
 
     it "evals variadic args ident" $ do
         property $ \p s (Few es) -> do
@@ -340,23 +318,13 @@ evalArgsSpec = describe "evalArgs" $ do
             let elems = WithPos p (AstList KindForm $ map (uncurry toAstIdent) ps) : es
             evalArgs elems `shouldBe` Right (ArgsArity p $ map (uncurry toIdent) ps, es)
 
-    it "rejects qualified variadic args ident" $ do
-        property $ \s1 s2 (Few es) -> do
-            let elems = withPos (AstIdent $ Ident [s1, s2]) : es
-            isLeft (evalArgs elems) `shouldBe` True
-
-    it "rejects qualified arity args idents" $ do
-        property $ \s1 s2 (Few es) -> do
-            let elems = withPos (AstList KindForm [withPos $ AstIdent $ Ident [s1, s2]]) : es
-            isLeft (evalArgs elems) `shouldBe` True
-
     it "rejects empty list" $ do
         isLeft (evalArgs []) `shouldBe` True
 
     it "rejects non-ident and non-form list" $ do
         property $ \(Few es) -> do
             forM_   [ AstNum 0, AstStr ""
-                    , AstSymb $ symb $ ident ""
+                    , AstSymb $ symb $ Ident ""
                     , AstList KindList []
                     , AstList KindDict []
                     ] $ \e ->
@@ -374,69 +342,16 @@ unevalArgsSpec = describe "unevalArgs" $ do
 
 evalIdentSpec :: Spec
 evalIdentSpec = describe "evalIdent" $ do
-    it "evaluates zero ident parts" $ do
-        property $ \(ArbDict ctx) -> do
-            evalIdent ctx (Ident []) `shouldBe` Right (withPos $ PzDict ctx)
-
     it "evaluates one ident part" $ do
-        property $ \(ArbDict c) s v -> do
-            let ident = Ident [s]
-                k = withPos $ PzSymb $ symb ident
+        property $ \(ArbDict c) ident v -> do
+            let k = withPos $ PzSymb $ symb ident
                 ctx = flip (M.insert k) c v
             evalIdent ctx ident `shouldBe` Right v
 
-    it "evaluates two ident parts" $ do
-        property $ \(ArbDict c1) (ArbDict c2) p1 p2 s1 s2 v -> do
-            let k1 = WithPos p1 $ PzSymb $ symb $ Ident [s1]
-                k2 = WithPos p2 $ PzSymb $ symb $ Ident [s2]
-                ctx2 = flip (M.insert k2) c2 v
-                ctx1 = flip (M.insert k1) c1 $ withPos $ PzDict ctx2
-            evalIdent ctx1 (Ident [s1, s2]) `shouldBe` Right v
-
-    it "evaluates three ident parts" $ do
-        property $ \(ArbDict c1) (ArbDict c2) (ArbDict c3) p1 p2 p3 s1 s2 s3 v -> do
-            let k1 = WithPos p1 $ PzSymb $ symb $ Ident [s1]
-                k2 = WithPos p2 $ PzSymb $ symb $ Ident [s2]
-                k3 = WithPos p3 $ PzSymb $ symb $ Ident [s3]
-                ctx3 = flip (M.insert k3) c3 v
-                ctx2 = flip (M.insert k2) c2 $ withPos $ PzDict ctx3
-                ctx1 = flip (M.insert k1) c1 $ withPos $ PzDict ctx2
-            evalIdent ctx1 (Ident [s1, s2, s3]) `shouldBe` Right v
-
-    it "evaluates one undefined ident part" $ do
-        property $ \(ArbDict c) s -> do
-            let ident = Ident [s]
-                k = withPos $ PzSymb $ symb ident
+    it "evaluates undefined ident" $ do
+        property $ \(ArbDict c) ident -> do
+            let k = withPos $ PzSymb $ symb ident
             isLeft (evalIdent (M.delete k c) ident) `shouldBe` True
-
-    it "evaluates two undefined ident parts" $ do
-        property $ \(ArbDict c1) (ArbDict c2) p1 p2 s1 s2 -> do
-            let ident = Ident [s1, s2]
-                k1 = WithPos p1 $ PzSymb $ symb $ Ident [s1]
-                k2 = WithPos p2 $ PzSymb $ symb $ Ident [s2]
-                ctx = flip (M.insert k1) c1 $ withPos $ PzDict $ M.delete k2 c2
-            isLeft (evalIdent ctx ident) `shouldBe` True
-            isLeft (evalIdent (M.delete k1 c1) ident) `shouldBe` True
-
-    it "evaluates three undefined ident parts" $ do
-        property $ \(ArbDict c1) (ArbDict c2) (ArbDict c3) p1 p2 p3 s1 s2 s3 -> do
-            let ident = Ident [s1, s2, s3]
-                k1 = WithPos p1 $ PzSymb $ symb $ Ident [s1]
-                k2 = WithPos p2 $ PzSymb $ symb $ Ident [s2]
-                k3 = WithPos p3 $ PzSymb $ symb $ Ident [s3]
-                ctx1 = flip (M.insert k1) c1 $ withPos $ PzDict $
-                        flip (M.insert k2) c2 $ withPos $ PzDict $ M.delete k3 c3
-                ctx2 = flip (M.insert k1) c1 $ withPos $ PzDict $ M.delete k2 c2
-            isLeft (evalIdent ctx1 ident) `shouldBe` True
-            isLeft (evalIdent ctx2 ident) `shouldBe` True
-            isLeft (evalIdent (M.delete k1 c1) ident) `shouldBe` True
-
-    it "non-dictionary context" $ do
-        property $ \(ArbDict c) s1 s2 -> do
-            forM_ [PzUnit, PzNum 0, PzStr "", PzList []] $ \v -> do
-                let k = withPos $ PzSymb $ symb $ Ident [s1]
-                    ctx = flip (M.insert k) c $ withPos v
-                isLeft (evalIdent ctx (Ident [s1, s2])) `shouldBe` True
 
 validateNoDuplicateIdentsSpec :: Spec
 validateNoDuplicateIdentsSpec = describe "validateNoDuplicateIdents" $ do
@@ -448,68 +363,68 @@ validateNoDuplicateIdentsSpec = describe "validateNoDuplicateIdents" $ do
 
     it "accepts one arg (impure args)" $ do
         property $ \p c -> do
-            let ctx = withPos $ ident c
+            let ctx = withPos $ Ident c
             validateNoDuplicateIdents (both ctx) (ArgsArity p []) `shouldBe` Right ()
 
     it "accepts one arg (varia)" $ do
         property $ \v -> do
-            let varargs = withPos $ ident v
+            let varargs = withPos $ Ident v
             forM_ [none, form] $ \impArgs -> do
                 validateNoDuplicateIdents impArgs (ArgsVaria varargs) `shouldBe` Right ()
 
     it "accepts one arg (arity)" $ do
         property $ \p a -> do
-            let arg = withPos $ ident a
+            let arg = withPos $ Ident a
             forM_ [none, form] $ \impArgs -> do
                 validateNoDuplicateIdents impArgs (ArgsArity p [arg]) `shouldBe` Right ()
 
     it "accepts two args (impure+varia)" $ do
         property $ \c' v -> do
             let c = differentThan c' [v]
-                [ctx, varargs] = map (withPos.ident) [c, v]
+                [ctx, varargs] = map (withPos.Ident) [c, v]
             validateNoDuplicateIdents (both ctx) (ArgsVaria varargs) `shouldBe` Right ()
 
     it "accepts two args (impure+arity)" $ do
         property $ \p c' a -> do
             let c = differentThan c' [a]
-                [ctx, arg] = map (withPos.ident) [c, a]
+                [ctx, arg] = map (withPos.Ident) [c, a]
             validateNoDuplicateIdents (both ctx) (ArgsArity p [arg]) `shouldBe` Right ()
 
     it "accepts two args (arity)" $ do
         property $ \p a1' a2' -> do
             let a1 = differentThan a1' []
                 a2 = differentThan a2' [a1]
-                [arg1, arg2] = map (withPos.ident) [a1, a2]
+                [arg1, arg2] = map (withPos.Ident) [a1, a2]
             forM_ [none, form] $ \impArgs -> do
                 validateNoDuplicateIdents impArgs (ArgsArity p [arg1, arg2]) `shouldBe` Right ()
 
     it "accepts N+1 args (impure+arity)" $ do
         property $ \p c' (Uniques as) -> do
             let c = differentThan c' as
-                ctx = withPos $ ident c
-                args = map (withPos.ident) as
+                ctx = withPos $ Ident c
+                args = map (withPos.Ident) as
             validateNoDuplicateIdents (both ctx) (ArgsArity p args) `shouldBe` Right ()
 
     it "rejects two args (impure+varia)" $ do
         property $ \x -> do
-            let [ctx, varargs] = map (withPos.ident) [x, x]
+            let [ctx, varargs] = map (withPos.Ident) [x, x]
             isLeft (validateNoDuplicateIdents (both ctx) (ArgsVaria varargs)) `shouldBe` True
 
     it "rejects two args (impure+arity)" $ do
         property $ \x -> do
-            let [ctx, arg] = map (withPos.ident) [x, x]
+            let [ctx, arg] = map (withPos.Ident) [x, x]
             isLeft (validateNoDuplicateIdents (both ctx) (ArgsArity p' [arg])) `shouldBe` True
 
     it "rejects two args (arity)" $ do
         property $ \x -> do
-            let [arg1, arg2] = map (withPos.ident) [x, x]
+            let [arg1, arg2] = map (withPos.Ident) [x, x]
             forM_ [none, form] $ \impArgs -> do
                 isLeft (validateNoDuplicateIdents none (ArgsArity p' [arg1, arg2])) `shouldBe` True
 
     it "rejects N+1 args (impure+arity)" $ do
         property $ \x (Uniques as) -> do
-            let ctx = withPos $ ident x
-                args = map (withPos.ident) (x:as)
+            let ctx = withPos $ Ident x
+                args = map (withPos.Ident) (x:as)
             isLeft (validateNoDuplicateIdents (both ctx) (ArgsArity p' args)) `shouldBe` True
 
 p' = newPos "tests" 0 0

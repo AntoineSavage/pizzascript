@@ -1,8 +1,5 @@
 # TODO
-# 1) Identifiers are unqualified (therefore, symbols are unqualified)
-#   - no more ident_split/merge functions
-#
-# 2) Ast types are only used during parsing
+# 1) Ast types are only used during parsing
 #   - after parsing is finished, immediately convert to quoted values (stil values)
 #   - instad of converting from AstExpr to PzVal, convert from quoted PzVal to normal PzVal
 #   - arg-pass 'q is actually the most performant, since everything is already quoted

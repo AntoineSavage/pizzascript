@@ -15,15 +15,12 @@ import Utils
 
 spec :: Spec
 spec = do
-    identSpec
     symbSpec
     argPassToSymbVsSymbToArgPassSpec
     argPassToSymbSpec
     symbToArgPassSpec
     toFormSpec
-    splitSymbSpec
     getIdentSpec
-    getIdentUnqualSpec
     getArgPassSpec
     getDuplicatesSpec
     addIdentAndPosSpec
@@ -37,12 +34,6 @@ spec = do
     toFuncCustomVsFromFuncCustomSpec
     toFuncCustomSpec
     fromFuncCustomSpec
-
-identSpec :: Spec
-identSpec = describe "ident" $ do
-    it "converts string to ident" $ do
-        property $ \s -> do
-            ident s `shouldBe` Ident [s]
 
 symbSpec :: Spec
 symbSpec = describe "symb" $ do
@@ -77,11 +68,11 @@ symbToArgPassSpec = describe "symbToArgPass" $ do
         symbToArgPass symbDeepUnquote `shouldBe` Just DeepUnquote
 
     it "rejects unknown symbols" $ do
-        symbToArgPass (symb $ ident "ABC") `shouldBe` Nothing
+        symbToArgPass (symb $ Ident "ABC") `shouldBe` Nothing
 
     it "rejects unknown symbols (prop)" $ do
         property $ \s -> 
-            symbToArgPass (symb $ ident $ "_" ++ s) `shouldBe` Nothing
+            symbToArgPass (symb $ Ident $ "_" ++ s) `shouldBe` Nothing
 
 toFormSpec :: Spec
 toFormSpec = describe "toForm" $ do
@@ -97,48 +88,27 @@ toFormSpec = describe "toForm" $ do
             toForm p KindDict es `shouldBe` (WithPos p $ AstIdent $ identDict) : es
             toForm p KindForm es `shouldBe` es
 
-splitSymbSpec :: Spec
-splitSymbSpec = describe "splitSymb" $ do
-    it "splits symbol" $ do
-        property $ \n ps -> do
-            let symb = Symb n (Ident ps)
-            splitSymb symb `shouldBe` map (Symb n . Ident . (:[])) ps
-
 getIdentSpec :: Spec
 getIdentSpec = describe "getIdent" $ do
     it "converts ident" $
         property $ \p ident ->
-            getIdent (WithPos p $ AstIdent ident) `shouldBe` Just (WithPos p ident)
+            getIdent (WithPos p $ AstIdent ident) `shouldBe` Right (WithPos p ident)
 
     it "rejects number" $ do
         property $ \p n ->
-            getIdent (WithPos p $ AstNum n) `shouldBe` Nothing
+            isLeft (getIdent (WithPos p $ AstNum n)) `shouldBe` True
 
     it "rejects string" $ do
         property $ \p s ->
-            getIdent (WithPos p $ AstStr s) `shouldBe` Nothing
+            isLeft (getIdent (WithPos p $ AstStr s)) `shouldBe` True
 
     it "rejects symbol" $ do
         property $ \p s ->
-            getIdent (WithPos p $ AstSymb s) `shouldBe` Nothing
+            isLeft (getIdent (WithPos p $ AstSymb s)) `shouldBe` True
 
     it "rejects list" $ do
         property $ \p k l ->
-            getIdent (WithPos p $ AstList k l) `shouldBe` Nothing
-
-getIdentUnqualSpec :: Spec
-getIdentUnqualSpec = describe "getIdentUnqual" $ do
-    it "returns unqualified ident" $ do
-        property $ \p s -> do
-            getIdentUnqual (WithPos p $ AstIdent $ ident s) `shouldBe` Right (WithPos p $ ident s)
-
-    it "rejects empty ident" $ do
-        property $ \p -> do
-            isLeft (getIdentUnqual (WithPos p $ AstIdent $ Ident [])) `shouldBe` True
-
-    it "rejects qualified ident" $ do
-        property $ \p s1 s2 ss -> do
-            isLeft (getIdentUnqual (WithPos p $ AstIdent $ Ident $ s1:s2:ss)) `shouldBe` True
+            isLeft (getIdent (WithPos p $ AstList k l)) `shouldBe` True
 
 getArgPassSpec :: Spec
 getArgPassSpec = describe "getArgPass" $ do

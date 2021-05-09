@@ -7,7 +7,7 @@ import Text.Parsec ( SourcePos )
 
 -- Shared types
 newtype Ident
-    = Ident [String]
+    = Ident String
     deriving (Show, Eq, Ord)
 
 data Symb
