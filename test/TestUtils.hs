@@ -10,6 +10,7 @@ import Data.IdentSpec
 import Data.List
 import Data.NatSpec
 import Data.Numb
+import Data.Str
 import Data.Symb
 import Data.WithPos
 import Data.WithPosSpec
@@ -44,7 +45,7 @@ instance Arbitrary AstExpr where arbitrary = arbDepth
 instance ArbWithDepth AstExpr where
     arbWithDepth depth = oneof $
         [ AstNum . Numb <$> arbitrary
-        , AstStr <$> arbitrary
+        , AstStr . Str <$> arbitrary
         , AstIdent <$> arbitrary
         , AstSymb <$> liftM2 Symb arbitrary arbitrary
         ] ++
@@ -60,7 +61,7 @@ instance ArbWithDepth PzVal where
     arbWithDepth depth = oneof $
         [ return PzUnit
         , PzNum . Numb <$> arbitrary
-        , PzStr <$> arbitrary
+        , PzStr . Str <$> arbitrary
         , PzSymb <$> liftM2 Symb arbitrary arbitrary
         ] ++
         (if depth <= 0 then [] else
@@ -144,7 +145,7 @@ instance Arbitrary UnquoteValid where arbitrary = arbDepth
 instance ArbWithDepth UnquoteValid where
     arbWithDepth depth = fmap UnquoteValid $ liftM2 WithPos arbitrary $ oneof $
         [ AstNum . Numb <$> arbitrary
-        , AstStr <$> arbitrary
+        , AstStr . Str <$> arbitrary
         , AstSymb <$> liftM2 Symb arbitrary arbitrary
         ] ++
         ( if depth <= 0 then [] else
@@ -162,7 +163,7 @@ instance Arbitrary PzFalsish where
         fmap PzFalsish $ elements $ map (WithPos p) $
             [ PzUnit
             , PzNum $ Numb 0
-            , PzStr ""
+            , PzStr $ Str ""
             , PzList []
             , PzDict M.empty
             ]
@@ -171,7 +172,7 @@ newtype PzTruish = PzTruish (WithPos PzVal) deriving (Show, Eq)
 instance Arbitrary PzTruish where
     arbitrary = fmap PzTruish $ liftM2 WithPos arbitrary $ oneof
             [ PzNum . Numb . getNonZero <$> arbitrary
-            , PzStr . getNonEmpty <$> arbitrary
+            , PzStr . Str . getNonEmpty <$> arbitrary
             , PzList  <$> liftM2 (:) arbDepth (arbFew arbDepth)
             , fmap PzDict $ liftM3 M.insert arbDepth arbDepth arbDepth
             , PzFunc <$> arbitrary

@@ -4,6 +4,7 @@ import qualified Data.Map as M
 
 import Data.Ident ( Ident )
 import Data.Numb ( Numb )
+import Data.Str ( Str )
 import Data.Symb ( Symb )
 import Data.WithPos ( WithPos, Pos )
 import Text.Parsec ( SourcePos )
@@ -11,7 +12,7 @@ import Text.Parsec ( SourcePos )
 -- AST types
 data AstExpr
     = AstNum Numb
-    | AstStr String
+    | AstStr Str
     | AstIdent Ident
     | AstSymb Symb
     | AstList AstListKind [WithPos AstExpr]
@@ -27,7 +28,7 @@ data AstListKind
 data PzVal
     = PzUnit
     | PzNum Numb
-    | PzStr String
+    | PzStr Str
     | PzSymb Symb
     | PzList [WithPos PzVal]
     | PzDict Dict

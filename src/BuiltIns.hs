@@ -4,6 +4,7 @@ import qualified Data.Map as M
 
 import Data.Symb ( symb )
 import Data.Numb ( Numb(Numb) )
+import Data.Str ( Str(Str) )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
 import Text.Parsec.Pos ( newPos )
 import Types
@@ -172,7 +173,7 @@ boolish v
   | otherwise = case val v of
     PzUnit -> Falsish
     PzNum (Numb 0) -> Falsish
-    PzStr "" -> Falsish
+    PzStr (Str "") -> Falsish
     PzList [] -> Falsish
     PzDict d -> if M.null d then Falsish else Truish
     _ -> Truish

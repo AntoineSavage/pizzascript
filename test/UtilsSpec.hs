@@ -12,6 +12,8 @@ import Data.List
 import Data.Nat
 import Data.Numb
 import Data.NumbSpec
+import Data.Str
+import Data.StrSpec
 import Data.Symb
 import Data.SymbSpec
 import Data.WithPos

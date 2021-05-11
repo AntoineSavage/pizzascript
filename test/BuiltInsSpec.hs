@@ -7,6 +7,7 @@ import Test.QuickCheck
 
 import BuiltIns
 import Data.Numb
+import Data.Str
 import Data.Symb
 import Data.WithPos
 import TestUtils
@@ -161,7 +162,7 @@ boolishSpec = describe "boolish" $ do
         property $ \p -> do
             boolish (WithPos p PzUnit) `shouldBe` Falsish
             boolish (WithPos p $ PzNum $ Numb 0) `shouldBe` Falsish
-            boolish (WithPos p $ PzStr "") `shouldBe` Falsish
+            boolish (WithPos p $ PzStr $ Str "") `shouldBe` Falsish
             boolish (WithPos p $ PzList []) `shouldBe` Falsish
             boolish (WithPos p $ PzDict M.empty) `shouldBe` Falsish
 
@@ -173,7 +174,7 @@ boolishSpec = describe "boolish" $ do
         property $ \p f -> do
             let unit = WithPos p PzUnit
             boolish (WithPos p $ PzNum $ Numb 1) `shouldBe` Truish
-            boolish (WithPos p $ PzStr "0") `shouldBe` Truish
+            boolish (WithPos p $ PzStr $ Str "0") `shouldBe` Truish
             boolish (WithPos p $ PzList [unit]) `shouldBe` Truish
             boolish (WithPos p $ PzDict $ M.fromList [(unit, unit)]) `shouldBe` Truish
             boolish (WithPos p $ PzFunc f) `shouldBe` Truish

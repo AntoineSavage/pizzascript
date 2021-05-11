@@ -9,11 +9,11 @@ newtype Str
     = Str String
     deriving (Show, Eq, Ord)
 
-parseStr :: Parser String
-parseStr = char '"' >> manyTill parseChar (char '"')
+parseStr :: Parser Str
+parseStr = fmap Str $ char '"' >> manyTill parseChar (char '"')
 
-unparseStr :: String -> String
-unparseStr s = concat $ ["\""] ++ map unparseChar s ++ ["\""]
+unparseStr :: Str -> String
+unparseStr (Str s) = concat $ ["\""] ++ map unparseChar s ++ ["\""]
 
 parseChar :: Parser Char
 parseChar = do

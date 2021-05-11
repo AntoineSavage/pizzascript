@@ -8,6 +8,7 @@ import Data.Either
 import Data.Ident
 import Data.Nat
 import Data.Numb
+import Data.Str
 import Data.Symb
 import Data.WithPos
 import Quote
@@ -37,7 +38,7 @@ quoteSpec = describe "quote" $ do
 
     it "converts strings into themselves" $ do
         property $ \p s -> do
-            let e = WithPos p $ AstStr s
+            let e = WithPos p $ AstStr $ Str s
             quote e `shouldBe` e
 
     it "converts identifiers into single-quoted symbols" $ do
@@ -72,7 +73,7 @@ unquoteSpec = describe "unquote" $ do
 
     it "converts strings into themselves" $ do
         property $ \p s -> do
-            let e = WithPos p $ AstStr s
+            let e = WithPos p $ AstStr $ Str s
             unquote e `shouldBe` Right e
 
     it "rejects identifiers" $ do

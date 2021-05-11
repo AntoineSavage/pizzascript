@@ -23,133 +23,133 @@ spec = do
     parseHexCodepointSpec
 
 parseStrVsUnparseStrSpec :: Spec
-parseStrVsUnparseStrSpec = describe "parseStr vs unparseStr" $ do
-    it "composes parseStr with unparseStr into id" $ do
+parseStrVsUnparseStrSpec = describe "parseStr' vs unparseStr" $ do
+    it "composes parseStr' with unparseStr' into id" $ do
         property $ \s -> do
-            let unparsed = unparseStr s
-            parse parseStr "tests" unparsed `shouldBe` Right s
-            unparseStr <$> parse parseStr "tests" unparsed `shouldBe` Right unparsed
+            let unparsed = unparseStr' s
+            parse parseStr' "tests" unparsed `shouldBe` Right s
+            unparseStr' <$> parse parseStr' "tests" unparsed `shouldBe` Right unparsed
 
 parseStrSpec :: Spec
 parseStrSpec = describe "parseStr" $ do
     it "rejects empty string" $ do
-        isLeft (parse parseStr "tests" "") `shouldBe` True
+        isLeft (parse parseStr' "tests" "") `shouldBe` True
 
     it "rejects non-printable, non-backslash char in string" $ do
         forM_ [noEscapeChars ++ [c] | c <- "\b\f\n\t\b\0\31\127"] $ \s -> do
-            isLeft (parse parseStr "tests" ("\"" ++ s ++ "\"")) `shouldBe` True
+            isLeft (parse parseStr' "tests" ("\"" ++ s ++ "\"")) `shouldBe` True
 
     it "rejects unsupported escape sequence" $ do
         forM_ [noEscapeChars ++ ['\\', c] | c <- "acdeghijklmopqsvwxyz"] $ \s -> do
-            isLeft (parse parseStr "tests" ("\"" ++ s ++ "\"")) `shouldBe` True
+            isLeft (parse parseStr' "tests" ("\"" ++ s ++ "\"")) `shouldBe` True
 
     it "parses string without escaping (ascii)" $ do
         let s = noEscapeChars
-        parse parseStr "tests" ("\"" ++ s ++ "\"") `shouldBe` Right s
+        parse parseStr' "tests" ("\"" ++ s ++ "\"") `shouldBe` Right s
 
     it "parses string without excaping (accents)" $ do
         let s = accentChars
-        parse parseStr "tests" ("\"" ++ s ++ "\"") `shouldBe` Right s
+        parse parseStr' "tests" ("\"" ++ s ++ "\"") `shouldBe` Right s
 
     it "parses string with escaping (non-unicode)" $ do
-        parse parseStr "tests" "\"\\\"\"" `shouldBe` Right "\""
-        parse parseStr "tests" "\"\\\\\"" `shouldBe` Right "\\"
-        parse parseStr "tests" "\"\\/\"" `shouldBe` Right "/"
-        parse parseStr "tests" "\"\\b\"" `shouldBe` Right "\b"
-        parse parseStr "tests" "\"\\f\"" `shouldBe` Right "\f"
-        parse parseStr "tests" "\"\\n\"" `shouldBe` Right "\n"
-        parse parseStr "tests" "\"\\r\"" `shouldBe` Right "\r"
-        parse parseStr "tests" "\"\\t\"" `shouldBe` Right "\t"
+        parse parseStr' "tests" "\"\\\"\"" `shouldBe` Right "\""
+        parse parseStr' "tests" "\"\\\\\"" `shouldBe` Right "\\"
+        parse parseStr' "tests" "\"\\/\"" `shouldBe` Right "/"
+        parse parseStr' "tests" "\"\\b\"" `shouldBe` Right "\b"
+        parse parseStr' "tests" "\"\\f\"" `shouldBe` Right "\f"
+        parse parseStr' "tests" "\"\\n\"" `shouldBe` Right "\n"
+        parse parseStr' "tests" "\"\\r\"" `shouldBe` Right "\r"
+        parse parseStr' "tests" "\"\\t\"" `shouldBe` Right "\t"
 
     it "parses string with escaping (unicode)" $ do
-        parse parseStr "tests" "\"\\u{0}\"" `shouldBe` Right "\0"
-        parse parseStr "tests" "\"\\u{1}\"" `shouldBe` Right "\1"
-        parse parseStr "tests" "\"\\u{2}\"" `shouldBe` Right "\2"
-        parse parseStr "tests" "\"\\u{3}\"" `shouldBe` Right "\3"
-        parse parseStr "tests" "\"\\u{4}\"" `shouldBe` Right "\4"
-        parse parseStr "tests" "\"\\u{5}\"" `shouldBe` Right "\5"
-        parse parseStr "tests" "\"\\u{6}\"" `shouldBe` Right "\6"
-        parse parseStr "tests" "\"\\u{7}\"" `shouldBe` Right "\7"
-        parse parseStr "tests" "\"\\u{8}\"" `shouldBe` Right "\8"
-        parse parseStr "tests" "\"\\u{9}\"" `shouldBe` Right "\9"
-        parse parseStr "tests" "\"\\u{a}\"" `shouldBe` Right "\10"
-        parse parseStr "tests" "\"\\u{b}\"" `shouldBe` Right "\11"
-        parse parseStr "tests" "\"\\u{c}\"" `shouldBe` Right "\12"
-        parse parseStr "tests" "\"\\u{d}\"" `shouldBe` Right "\13"
-        parse parseStr "tests" "\"\\u{e}\"" `shouldBe` Right "\14"
-        parse parseStr "tests" "\"\\u{f}\"" `shouldBe` Right "\15"
-        parse parseStr "tests" "\"\\u{10}\"" `shouldBe` Right "\16"
-        parse parseStr "tests" "\"\\u{11}\"" `shouldBe` Right "\17"
-        parse parseStr "tests" "\"\\u{12}\"" `shouldBe` Right "\18"
-        parse parseStr "tests" "\"\\u{13}\"" `shouldBe` Right "\19"
-        parse parseStr "tests" "\"\\u{14}\"" `shouldBe` Right "\20"
-        parse parseStr "tests" "\"\\u{15}\"" `shouldBe` Right "\21"
-        parse parseStr "tests" "\"\\u{16}\"" `shouldBe` Right "\22"
-        parse parseStr "tests" "\"\\u{17}\"" `shouldBe` Right "\23"
-        parse parseStr "tests" "\"\\u{18}\"" `shouldBe` Right "\24"
-        parse parseStr "tests" "\"\\u{19}\"" `shouldBe` Right "\25"
-        parse parseStr "tests" "\"\\u{1a}\"" `shouldBe` Right "\26"
-        parse parseStr "tests" "\"\\u{1b}\"" `shouldBe` Right "\27"
-        parse parseStr "tests" "\"\\u{1c}\"" `shouldBe` Right "\28"
-        parse parseStr "tests" "\"\\u{1d}\"" `shouldBe` Right "\29"
-        parse parseStr "tests" "\"\\u{1e}\"" `shouldBe` Right "\30"
-        parse parseStr "tests" "\"\\u{1f}\"" `shouldBe` Right "\31"
-        parse parseStr "tests" "\"\\u{7f}\"" `shouldBe` Right "\127"
+        parse parseStr' "tests" "\"\\u{0}\"" `shouldBe` Right "\0"
+        parse parseStr' "tests" "\"\\u{1}\"" `shouldBe` Right "\1"
+        parse parseStr' "tests" "\"\\u{2}\"" `shouldBe` Right "\2"
+        parse parseStr' "tests" "\"\\u{3}\"" `shouldBe` Right "\3"
+        parse parseStr' "tests" "\"\\u{4}\"" `shouldBe` Right "\4"
+        parse parseStr' "tests" "\"\\u{5}\"" `shouldBe` Right "\5"
+        parse parseStr' "tests" "\"\\u{6}\"" `shouldBe` Right "\6"
+        parse parseStr' "tests" "\"\\u{7}\"" `shouldBe` Right "\7"
+        parse parseStr' "tests" "\"\\u{8}\"" `shouldBe` Right "\8"
+        parse parseStr' "tests" "\"\\u{9}\"" `shouldBe` Right "\9"
+        parse parseStr' "tests" "\"\\u{a}\"" `shouldBe` Right "\10"
+        parse parseStr' "tests" "\"\\u{b}\"" `shouldBe` Right "\11"
+        parse parseStr' "tests" "\"\\u{c}\"" `shouldBe` Right "\12"
+        parse parseStr' "tests" "\"\\u{d}\"" `shouldBe` Right "\13"
+        parse parseStr' "tests" "\"\\u{e}\"" `shouldBe` Right "\14"
+        parse parseStr' "tests" "\"\\u{f}\"" `shouldBe` Right "\15"
+        parse parseStr' "tests" "\"\\u{10}\"" `shouldBe` Right "\16"
+        parse parseStr' "tests" "\"\\u{11}\"" `shouldBe` Right "\17"
+        parse parseStr' "tests" "\"\\u{12}\"" `shouldBe` Right "\18"
+        parse parseStr' "tests" "\"\\u{13}\"" `shouldBe` Right "\19"
+        parse parseStr' "tests" "\"\\u{14}\"" `shouldBe` Right "\20"
+        parse parseStr' "tests" "\"\\u{15}\"" `shouldBe` Right "\21"
+        parse parseStr' "tests" "\"\\u{16}\"" `shouldBe` Right "\22"
+        parse parseStr' "tests" "\"\\u{17}\"" `shouldBe` Right "\23"
+        parse parseStr' "tests" "\"\\u{18}\"" `shouldBe` Right "\24"
+        parse parseStr' "tests" "\"\\u{19}\"" `shouldBe` Right "\25"
+        parse parseStr' "tests" "\"\\u{1a}\"" `shouldBe` Right "\26"
+        parse parseStr' "tests" "\"\\u{1b}\"" `shouldBe` Right "\27"
+        parse parseStr' "tests" "\"\\u{1c}\"" `shouldBe` Right "\28"
+        parse parseStr' "tests" "\"\\u{1d}\"" `shouldBe` Right "\29"
+        parse parseStr' "tests" "\"\\u{1e}\"" `shouldBe` Right "\30"
+        parse parseStr' "tests" "\"\\u{1f}\"" `shouldBe` Right "\31"
+        parse parseStr' "tests" "\"\\u{7f}\"" `shouldBe` Right "\127"
 
 unparseStrSpec :: Spec
 unparseStrSpec = describe "unparseStr" $ do
     it "unparses string without excaping (ascii)" $ do
         let s = noEscapeChars
-        unparseStr s `shouldBe` ("\"" ++ s ++ "\"")
+        unparseStr' s `shouldBe` ("\"" ++ s ++ "\"")
 
     it "unparses string without excaping (accents)" $ do
         let s = accentChars
-        unparseStr s `shouldBe` ("\"" ++ s ++ "\"")
+        unparseStr' s `shouldBe` ("\"" ++ s ++ "\"")
 
     it "unparses string with escaping (non-unicode)" $ do
-        unparseStr "\"" `shouldBe` "\"\\\"\""
-        unparseStr "\\" `shouldBe` "\"\\\\\""
-        unparseStr "/" `shouldBe` "\"\\/\""
-        unparseStr "\b" `shouldBe` "\"\\b\""
-        unparseStr "\f" `shouldBe` "\"\\f\""
-        unparseStr "\n" `shouldBe` "\"\\n\""
-        unparseStr "\r" `shouldBe` "\"\\r\""
-        unparseStr "\t" `shouldBe` "\"\\t\""
+        unparseStr' "\"" `shouldBe` "\"\\\"\""
+        unparseStr' "\\" `shouldBe` "\"\\\\\""
+        unparseStr' "/" `shouldBe` "\"\\/\""
+        unparseStr' "\b" `shouldBe` "\"\\b\""
+        unparseStr' "\f" `shouldBe` "\"\\f\""
+        unparseStr' "\n" `shouldBe` "\"\\n\""
+        unparseStr' "\r" `shouldBe` "\"\\r\""
+        unparseStr' "\t" `shouldBe` "\"\\t\""
 
     it "unparses string with escaping (unicode)" $ do
-        unparseStr "\0" `shouldBe` "\"\\u{0}\""
-        unparseStr "\1" `shouldBe` "\"\\u{1}\""
-        unparseStr "\2" `shouldBe` "\"\\u{2}\""
-        unparseStr "\3" `shouldBe` "\"\\u{3}\""
-        unparseStr "\4" `shouldBe` "\"\\u{4}\""
-        unparseStr "\5" `shouldBe` "\"\\u{5}\""
-        unparseStr "\6" `shouldBe` "\"\\u{6}\""
-        unparseStr "\7" `shouldBe` "\"\\u{7}\""
-        unparseStr "\8" `shouldBe` "\"\\b\""
-        unparseStr "\9" `shouldBe` "\"\\t\""
-        unparseStr "\10" `shouldBe` "\"\\n\""
-        unparseStr "\11" `shouldBe` "\"\\u{b}\""
-        unparseStr "\12" `shouldBe` "\"\\f\""
-        unparseStr "\13" `shouldBe` "\"\\r\""
-        unparseStr "\14" `shouldBe` "\"\\u{e}\""
-        unparseStr "\15" `shouldBe` "\"\\u{f}\""
-        unparseStr "\16" `shouldBe` "\"\\u{10}\""
-        unparseStr "\17" `shouldBe` "\"\\u{11}\""
-        unparseStr "\18" `shouldBe` "\"\\u{12}\""
-        unparseStr "\19" `shouldBe` "\"\\u{13}\""
-        unparseStr "\20" `shouldBe` "\"\\u{14}\""
-        unparseStr "\21" `shouldBe` "\"\\u{15}\""
-        unparseStr "\22" `shouldBe` "\"\\u{16}\""
-        unparseStr "\23" `shouldBe` "\"\\u{17}\""
-        unparseStr "\24" `shouldBe` "\"\\u{18}\""
-        unparseStr "\25" `shouldBe` "\"\\u{19}\""
-        unparseStr "\26" `shouldBe` "\"\\u{1a}\""
-        unparseStr "\27" `shouldBe` "\"\\u{1b}\""
-        unparseStr "\28" `shouldBe` "\"\\u{1c}\""
-        unparseStr "\29" `shouldBe` "\"\\u{1d}\""
-        unparseStr "\30" `shouldBe` "\"\\u{1e}\""
-        unparseStr "\31" `shouldBe` "\"\\u{1f}\""
-        unparseStr "\127" `shouldBe` "\"\\u{7f}\""
+        unparseStr' "\0" `shouldBe` "\"\\u{0}\""
+        unparseStr' "\1" `shouldBe` "\"\\u{1}\""
+        unparseStr' "\2" `shouldBe` "\"\\u{2}\""
+        unparseStr' "\3" `shouldBe` "\"\\u{3}\""
+        unparseStr' "\4" `shouldBe` "\"\\u{4}\""
+        unparseStr' "\5" `shouldBe` "\"\\u{5}\""
+        unparseStr' "\6" `shouldBe` "\"\\u{6}\""
+        unparseStr' "\7" `shouldBe` "\"\\u{7}\""
+        unparseStr' "\8" `shouldBe` "\"\\b\""
+        unparseStr' "\9" `shouldBe` "\"\\t\""
+        unparseStr' "\10" `shouldBe` "\"\\n\""
+        unparseStr' "\11" `shouldBe` "\"\\u{b}\""
+        unparseStr' "\12" `shouldBe` "\"\\f\""
+        unparseStr' "\13" `shouldBe` "\"\\r\""
+        unparseStr' "\14" `shouldBe` "\"\\u{e}\""
+        unparseStr' "\15" `shouldBe` "\"\\u{f}\""
+        unparseStr' "\16" `shouldBe` "\"\\u{10}\""
+        unparseStr' "\17" `shouldBe` "\"\\u{11}\""
+        unparseStr' "\18" `shouldBe` "\"\\u{12}\""
+        unparseStr' "\19" `shouldBe` "\"\\u{13}\""
+        unparseStr' "\20" `shouldBe` "\"\\u{14}\""
+        unparseStr' "\21" `shouldBe` "\"\\u{15}\""
+        unparseStr' "\22" `shouldBe` "\"\\u{16}\""
+        unparseStr' "\23" `shouldBe` "\"\\u{17}\""
+        unparseStr' "\24" `shouldBe` "\"\\u{18}\""
+        unparseStr' "\25" `shouldBe` "\"\\u{19}\""
+        unparseStr' "\26" `shouldBe` "\"\\u{1a}\""
+        unparseStr' "\27" `shouldBe` "\"\\u{1b}\""
+        unparseStr' "\28" `shouldBe` "\"\\u{1c}\""
+        unparseStr' "\29" `shouldBe` "\"\\u{1d}\""
+        unparseStr' "\30" `shouldBe` "\"\\u{1e}\""
+        unparseStr' "\31" `shouldBe` "\"\\u{1f}\""
+        unparseStr' "\127" `shouldBe` "\"\\u{7f}\""
 
 parseCharVsUnparseCharSpec :: Spec
 parseCharVsUnparseCharSpec = describe "parseChar vs unparseChar" $ do
@@ -340,4 +340,7 @@ parseHexCodepointSpec = describe "parseHexCodepoint" $ do
                 isLeft (parse (parseHexCodepoint $ return $ f s) "tests" "") `shouldBe` True
 
 -- Utils
+unparseStr' = unparseStr . Str
+parseStr' = do Str s <- parseStr; return s
+
 instance Arbitrary Str where arbitrary = Str <$> arbitrary

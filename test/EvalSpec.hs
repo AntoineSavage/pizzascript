@@ -11,6 +11,8 @@ import Data.Ident
 import Data.Nat
 import Data.Numb
 import Data.NumbSpec
+import Data.Str
+import Data.StrSpec
 import Data.Symb
 import Data.SymbSpec
 import Data.WithPos
@@ -122,14 +124,14 @@ evalExprSpec = describe "evalExpr" $ do
             isLeft (evalExpr ctx (WithPos p $ AstIdent i) Unquote) `shouldBe` True
 
     it "evals identifiers (DeepQuote) as the associated value, quoted" $ do
-        property $ \(ArbDict c) p p2 d s n i' -> do
+        property $ \(ArbDict c) p p2 d s1 s2 n i' -> do
             let pairs =
                     [ (PzNum d, PzNum d)
-                    , (PzStr s, PzStr s)
+                    , (PzStr s1, PzStr s1)
                     , (PzSymb $ Symb n i', PzSymb $ Symb (S n) i')
                     ]
             forM_ pairs $ \(v, v') -> do
-                let i = Ident s
+                let i = Ident s2
                     k = withPos $ PzSymb $ symb i
                     ctx = M.insert k (WithPos p2 v) c
 
@@ -137,14 +139,14 @@ evalExprSpec = describe "evalExpr" $ do
                     Right (Evaled $ WithPos p2 v')
 
     it "evals identifiers (DeepUnquote) as the associated value, unquoted" $ do
-        property $ \(ArbDict c) p p2 d s n i' -> do
+        property $ \(ArbDict c) p p2 d s1 s2 n i' -> do
             let pairs =
                     [ (PzNum d, PzNum d)
-                    , (PzStr s, PzStr s)
+                    , (PzStr s1, PzStr s1)
                     , (PzSymb $ Symb (S n) i', PzSymb $ Symb n i')
                     ]
             forM_ pairs $ \(v', v) -> do
-                let i = Ident s
+                let i = Ident s2
                     k = withPos $ PzSymb $ symb i
                     ctx = M.insert k (WithPos p2 v') c
 
@@ -240,7 +242,7 @@ evalImpureArgsSpec = describe "evalImpureArgs" $ do
     it "evals mismatch to None" $ do
         forM_ [ []
                 , [AstNum $ Numb 0]
-                , [AstStr ""]
+                , [AstStr $ Str ""]
                 , [AstIdent $ Ident ""]
                 , [AstSymb $ symb $ Ident ""]
                 , [AstList KindList [withPos $ AstSymb $ symb $ Ident ""]]
@@ -329,7 +331,7 @@ evalArgsSpec = describe "evalArgs" $ do
 
     it "rejects non-ident and non-form list" $ do
         property $ \(Few es) -> do
-            forM_   [ AstNum $ Numb 0, AstStr ""
+            forM_   [ AstNum $ Numb 0, AstStr $ Str ""
                     , AstSymb $ symb $ Ident ""
                     , AstList KindList []
                     , AstList KindDict []
