@@ -6,6 +6,7 @@ import qualified Data.Map as M
 import BuiltIns
 import Control.Monad
 import Data.Ident
+import Data.IdentSpec
 import Data.List
 import Data.NatSpec
 import Data.Symb
@@ -19,17 +20,10 @@ import Utils
 import Utils.ArbWithDepth
 
 -- Constants
-digits = ['0'..'9']
-lettersUpper = ['A'..'Z']
-lettersLower = ['a'..'z']
-symbols = " !#$%&'()*+,-.:;<=>?@[]^`{|}~"
 noEscapeChars = digits ++ lettersUpper ++ lettersLower ++ symbols
-accentChars = "àâäĉèéêëĝĥîïĵôöŝùûüŵŷÿ"
-escapees = "\"\\\b\f\n\r\t"
 doubleQuoteChar = '"'
 backslashChar = '\\'
 solidusChar = '/'
-underscore = '_'
 
 validFirsts = underscore : lettersUpper ++ lettersLower ++ accentChars
 invalidFirsts = digits ++ symbols ++ escapees
@@ -92,13 +86,13 @@ instance Arbitrary FuncImpureArgs where
     arbitrary = oneof
         [ return None
         , liftM2 ArgPass arbitrary arbitrary
-        , liftM3 Both arbitrary arbitrary arbIdentUnqual
+        , liftM3 Both arbitrary arbitrary arbitrary
         ]
 
 instance Arbitrary ArgPass where arbitrary = elements argPasses
 instance ArbWithDepth ArgPass where arbWithDepth _ = arbitrary
 
-instance Arbitrary FuncArgs where arbitrary = oneof [ArgsVaria <$> arbIdentUnqual, liftM2 ArgsArity arbitrary $ arbFew arbIdentUnqual]
+instance Arbitrary FuncArgs where arbitrary = oneof [ArgsVaria <$> arbitrary, liftM2 ArgsArity arbitrary $ arbFew arbitrary]
 instance Arbitrary FuncBody where arbitrary = arbDepth
 instance ArbWithDepth FuncBody where arbWithDepth depth = oneof [BodyBuiltIn <$> arbitrary, BodyCustom <$> arbFew (arbWithDepth depth)]
 
@@ -212,6 +206,3 @@ arbMany min max me = chooseInt (min, max) >>= flip vectorOf me
 
 arbUnquoteValid :: Gen (WithPos AstExpr)
 arbUnquoteValid = do UnquoteValid e <- arbitrary; return e
-
-arbIdentUnqual :: Gen (WithPos Ident)
-arbIdentUnqual = liftM2 WithPos arbitrary arbitrary

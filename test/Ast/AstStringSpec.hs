@@ -7,6 +7,7 @@ import Ast
 import Control.Monad
 import Data.Char
 import Data.Either
+import Data.IdentSpec
 import Numeric
 import TestUtils
 import Text.Parsec

@@ -69,6 +69,7 @@ withPosFuncSpec = describe "WithPos (Functor instance)" $ do
                 let _ = (x :: Int, y :: String)
                 fmap (const y) (WithPos p1 x) `shouldBe` WithPos p y
 
+-- Utils
 positions = [ p1, p2 ]
 p1 = newPos "abc" 1 1
 p2 = newPos "xyz" 2 2

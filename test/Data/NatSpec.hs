@@ -57,10 +57,8 @@ toInt :: Nat -> Int
 toInt Z     = 0
 toInt (S n) = 1 + toInt n
 
-fromInt :: Int -> Nat
-fromInt n = if n <= 0 then Z else S $ fromInt $ n-1
-
 instance Arbitrary Nat where
     arbitrary = do
         Positive n <- arbitrary
-        return $ fromInt n
+        let go k = if k <= 0 then Z else S $ go $ k-1
+        return $ go (n :: Int)

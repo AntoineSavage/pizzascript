@@ -4,11 +4,11 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Data.Ident
+import Data.IdentSpec
 import Data.Either
 import Data.Nat
+import Data.NatSpec
 import Data.Symb
-
-import TestUtils
 import Text.Parsec
 
 spec :: Spec
@@ -49,3 +49,5 @@ unparseSymbSpec = describe "unparseSymb" $ do
     it "unparses n+1 quotes followed by ident" $ do
         property $ \n ident -> do
             unparseSymb (Symb n ident) `shouldBe` "'" ++ unlen n '\'' ++ unparseIdent ident
+
+-- Utils
