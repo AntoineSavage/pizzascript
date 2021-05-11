@@ -8,6 +8,7 @@ import Control.Monad
 import Data.WithPos
 import Text.Parsec.Pos
 import Types
+import Utils.ArbWithDepth
 
 spec :: Spec
 spec = do
@@ -73,3 +74,11 @@ withPosFuncSpec = describe "WithPos (Functor instance)" $ do
 positions = [ p1, p2 ]
 p1 = newPos "abc" 1 1
 p2 = newPos "xyz" 2 2
+
+instance Arbitrary SourcePos where arbitrary = liftM3 newPos arbitrary arbitrary arbitrary
+
+instance ArbWithDepth a => Arbitrary (WithPos a) where
+    arbitrary = arbDepth
+
+instance ArbWithDepth a => ArbWithDepth (WithPos a) where
+    arbWithDepth = liftM2 WithPos arbitrary . arbWithDepth

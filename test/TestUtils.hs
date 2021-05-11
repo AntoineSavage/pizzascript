@@ -11,6 +11,7 @@ import Data.List
 import Data.NatSpec
 import Data.Symb
 import Data.WithPos
+import Data.WithPosSpec
 import Test.QuickCheck
 import Text.Parsec
 import Text.Parsec.String
@@ -38,11 +39,6 @@ unparseElem = \case
     Just (Elem x) -> show x ++ " "
 
 -- Types and instances
-instance Arbitrary SourcePos where arbitrary = liftM3 newPos arbitrary arbitrary arbitrary
-
-instance ArbWithDepth a => Arbitrary (WithPos a) where arbitrary = arbDepth
-instance ArbWithDepth a => ArbWithDepth (WithPos a) where arbWithDepth = liftM2 WithPos arbitrary . arbWithDepth
-
 instance Arbitrary AstExpr where arbitrary = arbDepth
 instance ArbWithDepth AstExpr where
     arbWithDepth depth = oneof $
@@ -129,8 +125,6 @@ instance Arbitrary ValidCodepoint where arbitrary = ValidCodepoint <$> chooseInt
 newtype InvalidCodepoint = InvalidCodepoint Int deriving (Show, Eq)
 instance Arbitrary InvalidCodepoint where arbitrary = InvalidCodepoint <$> chooseInt (0x110000, maxBound)
 
-instance ArbWithDepth a => ArbWithDepth (Maybe a) where arbWithDepth depth = oneof [return Nothing, Just <$> arbWithDepth depth]
-
 newtype Elem = Elem Int deriving (Show, Eq)
 instance Arbitrary Elem where arbitrary = do Positive x <- arbitrary; return $ Elem x
 
@@ -143,13 +137,6 @@ instance (Eq a, Arbitrary a) => Arbitrary (Uniques a) where arbitrary = Uniques 
 newtype ArbDict = ArbDict Dict deriving (Show, Eq)
 instance Arbitrary ArbDict where arbitrary = arbDepth
 instance ArbWithDepth ArbDict where arbWithDepth depth = ArbDict <$> arbWithDepth depth
-
-instance ArbWithDepth a => ArbWithDepth [a] where arbWithDepth depth = arbFew $ arbWithDepth $ depth-1
-instance (Ord k, ArbWithDepth k, ArbWithDepth v) => ArbWithDepth (M.Map k v) where
-    arbWithDepth depth =
-        let sub :: ArbWithDepth a => Gen a
-            sub = arbWithDepth $ depth-1
-        in fmap M.fromList $ arbFew $ liftM2 (,) sub sub
 
 newtype UnquoteValid = UnquoteValid (WithPos AstExpr) deriving (Show, Eq)
 instance Arbitrary UnquoteValid where arbitrary = arbDepth
@@ -190,14 +177,5 @@ instance Arbitrary PzTruish where
             ]
 
 -- Arbitrary utils
-arbDepth :: ArbWithDepth a => Gen a
-arbDepth = chooseInt (0, 3) >>= arbWithDepth
-
-arbFew :: Gen a -> Gen [a]
-arbFew = arbMany 0 4
-
-arbMany :: Int -> Int -> Gen a -> Gen [a]
-arbMany min max me = chooseInt (min, max) >>= flip vectorOf me
-
 arbUnquoteValid :: Gen (WithPos AstExpr)
 arbUnquoteValid = do UnquoteValid e <- arbitrary; return e
