@@ -5,6 +5,7 @@ import Test.QuickCheck
 
 import Ast
 import Data.Either
+import Data.Ident
 import Data.Nat
 import Quote
 import TestUtils

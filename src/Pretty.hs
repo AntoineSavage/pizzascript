@@ -1,8 +1,8 @@
 {-# LANGUAGE LambdaCase #-}
 module Pretty where
 
-import Ast ( unparseIdent, unparseSymb, unparseExpr )
-import Data.Ident ( Ident )
+import Ast ( unparseSymb, unparseExpr )
+import Data.Ident ( Ident, unparseIdent )
 import Text.Parsec ( SourcePos )
 import Types ( WithPos, AstExpr, Symb )
 

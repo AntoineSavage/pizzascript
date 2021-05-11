@@ -1,6 +1,7 @@
 module Quote (quote, unquote, unparse) where
 
-import Ast ( unparseExpr, unparseIdent, unparseList )
+import Ast ( unparseExpr, unparseList )
+import Data.Ident ( unparseIdent )
 import Data.Nat ( Nat(..) )
 import Types ( AstListKind(..), AstExpr(..), WithPos(..), Symb(..) )
 import Utils ( symb, toForm )

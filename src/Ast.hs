@@ -3,7 +3,7 @@ module Ast where
 
 import Control.Monad ( liftM2, void )
 import Data.Char ( ord, isControl, isPrint )
-import Data.Ident ( Ident(..) )
+import Data.Ident ( parseIdent, unparseIdent )
 import Data.List ( intercalate )
 import Data.Nat ( len, unlen, Nat(..) )
 import Numeric ( readHex, showHex )
@@ -92,15 +92,6 @@ parseHexCodepoint p = do
     let [(i, "")] = readHex s
     if i <= 0x10FFFF then return s else
         parserFail $ "Hex codepoint out of range: " ++ s
-
--- Identifiers
-parseIdent :: Parser Ident
-parseIdent =
-    let us = char '_' in
-    fmap Ident $ liftM2 (:) (letter <|> us) $ many $ alphaNum <|> us
-
-unparseIdent :: Ident -> String
-unparseIdent (Ident s) = s
 
 -- Symbols
 parseSymb :: Parser Symb
