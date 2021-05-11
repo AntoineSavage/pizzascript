@@ -3,6 +3,7 @@ module Data.SymbSpec where
 import Test.Hspec
 import Test.QuickCheck
 
+import Control.Monad
 import Data.Ident
 import Data.IdentSpec
 import Data.Either
@@ -51,3 +52,5 @@ unparseSymbSpec = describe "unparseSymb" $ do
             unparseSymb (Symb n ident) `shouldBe` "'" ++ unlen n '\'' ++ unparseIdent ident
 
 -- Utils
+instance Arbitrary Symb where
+    arbitrary = liftM2 Symb arbitrary arbitrary

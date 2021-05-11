@@ -10,6 +10,7 @@ import Data.Either
 import Data.Ident
 import Data.Nat
 import Data.Symb
+import Data.SymbSpec
 import Data.WithPos
 import Eval
 import Quote

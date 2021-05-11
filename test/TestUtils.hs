@@ -25,10 +25,6 @@ doubleQuoteChar = '"'
 backslashChar = '\\'
 solidusChar = '/'
 
-validFirsts = underscore : lettersUpper ++ lettersLower ++ accentChars
-invalidFirsts = digits ++ symbols ++ escapees
-validNexts = underscore : digits ++ lettersUpper ++ lettersLower ++ accentChars
-
 kinds = [ KindList, KindDict, KindForm ]
 argPasses = [ Eval, Quote, Unquote, DeepQuote, DeepUnquote ]
 
@@ -42,7 +38,6 @@ unparseElem = \case
     Just (Elem x) -> show x ++ " "
 
 -- Types and instances
-instance Arbitrary Symb where arbitrary = liftM2 Symb arbitrary arbitrary
 instance Arbitrary SourcePos where arbitrary = liftM3 newPos arbitrary arbitrary arbitrary
 
 instance ArbWithDepth a => Arbitrary (WithPos a) where arbitrary = arbDepth
