@@ -1,9 +1,11 @@
-module TypesSpec where
-   
+module Data.WithPosSpec where
+
+
 import Test.Hspec
 import Test.QuickCheck
 
 import Control.Monad
+import Data.WithPos
 import Text.Parsec.Pos
 import Types
 

@@ -9,6 +9,7 @@ import Data.Ident
 import Data.List
 import Data.NatSpec
 import Data.Symb
+import Data.WithPos
 import Test.QuickCheck
 import Text.Parsec
 import Text.Parsec.String

@@ -3,6 +3,7 @@ module BuiltIns where
 import qualified Data.Map as M
 
 import Data.Symb ( symb )
+import Data.WithPos ( WithPos(WithPos, val), Pos )
 import Text.Parsec.Pos ( newPos )
 import Types
 import Utils

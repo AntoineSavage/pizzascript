@@ -7,6 +7,7 @@ import Test.QuickCheck
 
 import BuiltIns
 import Data.Symb
+import Data.WithPos
 import TestUtils
 import Types
 import Utils

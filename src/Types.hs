@@ -4,18 +4,8 @@ import qualified Data.Map as M
 
 import Data.Ident ( Ident )
 import Data.Symb ( Symb )
+import Data.WithPos ( WithPos, Pos )
 import Text.Parsec ( SourcePos )
-
--- Shared types
-type Pos = SourcePos
-data WithPos a
-    = WithPos { pos :: Pos, val :: a }
-
--- Ignore position in show, eq and ord
-instance Show a => Show (WithPos a) where show (WithPos _ x) = show x
-instance Eq a => Eq (WithPos a) where (==) (WithPos _ x) (WithPos _ y) = x == y
-instance Ord a => Ord (WithPos a) where compare (WithPos _ x) (WithPos _ y) = compare x y
-instance Functor WithPos where fmap f (WithPos p x) = WithPos p $ f x
 
 -- AST types
 data AstExpr

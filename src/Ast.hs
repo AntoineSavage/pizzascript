@@ -7,10 +7,11 @@ import Data.Ident ( parseIdent, unparseIdent )
 import Data.List ( intercalate )
 import Data.Nat ( len, unlen, Nat(..) )
 import Data.Symb ( parseSymb, unparseSymb )
+import Data.WithPos ( WithPos(WithPos, val) )
 import Numeric ( readHex, showHex )
 import Text.Parsec
 import Text.Parsec.String ( Parser )
-import Types ( AstExpr(..), AstListKind(..), WithPos(..) )
+import Types ( AstExpr(..), AstListKind(..) )
 
 -- Ignore
 ignore :: Parser ()

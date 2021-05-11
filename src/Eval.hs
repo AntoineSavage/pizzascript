@@ -11,6 +11,7 @@ import Control.Monad ( forM_, liftM2 )
 import Data.Ident ( Ident )
 import Data.Nat ( Nat(Z) )
 import Data.Symb ( Symb(Symb), symb )
+import Data.WithPos ( WithPos(WithPos, val), Pos )
 import Types
 import Utils
 

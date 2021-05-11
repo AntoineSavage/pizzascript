@@ -8,6 +8,7 @@ import Data.Maybe ( fromMaybe )
 import Data.Ident ( Ident(..) )
 import Data.Nat ( Nat(Z) )
 import Data.Symb ( Symb(..), symb )
+import Data.WithPos ( WithPos(WithPos, val), Pos )
 import Types
 import Text.Parsec.Pos ( newPos )
 
