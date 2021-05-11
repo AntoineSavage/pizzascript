@@ -1,4 +1,4 @@
-module Data.Symb where
+module Data.Symb ( Symb(..), parseSymb, symb, unparseSymb ) where
 
 import Control.Monad ( liftM2 )
 import Data.Ident ( Ident, parseIdent, unparseIdent )

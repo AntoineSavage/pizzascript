@@ -1,4 +1,4 @@
-module Data.Nat (Nat(..), len, unlen) where
+module Data.Nat ( Nat(..), len, unlen ) where
 
 data Nat
     = Z

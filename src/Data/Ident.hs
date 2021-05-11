@@ -1,4 +1,4 @@
-module Data.Ident where
+module Data.Ident ( Ident(..), parseIdent, unparseIdent ) where
 
 import Control.Monad ( liftM2 )
 import Text.Parsec ( alphaNum, char, letter, (<|>), many )

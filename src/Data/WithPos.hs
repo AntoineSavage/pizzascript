@@ -1,4 +1,4 @@
-module Data.WithPos where
+module Data.WithPos ( Pos, WithPos(..) ) where
 
 import Text.Parsec ( SourcePos )
 
