@@ -7,15 +7,9 @@ import Ast
 import Control.Monad
 import Data.Char
 import Data.Either
-import Data.Ident
-import Data.List
-import Data.Nat
-import Data.Symb
-import Data.WithPos
 import Numeric
 import TestUtils
 import Text.Parsec
-import Types
 
 spec :: Spec
 spec = do
