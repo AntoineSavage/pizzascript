@@ -17,7 +17,7 @@ spec = do
 
 parseIdentVsUnparseIdentSpec :: Spec
 parseIdentVsUnparseIdentSpec = describe "parseIdent vs unparseIdent" $ do
-    it "composes parseIdent and unparseIdent into id into id" $ do
+    it "composes parseIdent and unparseIdent into id" $ do
         property $ \ident -> do
             let s = unparseIdent ident
             parse parseIdent "tests" s `shouldBe` Right ident

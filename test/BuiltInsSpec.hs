@@ -165,7 +165,7 @@ boolishSpec = describe "boolish" $ do
     it "converts falsish values (prop)" $ do
         property $ \(PzFalsish v) -> do
             boolish v `shouldBe` Falsish
-    
+   
     it "converts simple truish values" $ do
         property $ \p f -> do
             let unit = WithPos p PzUnit
@@ -174,7 +174,7 @@ boolishSpec = describe "boolish" $ do
             boolish (WithPos p $ PzList [unit]) `shouldBe` Truish
             boolish (WithPos p $ PzDict $ M.fromList [(unit, unit)]) `shouldBe` Truish
             boolish (WithPos p $ PzFunc f) `shouldBe` Truish
-    
+   
     it "converts truish values (prop)" $ do
         property $ \(PzTruish v) -> do
             boolish v `shouldBe` Truish

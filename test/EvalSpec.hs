@@ -11,7 +11,7 @@ import Data.Ident
 import Data.Nat
 import Eval
 import Quote
-import Text.Parsec.Pos  
+import Text.Parsec.Pos 
 import TestUtils
 import Types
 import Utils
@@ -292,7 +292,7 @@ unevalImpureArgsSpec = describe "unevalImpureArgs" $ do
         property $ \p p2 p3 ap ec -> do
             unevalImpureArgs (Both p (WithPos p2 ap) $ WithPos p3 ec) `shouldBe`
                 [WithPos p $ AstList KindForm [
-                    WithPos p2 $ AstSymb $ argPassToSymb ap, 
+                    WithPos p2 $ AstSymb $ argPassToSymb ap,
                     WithPos p3 $ AstIdent ec
                 ]]
 

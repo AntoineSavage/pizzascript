@@ -5,7 +5,7 @@
 ((func ('eval ctx) () [
     (put ctx 'def
         # This is the 'def definition
-        (func ('quote ctx) (k v) [   
+        (func ('quote ctx) (k v) [  
             (put ctx k ((func ('deep_unquote) (x) x) v))
             () # 'def returns nothing
         ])

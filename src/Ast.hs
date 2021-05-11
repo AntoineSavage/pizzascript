@@ -12,11 +12,11 @@ import Text.Parsec.String ( Parser )
 import Types ( AstExpr(..), AstListKind(..), Symb(..), WithPos(..) )
 
 -- Ignore
-ignore :: Parser () 
+ignore :: Parser ()
 ignore = void $ many (comment <|> void (many1 space) <|> void (many1 $ satisfy isControl))
 
 comment :: Parser ()
-comment = char '#' >> go where 
+comment = char '#' >> go where
     go = do
         meof <- optionMaybe eof
         mnl <- optionMaybe newline

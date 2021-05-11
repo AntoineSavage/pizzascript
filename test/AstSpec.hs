@@ -166,7 +166,7 @@ commentSpec = describe "comment" $ do
 -- Numbers
 parseNumVsUnparseNumSpec :: Spec
 parseNumVsUnparseNumSpec = describe "parseNum vs unparseNum" $ do
-    it "composes parseNum and unparseNum into id into identity" $ do
+    it "composes parseNum and unparseNum into identity" $ do
         property $ \n -> do
             let s = unparseNum n
             parse parseNum "tests" s `shouldBe` Right n
@@ -214,7 +214,7 @@ unparseNumSpec = describe "unparseNum" $ do
 -- Strings
 parseStrVsUnparseStrSpec :: Spec
 parseStrVsUnparseStrSpec = describe "parseStr vs unparseStr" $ do
-    it "composes parseStr with unparseStr into id into id" $ do
+    it "composes parseStr with unparseStr into id" $ do
         property $ \s -> do
             let unparsed = unparseStr s
             parse parseStr "tests" unparsed `shouldBe` Right s
@@ -343,7 +343,7 @@ unparseStrSpec = describe "unparseStr" $ do
 
 parseCharVsUnparseCharSpec :: Spec
 parseCharVsUnparseCharSpec = describe "parseChar vs unparseChar" $ do
-    it "composes parseChar with unparseChar into id into id" $ do
+    it "composes parseChar with unparseChar into id" $ do
         property $ \c -> do
             let s = unparseChar c
             parse parseChar "tests" s `shouldBe` Right c
@@ -558,7 +558,7 @@ unparseSymbSpec = describe "unparseSymb" $ do
     it "unparses one quote followed by ident" $ do
         property $ \ident -> do
             unparseSymb (Symb Z ident) `shouldBe` "'" ++ unparseIdent ident
-    
+   
     it "unparses n+1 quotes followed by ident" $ do
         property $ \n ident -> do
             unparseSymb (Symb n ident) `shouldBe` "'" ++ unlen n '\'' ++ unparseIdent ident
@@ -572,7 +572,7 @@ parseListVsUnparseListSpec = describe "parseList vs unparseList" $ do
                 let s = unparseList' k es
                 parseList' k s `shouldBe` Right es
                 unparseList' k <$> parseList' k s `shouldBe` Right s
-            
+           
 parseListSpec :: Spec
 parseListSpec = describe "parseList" $ do
     forM_ kinds $ \k -> do
@@ -585,19 +585,19 @@ parseListSpec = describe "parseList" $ do
             parseList' k ([start] ++ [end]) `shouldBe` Right []
 
         it "parses one elem" $ do
-            property $ \e -> 
+            property $ \e ->
                 parseList' k ([start] ++ unparseElem' e ++ [end]) `shouldBe` Right [e]
 
         it "parses two elems" $ do
-            property $ \e1 e2 -> 
+            property $ \e1 e2 ->
                 parseList' k ([start] ++ unparseElem' e1 ++ unparseElem' e2 ++ [end]) `shouldBe` Right [e1, e2]
 
         it "parses three elems" $ do
-            property $ \e1 e2 e3 -> 
+            property $ \e1 e2 e3 ->
                 parseList' k ([start] ++ unparseElem' e1 ++ unparseElem' e2 ++ unparseElem' e3 ++ [end]) `shouldBe` Right [e1, e2, e3]
 
         it "parses n elems" $ do
-            property $ \(Few es) -> 
+            property $ \(Few es) ->
                 parseList' k ([start] ++ concatMap unparseElem' es ++ [end]) `shouldBe` Right es
 
 unparseListSpec :: Spec

@@ -91,7 +91,7 @@ unquoteSpec = describe "unquote" $ do
                 mactual = unquote $ WithPos p list
             isRight mactual `shouldBe` True
             mactual `shouldBe` (WithPos p . AstList KindForm <$> mapM unquote es)
-    
+   
     it "rejects dictionaries" $ do
         property $ \p (Few es) -> do
             let dictionary = AstList KindDict es

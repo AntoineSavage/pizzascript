@@ -72,7 +72,7 @@ symbToArgPassSpec = describe "symbToArgPass" $ do
         symbToArgPass (symb $ Ident "ABC") `shouldBe` Nothing
 
     it "rejects unknown symbols (prop)" $ do
-        property $ \s -> 
+        property $ \s ->
             symbToArgPass (symb $ Ident $ "_" ++ s) `shouldBe` Nothing
 
 toFormSpec :: Spec
@@ -114,15 +114,15 @@ getIdentSpec = describe "getIdent" $ do
 getArgPassSpec :: Spec
 getArgPassSpec = describe "getArgPass" $ do
     it "converts None to Eval" $ do
-        property $ \implCtx args body -> 
+        property $ \implCtx args body ->
             getArgPass (Func implCtx None args body) `shouldBe` Eval
 
     it "converts ArgPass" $ do
-        property $ \p implCtx ap args body -> 
+        property $ \p implCtx ap args body ->
             getArgPass (Func implCtx (ArgPass p $ WithPos p ap) args body) `shouldBe` ap
 
     it "converts Both" $ do
-        property $ \p implCtx ap explCtx args body -> 
+        property $ \p implCtx ap explCtx args body ->
             getArgPass (Func implCtx (Both p (WithPos p ap) explCtx) args body) `shouldBe` ap
 
 getDuplicatesSpec :: Spec
@@ -137,23 +137,23 @@ getDuplicatesSpec = describe "getDuplicates" $ do
     it "finds one duplicate" $ do
         property $ \x (Uniques xs) -> do
             getDuplicates (x:xs ++ [x]) `shouldBe` ([x] :: [Int])
-    
+   
     it "finds two duplicates" $ do
         property $ \x y (Uniques xs) -> nub [x, y] == [x, y] ==> do
             getDuplicates (x:y:xs ++ [x, y]) `shouldBe` (sort [x, y] :: [Int])
-    
+   
     it "finds three duplicates" $ do
         property $ \x y z (Uniques xs) -> nub [x, y, z] == [x, y, z] ==> do
             getDuplicates (x:y:z:xs ++ [x, y, z]) `shouldBe` (sort [x, y, z] :: [Int])
-    
+   
     it "finds N duplicates" $ do
         property $ \(Uniques ds) (Uniques xs) -> do
             getDuplicates (ds ++ xs ++ ds) `shouldBe` (sort ds :: [Int])
-    
+   
     it "finds only duplicates" $ do
         property $ \(Uniques xs) -> do
             getDuplicates (xs ++ xs) `shouldBe` (sort xs :: [Int])
-    
+   
 addIdentAndPosSpec :: Spec
 addIdentAndPosSpec = describe "addIdentAndPos" $ do
     it "adds position without identifier" $ do

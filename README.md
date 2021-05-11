@@ -683,7 +683,7 @@ Unquoting adheres to the following rules:
   - unquoting `'true` evaluates the identifier `true`, which produces `'true`
   - unquoting `'id` evaluates the identifier `id`, which produces `(func (x) x)`
 
-- unquoting a list literal produces an unevaluated form with each elements unquoted recursively. Square brackets are replaced with parentheses during this process. The form is then evaluated according to the function's specified argument-passing behaviour. Ex: 
+- unquoting a list literal produces an unevaluated form with each elements unquoted recursively. Square brackets are replaced with parentheses during this process. The form is then evaluated according to the function's specified argument-passing behaviour. Ex:
   - unquoting the empty list `[]` produces the empty form `()` (i.e. the unit type)
   - unquoting `['func ['x] 'x]` produces:
     - `(func (x) x)`
@@ -909,7 +909,7 @@ Here is an example of implementing a prompt functionality:
 # putting it all together:
 
 (prompt1 "Enter your name: ")
-# prints: Enter your name: 
+# prints: Enter your name:
 
 (prompt2)
 # waits for user input
@@ -1055,7 +1055,7 @@ The program evaluation algorithm is as follows:
     - `['data 'list 'lazy]`
 
   - each value is a module's context dictionary. Ex:
-    - `{}` 
+    - `{}`
 
 2. let `(evaluate modules module)` be defined (see below)
 3. call `(evaluate modules 'main)`

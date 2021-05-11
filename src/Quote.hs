@@ -16,7 +16,7 @@ quote e@(WithPos p v) =
 
         -- Identifiers quote as symbols
         AstIdent ident ->
-            toExpr $ AstSymb $ symb ident 
+            toExpr $ AstSymb $ symb ident
 
         -- Symbols quote as themselves with one more quote
         AstSymb (Symb n ident) ->

@@ -15,7 +15,7 @@ import Text.Parsec ( eof )
 import Text.Parsec.String ( parseFromFile )
 import Types
 import Utils
- 
+
 type EvalResult = Either String Acc
 
 evalFrame :: Result -> StackFrame -> [StackFrame] -> EvalResult
@@ -31,7 +31,7 @@ evalBlock result ctx es frames =
         [] ->
             -- block finished: pop frame
             return $ Acc result frames
-        
+       
         e:es ->
             -- evaluate next block expression
             evalExpr ctx e Eval >>= toAcc ctx e (Block ctx es : frames)
@@ -45,11 +45,11 @@ evalForm result ctx p mfi elems frames =
                 [] ->
                     -- empty form -> return unit type (and pop frame)
                     return $ Acc (Just $ WithPos p PzUnit) frames
-        
+       
                 e:es ->
                     -- evaluate first form element (should be a function)
                     evalExpr ctx e Eval >>= toAcc ctx e (Form ctx p mfi es : frames)
-        
+       
         Just f ->
             -- process result (first form elem, should be a function)
             case val f of
@@ -74,15 +74,15 @@ evalInvoc :: Result -> Dict -> Pos -> Maybe (WithPos Ident) -> Func -> [WithPos 
 evalInvoc result ctx p mfi f as melems frames =
     case result of
         Nothing ->
-            -- no result to process yet 
+            -- no result to process yet
             case melems of
-                Nothing -> 
+                Nothing ->
                     -- marked for invocation: invoke function
                     case invokeFunc ctx p f as frames of
                         Left s -> Left $ addIdentAndPos p mfi s
                         Right acc -> return acc
 
-                Just [] -> 
+                Just [] ->
                     -- all args evaluated: mark for invocation
                     return $ Acc Nothing $ Invoc ctx p mfi f (reverse as) Nothing : frames
 
@@ -95,7 +95,7 @@ evalInvoc result ctx p mfi f as melems frames =
         Just r ->
             -- process result
             case melems of
-                Just es -> 
+                Just es ->
                     -- argument evaluation result
                     return $ Acc Nothing $ Invoc ctx p mfi f (r:as) (Just es) : frames
 
@@ -133,7 +133,7 @@ invokeFuncCustom explCtx p as implCtx impArgs args es frames =
         explCtxPairs = case impArgs of
             Both _ _ i -> [ (toExpr i, WithPos (pos i) $ PzDict explCtx) ]
             _ -> []
-        
+       
         actLen = length as
         (expLen, argPairs) = case args of
             ArgsVaria i -> (actLen, [ (toExpr i, WithPos (pos i) $ PzList as) ])
@@ -145,7 +145,7 @@ invokeFuncCustom explCtx p as implCtx impArgs args es frames =
 
     in if actLen == expLen
             then return $ Acc Nothing $ Block finalImplCtx es : frames
-            else Left $ 
+            else Left $
                 "Error: Invoking function with incorrect number of arguments:"
                 ++ "\n expected: " ++ show expLen
                 ++ "\n received: " ++ show actLen

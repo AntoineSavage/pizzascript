@@ -19,7 +19,7 @@ data ExprEvalResult
     deriving (Show, Eq)
 
 evalExpr :: Dict -> WithPos AstExpr -> ArgPass -> Either String ExprEvalResult
-evalExpr ctx e@(WithPos p v) eval = 
+evalExpr ctx e@(WithPos p v) eval =
     let evaled = return . Evaled . WithPos p in
     case (v, eval) of
         -- numbers and strings
@@ -131,11 +131,11 @@ validateNoDuplicateIdents impArgs args =
     let explCtxIdents = case impArgs of
             Both _ _ i -> [i]
             _ -> []
-        
+       
         argIdents = case args of
             ArgsVaria i -> [i]
             ArgsArity _ is -> is
-    
+   
         duplicates = getDuplicates $ explCtxIdents ++ argIdents
     in if null duplicates
         then return ()

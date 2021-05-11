@@ -1,5 +1,5 @@
 module TypesSpec where
-    
+   
 import Test.Hspec
 import Test.QuickCheck
 
@@ -60,7 +60,7 @@ withPosFuncSpec :: Spec
 withPosFuncSpec = describe "WithPos (Functor instance)" $ do
     forM_ positions $ \p -> do
         it "ignores position" $ do
-            fmap (+1) (WithPos p1 1) `shouldBe` (WithPos p 2) 
+            fmap (+1) (WithPos p1 1) `shouldBe` (WithPos p 2)
 
         it "ignores position (prop)" $ do
             property $ \x y -> do

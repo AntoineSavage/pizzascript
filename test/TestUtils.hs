@@ -88,7 +88,7 @@ instance Arbitrary Func where arbitrary = arbDepth
 instance ArbWithDepth Func where
     arbWithDepth depth = liftM4 Func (arbWithDepth depth) arbitrary arbitrary (arbWithDepth depth)
 
-instance Arbitrary FuncImpureArgs where 
+instance Arbitrary FuncImpureArgs where
     arbitrary = oneof
         [ return None
         , liftM2 ArgPass arbitrary arbitrary
@@ -123,7 +123,7 @@ instance ArbWithDepth StackFrame where
     arbWithDepth depth = oneof
         [liftM2 Block arbDepth arbDepth
         , liftM4 Form arbDepth arbitrary arbitrary arbDepth
-        , do 
+        , do
             a <- arbDepth
             b <- arbitrary
             c <- arbDepth

@@ -48,7 +48,7 @@ getIdent (WithPos p v) = case v of
 
 getArgPass :: Func -> ArgPass
 getArgPass func = case impArgs func of
-    None -> Eval 
+    None -> Eval
     ArgPass _ ap -> val ap
     Both _ ap _ -> val ap
 
