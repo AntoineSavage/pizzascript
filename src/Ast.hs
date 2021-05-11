@@ -6,7 +6,7 @@ import Data.Char ( ord, isControl, isPrint )
 import Data.Ident ( parseIdent, unparseIdent )
 import Data.List ( intercalate )
 import Data.Nat ( len, unlen, Nat(..) )
-import Data.Symb ( Symb(..) )
+import Data.Symb ( parseSymb, unparseSymb )
 import Numeric ( readHex, showHex )
 import Text.Parsec
 import Text.Parsec.String ( Parser )
@@ -93,13 +93,6 @@ parseHexCodepoint p = do
     let [(i, "")] = readHex s
     if i <= 0x10FFFF then return s else
         parserFail $ "Hex codepoint out of range: " ++ s
-
--- Symbols
-parseSymb :: Parser Symb
-parseSymb = liftM2 Symb (char '\'' >> len <$> many (char '\'')) parseIdent
-
-unparseSymb :: Symb -> String
-unparseSymb (Symb n ident) = "'" ++ unlen n '\'' ++ unparseIdent ident
 
 -- Lists
 parseList :: AstListKind -> Parser () -> Parser a -> Parser [a]

@@ -7,12 +7,9 @@ import qualified Data.Set as S
 import Data.Maybe ( fromMaybe )
 import Data.Ident ( Ident(..) )
 import Data.Nat ( Nat(Z) )
-import Data.Symb ( Symb(..) )
+import Data.Symb ( Symb(..), symb )
 import Types
 import Text.Parsec.Pos ( newPos )
-
-symb :: Ident -> Symb
-symb = Symb Z
 
 argPassToSymb :: ArgPass -> Symb
 argPassToSymb = \case

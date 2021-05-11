@@ -6,6 +6,7 @@ import Test.Hspec
 import Test.QuickCheck
 
 import BuiltIns
+import Data.Symb
 import TestUtils
 import Types
 import Utils

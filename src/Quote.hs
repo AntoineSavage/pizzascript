@@ -3,9 +3,9 @@ module Quote (quote, unquote, unparse) where
 import Ast ( unparseExpr, unparseList )
 import Data.Ident ( unparseIdent )
 import Data.Nat ( Nat(..) )
-import Data.Symb ( Symb(Symb) )
+import Data.Symb ( Symb(Symb), symb )
 import Types ( AstListKind(..), AstExpr(..), WithPos(..) )
-import Utils ( symb, toForm )
+import Utils ( toForm )
 
 quote :: WithPos AstExpr -> WithPos AstExpr
 quote e@(WithPos p v) =

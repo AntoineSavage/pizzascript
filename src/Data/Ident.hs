@@ -1,7 +1,6 @@
 module Data.Ident where
 
 import Control.Monad ( liftM2 )
-
 import Text.Parsec ( alphaNum, char, letter, (<|>), many )
 import Text.Parsec.String ( Parser )
 

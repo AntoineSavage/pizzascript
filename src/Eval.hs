@@ -10,7 +10,7 @@ import BuiltIns ( withPos )
 import Control.Monad ( forM_, liftM2 )
 import Data.Ident ( Ident )
 import Data.Nat ( Nat(Z) )
-import Data.Symb ( Symb(Symb) )
+import Data.Symb ( Symb(Symb), symb )
 import Types
 import Utils
 
