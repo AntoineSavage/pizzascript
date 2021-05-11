@@ -5,6 +5,7 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 
 import Data.Maybe ( fromMaybe )
+import Data.Ident ( Ident(..) )
 import Data.Nat ( Nat(..) )
 import Types
 import Text.Parsec.Pos ( newPos )

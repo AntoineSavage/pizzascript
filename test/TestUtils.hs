@@ -5,6 +5,7 @@ import qualified Data.Map as M
 
 import BuiltIns
 import Control.Monad
+import Data.Ident
 import Data.List
 import Data.NatSpec
 import Test.QuickCheck

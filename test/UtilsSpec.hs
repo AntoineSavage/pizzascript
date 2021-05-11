@@ -7,6 +7,7 @@ import Test.QuickCheck
 
 import Control.Monad
 import Data.Either
+import Data.Ident
 import Data.List
 import Data.Nat
 import TestUtils

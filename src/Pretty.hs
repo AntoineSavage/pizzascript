@@ -1,9 +1,10 @@
 {-# LANGUAGE LambdaCase #-}
 module Pretty where
 
-import Ast
+import Ast ( unparseIdent, unparseSymb, unparseExpr )
+import Data.Ident ( Ident )
 import Text.Parsec ( SourcePos )
-import Types
+import Types ( WithPos, AstExpr, Symb )
 
 identSize :: Int
 identSize = 2

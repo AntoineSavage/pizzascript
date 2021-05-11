@@ -7,6 +7,7 @@ import Ast
 import Control.Monad
 import Data.Char
 import Data.Either
+import Data.Ident
 import Data.List
 import Data.Nat
 import Numeric

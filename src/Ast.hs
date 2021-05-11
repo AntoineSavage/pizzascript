@@ -3,12 +3,13 @@ module Ast where
 
 import Control.Monad ( liftM2, void )
 import Data.Char ( ord, isControl, isPrint )
+import Data.Ident ( Ident(..) )
 import Data.List ( intercalate )
 import Data.Nat ( len, unlen, Nat(..) )
 import Numeric ( readHex, showHex )
 import Text.Parsec
 import Text.Parsec.String ( Parser )
-import Types ( AstExpr(..), AstListKind(..), Ident(..), Symb(..), WithPos(..) )
+import Types ( AstExpr(..), AstListKind(..), Symb(..), WithPos(..) )
 
 -- Ignore
 ignore :: Parser () 

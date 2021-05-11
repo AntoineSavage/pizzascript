@@ -2,14 +2,11 @@ module Types where
 
 import qualified Data.Map as M
 
+import Data.Ident ( Ident )
 import Data.Nat ( Nat )
 import Text.Parsec ( SourcePos )
 
 -- Shared types
-newtype Ident
-    = Ident String
-    deriving (Show, Eq, Ord)
-
 data Symb
     = Symb Nat Ident
     deriving (Show, Eq, Ord)

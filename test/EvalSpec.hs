@@ -7,6 +7,7 @@ import qualified Data.Map as M
 
 import Control.Monad
 import Data.Either
+import Data.Ident
 import Data.Nat
 import Eval
 import Quote

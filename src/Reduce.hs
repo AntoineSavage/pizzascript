@@ -6,9 +6,10 @@ import qualified Data.Map as M
 import Ast ( parseExpr, parseMany, ignore )
 import BuiltIns ( FuncReturn, builtInCtx, func, _not, _or, _and )
 import Control.Monad ( forM_, liftM2 )
+import Data.Ident ( Ident(..) )
 import Data.Maybe ( fromMaybe )
 import Data.Nat ( Nat(..) )
-import Eval
+import Eval ( ExprEvalResult(..), evalExpr, evalFuncCustom )
 import Quote ( quote, unquote )
 import Text.Parsec ( eof )
 import Text.Parsec.String ( parseFromFile )
