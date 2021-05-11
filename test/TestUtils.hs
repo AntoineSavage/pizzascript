@@ -16,6 +16,7 @@ import Text.Parsec.String
 import Text.Parsec.Pos
 import Types
 import Utils
+import Utils.ArbWithDepth
 
 -- Constants
 digits = ['0'..'9']
@@ -47,9 +48,6 @@ unparseElem = \case
     Just (Elem x) -> show x ++ " "
 
 -- Types and instances
-instance Arbitrary Ident where arbitrary = fmap Ident $ liftM2 (:) (elements validFirsts) $ chooseInt (0, 10) >>= flip vectorOf (elements validNexts)
-instance ArbWithDepth Ident where arbWithDepth _ = arbitrary
-
 instance Arbitrary Symb where arbitrary = liftM2 Symb arbitrary arbitrary
 instance Arbitrary SourcePos where arbitrary = liftM3 newPos arbitrary arbitrary arbitrary
 
@@ -142,7 +140,6 @@ instance Arbitrary ValidCodepoint where arbitrary = ValidCodepoint <$> chooseInt
 newtype InvalidCodepoint = InvalidCodepoint Int deriving (Show, Eq)
 instance Arbitrary InvalidCodepoint where arbitrary = InvalidCodepoint <$> chooseInt (0x110000, maxBound)
 
-class Arbitrary a => ArbWithDepth a where arbWithDepth :: Int -> Gen a
 instance ArbWithDepth a => ArbWithDepth (Maybe a) where arbWithDepth depth = oneof [return Nothing, Just <$> arbWithDepth depth]
 
 newtype Elem = Elem Int deriving (Show, Eq)

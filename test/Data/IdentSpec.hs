@@ -6,8 +6,8 @@ import Test.QuickCheck
 import Control.Monad
 import Data.Either
 import Data.Ident
-import TestUtils
 import Text.Parsec
+import Utils.ArbWithDepth
 
 spec :: Spec
 spec = do
@@ -26,7 +26,7 @@ parseIdentVsUnparseIdentSpec = describe "parseIdent vs unparseIdent" $ do
 parseIdentSpec :: Spec
 parseIdentSpec = describe "parseIdent" $ do
     it "rejects invalid first" $ do
-        forM_ invalidFirsts $ \f -> do
+        forM_ (digits ++ symbols ++ escapees) $ \f -> do
             let s = f : validNexts
             isLeft (parse parseIdent "tests" s) `shouldBe` True
 
@@ -40,3 +40,24 @@ unparseIdentSpec = describe "unparseIdent" $ do
     it "returns input string" $ do
         property $ \s -> do
             unparseIdent (Ident s) `shouldBe` s
+
+-- Utils
+digits = ['0'..'9']
+lettersUpper = ['A'..'Z']
+lettersLower = ['a'..'z']
+symbols = " !#$%&'()*+,-.:;<=>?@[]^`{|}~"
+accentChars = "àâäĉèéêëĝĥîïĵôöŝùûüŵŷÿ"
+escapees = "\"\\\b\f\n\r\t"
+underscore = '_'
+
+validFirsts = underscore : lettersUpper ++ lettersLower ++ accentChars
+validNexts = underscore : digits ++ lettersUpper ++ lettersLower ++ accentChars
+
+instance Arbitrary Ident where
+    arbitrary = do
+        first <- elements validFirsts
+        nexts <- chooseInt (0, 10) >>= flip vectorOf (elements validNexts)
+        return $ Ident $ first : nexts
+
+instance ArbWithDepth Ident where
+    arbWithDepth _ = arbitrary
