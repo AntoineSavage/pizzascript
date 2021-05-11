@@ -53,6 +53,7 @@ unlenSpec = describe "unlen" $ do
         property $ \n -> do
             unlen n () `shouldBe` replicate (toInt n) ()
 
+-- Utils
 toInt :: Nat -> Int
 toInt Z     = 0
 toInt (S n) = 1 + toInt n

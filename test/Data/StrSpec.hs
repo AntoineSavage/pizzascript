@@ -1,13 +1,13 @@
-module Ast.AstStringSpec where
+module Data.StrSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
-import Ast
 import Control.Monad
 import Data.Char
 import Data.Either
 import Data.IdentSpec
+import Data.Str
 import Numeric
 import TestUtils
 import Text.Parsec
@@ -338,3 +338,6 @@ parseHexCodepointSpec = describe "parseHexCodepoint" $ do
             property $ \(InvalidCodepoint i) -> do
                 let s = showHex i ""
                 isLeft (parse (parseHexCodepoint $ return $ f s) "tests" "") `shouldBe` True
+
+-- Utils
+instance Arbitrary Str where arbitrary = Str <$> arbitrary
