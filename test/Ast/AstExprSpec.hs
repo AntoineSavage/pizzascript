@@ -6,7 +6,9 @@ import Test.QuickCheck
 import Ast
 import Control.Monad
 import Data.Ident
+import Data.Numb
 import Data.Symb
+import Data.Str
 import Data.WithPos
 import TestUtils
 import Text.Parsec
@@ -32,7 +34,7 @@ parseExprSpec :: Spec
 parseExprSpec = describe "parseExpr" $ do
     it "parses num" $ do
         property $ \p n -> do
-            parse (parseExpr ignore undefined) "tests" (unparseNum n) `shouldBe` Right (WithPos p $ AstNum n)
+            parse (parseExpr ignore undefined) "tests" (unparseNumb n) `shouldBe` Right (WithPos p $ AstNum n)
 
     it "parses str" $ do
         property $ \p s -> do
@@ -57,7 +59,7 @@ unparseExprSpec :: Spec
 unparseExprSpec = describe "unparseExpr" $ do
     it "unparses num" $ do
         property $ \p n -> do
-            unparseExpr undefined (WithPos p $ AstNum n) `shouldBe` unparseNum n
+            unparseExpr undefined (WithPos p $ AstNum n) `shouldBe` unparseNumb n
 
     it "unparses str" $ do
         property $ \p s -> do
