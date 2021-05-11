@@ -3,6 +3,7 @@ module BuiltIns where
 import qualified Data.Map as M
 
 import Data.Symb ( symb )
+import Data.Numb ( Numb(Numb) )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
 import Text.Parsec.Pos ( newPos )
 import Types
@@ -170,7 +171,7 @@ boolish v
   | v == pzTrue = TrueReal
   | otherwise = case val v of
     PzUnit -> Falsish
-    PzNum 0 -> Falsish
+    PzNum (Numb 0) -> Falsish
     PzStr "" -> Falsish
     PzList [] -> Falsish
     PzDict d -> if M.null d then Falsish else Truish

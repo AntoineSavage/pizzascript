@@ -8,17 +8,17 @@ newtype Numb
     = Numb Double
     deriving (Show, Eq, Ord)
 
-parseNumb :: Parser Double
+parseNumb :: Parser Numb
 parseNumb = do
     let uint = many1 digit
         sint = liftM2 (++) (option "" $ string "-") uint
         consOrEmpty h t = option "" $ liftM2 (:) h t
         dec = consOrEmpty (char '.') uint
         exp = consOrEmpty (oneOf "eE") sint
-    read . concat <$> sequence [sint, dec, exp]
+    Numb . read . concat <$> sequence [sint, dec, exp]
 
-unparseNumb :: Double -> String
-unparseNumb d =
+unparseNumb :: Numb -> String
+unparseNumb (Numb d) =
     let truncated = truncate d
     in if d == fromIntegral truncated
         then show truncated

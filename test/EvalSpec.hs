@@ -9,6 +9,8 @@ import Control.Monad
 import Data.Either
 import Data.Ident
 import Data.Nat
+import Data.Numb
+import Data.NumbSpec
 import Data.Symb
 import Data.SymbSpec
 import Data.WithPos
@@ -237,7 +239,7 @@ evalImpureArgsSpec :: Spec
 evalImpureArgsSpec = describe "evalImpureArgs" $ do
     it "evals mismatch to None" $ do
         forM_ [ []
-                , [AstNum 0]
+                , [AstNum $ Numb 0]
                 , [AstStr ""]
                 , [AstIdent $ Ident ""]
                 , [AstSymb $ symb $ Ident ""]
@@ -327,7 +329,7 @@ evalArgsSpec = describe "evalArgs" $ do
 
     it "rejects non-ident and non-form list" $ do
         property $ \(Few es) -> do
-            forM_   [ AstNum 0, AstStr ""
+            forM_   [ AstNum $ Numb 0, AstStr ""
                     , AstSymb $ symb $ Ident ""
                     , AstList KindList []
                     , AstList KindDict []

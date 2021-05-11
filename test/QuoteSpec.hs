@@ -7,6 +7,7 @@ import Ast
 import Data.Either
 import Data.Ident
 import Data.Nat
+import Data.Numb
 import Data.Symb
 import Data.WithPos
 import Quote
@@ -31,7 +32,7 @@ quoteSpec :: Spec
 quoteSpec = describe "quote" $ do
     it "converts numbers into themselves" $ do
         property $ \p n -> do
-            let e = WithPos p $ AstNum n
+            let e = WithPos p $ AstNum $ Numb n
             quote e `shouldBe` e
 
     it "converts strings into themselves" $ do
@@ -66,7 +67,7 @@ unquoteSpec :: Spec
 unquoteSpec = describe "unquote" $ do
     it "converts numbers into themselves" $ do
         property $ \p n -> do
-            let e = WithPos p $ AstNum n
+            let e = WithPos p $ AstNum $ Numb n
             unquote e `shouldBe` Right e
 
     it "converts strings into themselves" $ do

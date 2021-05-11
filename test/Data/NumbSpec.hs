@@ -28,13 +28,13 @@ parseNumbSpec = describe "parseNumb" $ do
 
     it "parses integers" $ do
         property $ \n -> do
-            parse parseNumb "tests" (show (n :: Int)) `shouldBe` Right (fromIntegral n)
+            parse parseNumb "tests" (show (n :: Int)) `shouldBe` Right (Numb $ fromIntegral n)
 
     it "parses doubles with decimal part" $ do
         property $ \intPart (Positive decPart) -> do
             let _ = (intPart :: Integer, decPart :: Integer)
                 d = read $ show intPart ++ "." ++ show decPart
-            parse parseNumb "tests" (show d) `shouldBe` Right d
+            parse parseNumb "tests" (show d) `shouldBe` Right (Numb d)
 
     it "parses doubles with exponential part" $ do
         property $ \intPart (Positive decPart) expPart -> do
@@ -43,22 +43,22 @@ parseNumbSpec = describe "parseNumb" $ do
                 s2 = show intPart ++ "." ++ show (decPart + 1) ++ "E" ++ show expPart
                 d1 = read s1
                 d2 = read s2
-            parse parseNumb "tests" s1 `shouldBe` Right d1
-            parse parseNumb "tests" s1 `shouldBe` Right d2
+            parse parseNumb "tests" s1 `shouldBe` Right (Numb d1)
+            parse parseNumb "tests" s1 `shouldBe` Right (Numb d2)
 
     it "parses doubles" $ do
         property $ \d -> do
-            parse parseNumb "tests" (show d) `shouldBe` Right d
+            parse parseNumb "tests" (show d) `shouldBe` Right (Numb d)
 
 unparseNumbSpec :: Spec
 unparseNumbSpec = describe "unparseNumb" $ do
     it "returns show<int> for any integer" $ do
         property $ \n -> do
-            unparseNumb (fromIntegral n) `shouldBe` show (n :: Int)
+            unparseNumb (Numb $ fromIntegral n) `shouldBe` show (n :: Int)
 
     it "returns show<double> for any non-integer" $ do
         property $ \d -> do
-            unparseNumb (d + 0.1) `shouldBe` show (d + 0.1)
+            unparseNumb (Numb $ d + 0.1) `shouldBe` show (d + 0.1)
 
 -- Utils
 instance Arbitrary Numb where arbitrary = Numb <$> arbitrary

@@ -7,6 +7,7 @@ import Ast
 import Control.Monad
 import Data.Ident
 import Data.Numb
+import Data.NumbSpec
 import Data.Symb
 import Data.Str
 import Data.WithPos
@@ -59,7 +60,7 @@ unparseExprSpec :: Spec
 unparseExprSpec = describe "unparseExpr" $ do
     it "unparses num" $ do
         property $ \p n -> do
-            unparseExpr undefined (WithPos p $ AstNum n) `shouldBe` unparseNumb n
+            unparseExpr undefined (WithPos p $ AstNum $ n) `shouldBe` unparseNumb n
 
     it "unparses str" $ do
         property $ \p s -> do

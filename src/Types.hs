@@ -3,13 +3,14 @@ module Types where
 import qualified Data.Map as M
 
 import Data.Ident ( Ident )
+import Data.Numb ( Numb )
 import Data.Symb ( Symb )
 import Data.WithPos ( WithPos, Pos )
 import Text.Parsec ( SourcePos )
 
 -- AST types
 data AstExpr
-    = AstNum Double
+    = AstNum Numb
     | AstStr String
     | AstIdent Ident
     | AstSymb Symb
@@ -25,7 +26,7 @@ data AstListKind
 -- Value types
 data PzVal
     = PzUnit
-    | PzNum Double
+    | PzNum Numb
     | PzStr String
     | PzSymb Symb
     | PzList [WithPos PzVal]

@@ -9,6 +9,7 @@ import Data.Ident
 import Data.IdentSpec
 import Data.List
 import Data.NatSpec
+import Data.Numb
 import Data.Symb
 import Data.WithPos
 import Data.WithPosSpec
@@ -42,7 +43,7 @@ unparseElem = \case
 instance Arbitrary AstExpr where arbitrary = arbDepth
 instance ArbWithDepth AstExpr where
     arbWithDepth depth = oneof $
-        [ AstNum <$> arbitrary
+        [ AstNum . Numb <$> arbitrary
         , AstStr <$> arbitrary
         , AstIdent <$> arbitrary
         , AstSymb <$> liftM2 Symb arbitrary arbitrary
@@ -58,7 +59,7 @@ instance Arbitrary PzVal where arbitrary = arbDepth
 instance ArbWithDepth PzVal where
     arbWithDepth depth = oneof $
         [ return PzUnit
-        , PzNum <$> arbitrary
+        , PzNum . Numb <$> arbitrary
         , PzStr <$> arbitrary
         , PzSymb <$> liftM2 Symb arbitrary arbitrary
         ] ++
@@ -142,7 +143,7 @@ newtype UnquoteValid = UnquoteValid (WithPos AstExpr) deriving (Show, Eq)
 instance Arbitrary UnquoteValid where arbitrary = arbDepth
 instance ArbWithDepth UnquoteValid where
     arbWithDepth depth = fmap UnquoteValid $ liftM2 WithPos arbitrary $ oneof $
-        [ AstNum <$> arbitrary
+        [ AstNum . Numb <$> arbitrary
         , AstStr <$> arbitrary
         , AstSymb <$> liftM2 Symb arbitrary arbitrary
         ] ++
@@ -160,7 +161,7 @@ instance Arbitrary PzFalsish where
         p <- arbitrary
         fmap PzFalsish $ elements $ map (WithPos p) $
             [ PzUnit
-            , PzNum 0
+            , PzNum $ Numb 0
             , PzStr ""
             , PzList []
             , PzDict M.empty
@@ -169,7 +170,7 @@ instance Arbitrary PzFalsish where
 newtype PzTruish = PzTruish (WithPos PzVal) deriving (Show, Eq)
 instance Arbitrary PzTruish where
     arbitrary = fmap PzTruish $ liftM2 WithPos arbitrary $ oneof
-            [ PzNum . getNonZero <$> arbitrary
+            [ PzNum . Numb . getNonZero <$> arbitrary
             , PzStr . getNonEmpty <$> arbitrary
             , PzList  <$> liftM2 (:) arbDepth (arbFew arbDepth)
             , fmap PzDict $ liftM3 M.insert arbDepth arbDepth arbDepth

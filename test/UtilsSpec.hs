@@ -10,6 +10,8 @@ import Data.Either
 import Data.Ident
 import Data.List
 import Data.Nat
+import Data.Numb
+import Data.NumbSpec
 import Data.Symb
 import Data.SymbSpec
 import Data.WithPos
