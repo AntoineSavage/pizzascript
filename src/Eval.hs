@@ -9,7 +9,8 @@ import Quote ( quote, unquote )
 import BuiltIns ( withPos )
 import Control.Monad ( forM_, liftM2 )
 import Data.Ident ( Ident )
-import Data.Nat ( Nat(..) )
+import Data.Nat ( Nat(Z) )
+import Data.Symb ( Symb(Symb) )
 import Types
 import Utils
 

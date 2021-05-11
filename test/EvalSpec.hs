@@ -9,6 +9,7 @@ import Control.Monad
 import Data.Either
 import Data.Ident
 import Data.Nat
+import Data.Symb
 import Eval
 import Quote
 import Text.Parsec.Pos 

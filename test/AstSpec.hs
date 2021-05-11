@@ -10,6 +10,7 @@ import Data.Either
 import Data.Ident
 import Data.List
 import Data.Nat
+import Data.Symb
 import Numeric
 import TestUtils
 import Text.Parsec

@@ -8,6 +8,7 @@ import Control.Monad
 import Data.Ident
 import Data.List
 import Data.NatSpec
+import Data.Symb
 import Test.QuickCheck
 import Text.Parsec
 import Text.Parsec.String

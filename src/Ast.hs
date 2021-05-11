@@ -6,10 +6,11 @@ import Data.Char ( ord, isControl, isPrint )
 import Data.Ident ( parseIdent, unparseIdent )
 import Data.List ( intercalate )
 import Data.Nat ( len, unlen, Nat(..) )
+import Data.Symb ( Symb(..) )
 import Numeric ( readHex, showHex )
 import Text.Parsec
 import Text.Parsec.String ( Parser )
-import Types ( AstExpr(..), AstListKind(..), Symb(..), WithPos(..) )
+import Types ( AstExpr(..), AstListKind(..), WithPos(..) )
 
 -- Ignore
 ignore :: Parser ()

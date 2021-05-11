@@ -3,8 +3,9 @@ module Pretty where
 
 import Ast ( unparseSymb, unparseExpr )
 import Data.Ident ( Ident, unparseIdent )
+import Data.Symb ( Symb )
 import Text.Parsec ( SourcePos )
-import Types ( WithPos, AstExpr, Symb )
+import Types ( WithPos, AstExpr )
 
 identSize :: Int
 identSize = 2

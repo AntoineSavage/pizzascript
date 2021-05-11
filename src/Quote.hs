@@ -3,7 +3,8 @@ module Quote (quote, unquote, unparse) where
 import Ast ( unparseExpr, unparseList )
 import Data.Ident ( unparseIdent )
 import Data.Nat ( Nat(..) )
-import Types ( AstListKind(..), AstExpr(..), WithPos(..), Symb(..) )
+import Data.Symb ( Symb(Symb) )
+import Types ( AstListKind(..), AstExpr(..), WithPos(..) )
 import Utils ( symb, toForm )
 
 quote :: WithPos AstExpr -> WithPos AstExpr

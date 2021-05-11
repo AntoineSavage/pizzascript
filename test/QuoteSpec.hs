@@ -7,6 +7,7 @@ import Ast
 import Data.Either
 import Data.Ident
 import Data.Nat
+import Data.Symb
 import Quote
 import TestUtils
 import Types

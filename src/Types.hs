@@ -3,14 +3,10 @@ module Types where
 import qualified Data.Map as M
 
 import Data.Ident ( Ident )
-import Data.Nat ( Nat )
+import Data.Symb ( Symb )
 import Text.Parsec ( SourcePos )
 
 -- Shared types
-data Symb
-    = Symb Nat Ident
-    deriving (Show, Eq, Ord)
-
 type Pos = SourcePos
 data WithPos a
     = WithPos { pos :: Pos, val :: a }
