@@ -1,3 +1,4 @@
+AstExpr list in new type (like Symb, Numb, Str. Lst?) that contains the type and elems
 move Acc stuff out of main
 
 built-ins:
