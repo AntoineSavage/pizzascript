@@ -1,8 +1,8 @@
 {-# LANGUAGE LambdaCase #-}
 module Data.Lst ( Lst(..), LstKind(..), getStart, getEnd, parseLst, parseMany, unparseLst, unparseMany ) where
 
-import Control.Monad
-import Text.Parsec
+import Control.Monad ( void )
+import Text.Parsec ( char, choice, optionMaybe, (<?>) )
 import Text.Parsec.String ( Parser )
 
 data Lst a
@@ -28,10 +28,16 @@ getEnd = \case
     KindForm -> ')'
 
 parseLst :: Parser () -> Parser a -> Parser (Lst a)
-parseLst ign p = undefined
+parseLst ign p =
+    let parseList k = fmap (Lst k) $ char (getStart k) >> parseMany ign p (void $ char $ getEnd k)
+    in choice
+        [ parseList KindList <?> "list"
+        , parseList KindDict <?> "dictionary"
+        , parseList KindForm <?> "form"
+        ]
 
 unparseLst :: (Maybe a -> String) -> Lst a -> String
-unparseLst f (Lst k es) = undefined
+unparseLst f (Lst k es) = [getStart k] ++ unparseMany f es ++ [getEnd k]
 
 parseMany :: Parser () -> Parser a -> Parser () -> Parser [a]
 parseMany ign elem end = go [] where
