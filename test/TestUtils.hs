@@ -121,12 +121,6 @@ instance ArbWithDepth StackFrame where
         ]
 
 -- Test-only types
-newtype ValidCodepoint = ValidCodepoint Int deriving (Show, Eq)
-instance Arbitrary ValidCodepoint where arbitrary = ValidCodepoint <$> chooseInt (0, 0x10FFFF)
-
-newtype InvalidCodepoint = InvalidCodepoint Int deriving (Show, Eq)
-instance Arbitrary InvalidCodepoint where arbitrary = InvalidCodepoint <$> chooseInt (0x110000, maxBound)
-
 newtype Elem = Elem Int deriving (Show, Eq)
 instance Arbitrary Elem where arbitrary = do Positive x <- arbitrary; return $ Elem x
 
