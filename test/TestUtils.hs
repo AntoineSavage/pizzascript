@@ -26,15 +26,6 @@ import Utils.ArbWithDepth
 kinds = [ KindList, KindDict, KindForm ]
 argPasses = [ Eval, Quote, Unquote, DeepQuote, DeepUnquote ]
 
--- Functions
-parseElem :: Parser Elem
-parseElem = Elem . read <$> many1 digit
-
-unparseElem :: Maybe Elem -> String
-unparseElem = \case
-    Nothing -> ""
-    Just (Elem x) -> show x ++ " "
-
 -- Types and instances
 instance Arbitrary AstExpr where arbitrary = arbDepth
 instance ArbWithDepth AstExpr where
@@ -116,9 +107,6 @@ instance ArbWithDepth StackFrame where
         ]
 
 -- Test-only types
-newtype Elem = Elem Int deriving (Show, Eq)
-instance Arbitrary Elem where arbitrary = do Positive x <- arbitrary; return $ Elem x
-
 newtype Few a = Few [a] deriving (Show, Eq)
 instance Arbitrary a => Arbitrary (Few a) where arbitrary = Few <$> arbFew arbitrary
 

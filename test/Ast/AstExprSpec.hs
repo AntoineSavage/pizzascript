@@ -81,11 +81,3 @@ unparseExprSpec = describe "unparseExpr" $ do
         property $ \p (Few es) -> do
             forM_ kinds $ \k -> do
                 unparseExpr f (WithPos p $ AstList k es) `shouldBe` unparseList k f es
-
-unparseElem' = unparseElem.Just
-
-parseList' k = parse (parseList k ignore parseElem) "tests"
-unparseList' k = unparseList k unparseElem
-
-parseMany' = parse (parseMany spaces parseElem $ void $ char '$') "tests"
-unparseMany' es = unparseMany unparseElem es

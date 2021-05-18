@@ -1,6 +1,5 @@
-test Data.Lst
-use Data.Lst in Ast.Expr
-move string/number utils to appropriate specs
+Use Lst in AstExpr
+
 move Acc stuff out of main
 
 built-ins:

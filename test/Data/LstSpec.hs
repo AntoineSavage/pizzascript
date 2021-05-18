@@ -7,7 +7,7 @@ import Test.QuickCheck
 import Control.Monad
 import Data.Either
 import Data.Lst
-import TestUtils
+import TestUtils hiding ( kinds )
 import Text.Parsec
 import Text.Parsec.String
 
@@ -38,7 +38,7 @@ getEndSpec = describe "getEnd" $ do
 
 parseLstVsUnparseLstSpec :: Spec
 parseLstVsUnparseLstSpec = describe "parseLst vs unparseLst" $ do
-    forM_ kinds_ $ \k -> do
+    forM_ kinds $ \k -> do
         it "composes parseLst and unparseLst into id" $ do
             property $ \(Few es) -> do
                 let s = unparseLst' k es
@@ -48,7 +48,7 @@ parseLstVsUnparseLstSpec = describe "parseLst vs unparseLst" $ do
            
 parseLstSpec :: Spec
 parseLstSpec = describe "parseLst" $ do
-    forM_ kinds_ $ \k -> do
+    forM_ kinds $ \k -> do
         let (start, end) = (getStart k, getEnd k)
 
         it "rejects an empty string" $ do
@@ -75,7 +75,7 @@ parseLstSpec = describe "parseLst" $ do
 
 unparseLstSpec :: Spec
 unparseLstSpec = describe "unparseLst" $ do
-    forM_ kinds_ $ \k -> do
+    forM_ kinds $ \k -> do
         let (start, end) = (getStart k, getEnd k)
 
         it "unparses zero elems" $ do
@@ -134,7 +134,7 @@ unparseManySpec :: Spec
 unparseManySpec = describe "unparseMany" $ do
     it "unparses empty list" $ do
         unparseMany' [] `shouldBe` ""
-        unparseMany' [] `shouldBe` unparseElem_ Nothing
+        unparseMany' [] `shouldBe` unparseElem Nothing
 
     it "unparses one elem" $ do
         property $ \e -> do
@@ -153,27 +153,23 @@ unparseManySpec = describe "unparseMany" $ do
             unparseMany' es `shouldBe` concatMap str es
 
 -- Utils
-kinds_ = [ KindList, KindDict, KindForm ]
+kinds = [ KindList, KindDict, KindForm ]
 
-ignore :: Parser ()
-ignore = spaces
+newtype Elem = Elem Int deriving (Show, Eq)
+instance Arbitrary Elem where arbitrary = do Positive x <- arbitrary; return $ Elem x
 
--- TODO Remove _ once TestUtils is cleaned-up
-newtype Elem_ = Elem_ Int deriving (Show, Eq)
-instance Arbitrary Elem_ where arbitrary = do Positive x <- arbitrary; return $ Elem_ x
+parseElem :: Parser Elem
+parseElem = Elem . read <$> many1 digit
 
-parseElem_ :: Parser Elem_
-parseElem_ = Elem_ . read <$> many1 digit
-
-unparseElem_ :: Maybe Elem_ -> String
-unparseElem_ = \case
+unparseElem :: Maybe Elem -> String
+unparseElem = \case
     Nothing -> ""
-    Just (Elem_ x) -> show x ++ " "
+    Just (Elem x) -> show x ++ " "
 
-str = unparseElem_.Just
+str = unparseElem.Just
 
-parseLst' = parse (parseLst ignore parseElem_) "tests"
-unparseLst' k es = unparseLst unparseElem_ (Lst k es)
+parseLst' = parse (parseLst spaces parseElem) "tests"
+unparseLst' k es = unparseLst unparseElem (Lst k es)
 
-parseMany' = parse (parseMany spaces parseElem_ $ void $ char '$') "tests"
-unparseMany' es = unparseMany unparseElem_ es
+parseMany' = parse (parseMany spaces parseElem $ void $ char '$') "tests"
+unparseMany' es = unparseMany unparseElem es
