@@ -23,11 +23,6 @@ import Utils
 import Utils.ArbWithDepth
 
 -- Constants
-noEscapeChars = digits ++ lettersUpper ++ lettersLower ++ symbols
-doubleQuoteChar = '"'
-backslashChar = '\\'
-solidusChar = '/'
-
 kinds = [ KindList, KindDict, KindForm ]
 argPasses = [ Eval, Quote, Unquote, DeepQuote, DeepUnquote ]
 

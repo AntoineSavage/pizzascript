@@ -340,6 +340,11 @@ parseHexCodepointSpec = describe "parseHexCodepoint" $ do
                 isLeft (parse (parseHexCodepoint $ return $ f s) "tests" "") `shouldBe` True
 
 -- Utils
+noEscapeChars = digits ++ lettersUpper ++ lettersLower ++ symbols
+doubleQuoteChar = '"'
+backslashChar = '\\'
+solidusChar = '/'
+
 unparseStr' = unparseStr . Str
 parseStr' = do Str s <- parseStr; return s
 
