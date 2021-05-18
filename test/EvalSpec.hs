@@ -18,6 +18,7 @@ import Data.SymbSpec
 import Data.WithPos
 import Eval
 import Quote
+import QuoteSpec
 import Text.Parsec.Pos 
 import TestUtils
 import Types

@@ -134,22 +134,6 @@ newtype ArbDict = ArbDict Dict deriving (Show, Eq)
 instance Arbitrary ArbDict where arbitrary = arbDepth
 instance ArbWithDepth ArbDict where arbWithDepth depth = ArbDict <$> arbWithDepth depth
 
-newtype UnquoteValid = UnquoteValid (WithPos AstExpr) deriving (Show, Eq)
-instance Arbitrary UnquoteValid where arbitrary = arbDepth
-instance ArbWithDepth UnquoteValid where
-    arbWithDepth depth = fmap UnquoteValid $ liftM2 WithPos arbitrary $ oneof $
-        [ AstNum . Numb <$> arbitrary
-        , AstStr . Str <$> arbitrary
-        , AstSymb <$> liftM2 Symb arbitrary arbitrary
-        ] ++
-        ( if depth <= 0 then [] else
-            [ AstList KindList <$> arbFew arbUnquoteValid
-            ]
-        )
-
-newtype UnquoteValids = UnquoteValids [WithPos AstExpr] deriving (Show, Eq)
-instance Arbitrary UnquoteValids where arbitrary = UnquoteValids <$> arbFew arbUnquoteValid
-
 newtype PzFalsish = PzFalsish (WithPos PzVal) deriving (Show, Eq)
 instance Arbitrary PzFalsish where
     arbitrary = do
@@ -171,7 +155,3 @@ instance Arbitrary PzTruish where
             , fmap PzDict $ liftM3 M.insert arbDepth arbDepth arbDepth
             , PzFunc <$> arbitrary
             ]
-
--- Arbitrary utils
-arbUnquoteValid :: Gen (WithPos AstExpr)
-arbUnquoteValid = do UnquoteValid e <- arbitrary; return e

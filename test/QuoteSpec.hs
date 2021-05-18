@@ -4,6 +4,7 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Ast
+import Control.Monad
 import Data.Either
 import Data.Ident
 import Data.Nat
@@ -15,6 +16,7 @@ import Quote
 import TestUtils
 import Types
 import Utils
+import Utils.ArbWithDepth
 
 spec :: Spec
 spec = do
@@ -107,3 +109,23 @@ unquoteSpec = describe "unquote" $ do
             let form = AstList KindForm es
             unquote (WithPos p form) `shouldBe`
                 Left ("Unquote: unexpected form: " ++ unparseList KindForm unparse es)
+
+-- Utils
+arbUnquoteValid :: Gen (WithPos AstExpr)
+arbUnquoteValid = do UnquoteValid e <- arbitrary; return e
+
+newtype UnquoteValid = UnquoteValid (WithPos AstExpr) deriving (Show, Eq)
+instance Arbitrary UnquoteValid where arbitrary = arbDepth
+instance ArbWithDepth UnquoteValid where
+    arbWithDepth depth = fmap UnquoteValid $ liftM2 WithPos arbitrary $ oneof $
+        [ AstNum . Numb <$> arbitrary
+        , AstStr . Str <$> arbitrary
+        , AstSymb <$> liftM2 Symb arbitrary arbitrary
+        ] ++
+        ( if depth <= 0 then [] else
+            [ AstList KindList <$> arbFew arbUnquoteValid
+            ]
+        )
+
+newtype UnquoteValids = UnquoteValids [WithPos AstExpr] deriving (Show, Eq)
+instance Arbitrary UnquoteValids where arbitrary = UnquoteValids <$> arbFew arbUnquoteValid
