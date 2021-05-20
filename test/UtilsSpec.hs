@@ -6,8 +6,12 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Control.Monad
+import Data.ArgPass
 import Data.AstExpr
 import Data.Either
+import Data.FuncArgs
+import Data.FuncImpureArgs
+import Data.FuncBody
 import Data.Ident
 import Data.List
 import Data.Lst

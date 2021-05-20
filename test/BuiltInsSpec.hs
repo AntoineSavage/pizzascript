@@ -6,6 +6,10 @@ import Test.Hspec
 import Test.QuickCheck
 
 import BuiltIns
+import Data.ArgPass
+import Data.FuncArgs
+import Data.FuncBody
+import Data.FuncImpureArgs
 import Data.Numb
 import Data.Str
 import Data.Symb

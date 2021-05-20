@@ -2,7 +2,11 @@ module Types where
 
 import qualified Data.Map as M
 
+import Data.ArgPass ( ArgPass )
 import Data.AstExpr ( AstExpr )
+import Data.FuncArgs ( FuncArgs )
+import Data.FuncBody ( FuncBody )
+import Data.FuncImpureArgs ( FuncImpureArgs )
 import Data.Ident ( Ident )
 import Data.Numb ( Numb )
 import Data.Str ( Str )
@@ -26,29 +30,6 @@ data Func
     deriving (Show, Eq, Ord)
 
 type FuncImplCtx = Dict
-data FuncImpureArgs
-    = None
-    | ArgPass Pos (WithPos ArgPass)
-    | Both Pos (WithPos ArgPass) (WithPos Ident)
-    deriving (Show, Eq, Ord)
-
-data ArgPass
-    = Eval
-    | Quote
-    | Unquote
-    | DeepQuote
-    | DeepUnquote
-    deriving (Show, Eq, Ord)
-
-data FuncArgs
-    = ArgsVaria (WithPos Ident)
-    | ArgsArity Pos [WithPos Ident]
-    deriving (Show, Eq, Ord)
-
-data FuncBody
-    = BodyBuiltIn Ident
-    | BodyCustom [WithPos AstExpr]
-    deriving (Show, Eq, Ord)
 
 -- Evaluator types
 type Result = Maybe (WithPos PzVal)

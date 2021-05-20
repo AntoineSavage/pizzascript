@@ -4,7 +4,11 @@ import qualified Data.Map as M
 
 import BuiltIns ( FuncReturn, builtInCtx, func, _not, _or, _and )
 import Control.Monad ( forM_, liftM2 )
+import Data.ArgPass ( ArgPass(..) )
 import Data.AstExpr ( AstExpr, parseExpr )
+import Data.FuncArgs ( FuncArgs(..) )
+import Data.FuncBody ( FuncBody(..) )
+import Data.FuncImpureArgs ( FuncImpureArgs(..) )
 import Data.Ident ( Ident(..) )
 import Data.Lst ( parseMany )
 import Data.Maybe ( fromMaybe )

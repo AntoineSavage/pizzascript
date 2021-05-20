@@ -2,9 +2,13 @@ module BuiltIns where
 
 import qualified Data.Map as M
 
-import Data.Symb ( symb )
+import Data.ArgPass ( ArgPass(..) )
+import Data.FuncArgs ( FuncArgs(..) )
+import Data.FuncBody ( FuncBody(..) )
+import Data.FuncImpureArgs ( FuncImpureArgs(..) )
 import Data.Numb ( Numb(Numb) )
 import Data.Str ( Str(Str) )
+import Data.Symb ( symb )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
 import Text.Parsec.Pos ( newPos )
 import Types

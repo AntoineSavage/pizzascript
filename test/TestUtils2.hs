@@ -5,7 +5,11 @@ module TestUtils2 where
 import qualified Data.Map as M
 
 import Control.Monad
+import Data.ArgPass
 import Data.AstExprSpec
+import Data.FuncArgs
+import Data.FuncBody
+import Data.FuncImpureArgs
 import Data.IdentSpec
 import Data.List
 import Data.Numb

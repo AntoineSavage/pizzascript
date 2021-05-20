@@ -4,10 +4,14 @@ module Utils where
 import qualified Data.Map as M
 import qualified Data.Set as S
 
+import Data.ArgPass ( ArgPass(..) )
 import Data.AstExpr ( AstExpr(..) )
-import Data.Maybe ( fromMaybe )
+import Data.FuncArgs ( FuncArgs(..) )
+import Data.FuncBody ( FuncBody(..) )
+import Data.FuncImpureArgs ( FuncImpureArgs(..) )
 import Data.Ident ( Ident(..) )
 import Data.Lst ( LstKind(..) )
+import Data.Maybe ( fromMaybe )
 import Data.Nat ( Nat(Z) )
 import Data.Symb ( Symb(..), symb )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
