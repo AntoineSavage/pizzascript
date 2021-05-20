@@ -2,14 +2,12 @@ module Types where
 
 import qualified Data.Map as M
 
-import Data.AstExpr
-import Data.Ident
-import Data.Lst
-import Data.Numb
-import Data.Str
-import Data.Symb
-import Data.WithPos
-import Text.Parsec
+import Data.AstExpr ( AstExpr )
+import Data.Ident ( Ident )
+import Data.Numb ( Numb )
+import Data.Str ( Str )
+import Data.Symb ( Symb )
+import Data.WithPos ( Pos, WithPos )
 
 -- Value types
 data PzVal
