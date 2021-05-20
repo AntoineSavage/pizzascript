@@ -6,17 +6,12 @@ import qualified Data.Set as S
 
 import Data.ArgPass ( ArgPass(..) )
 import Data.AstExpr ( AstExpr(..) )
-import Data.FuncArgs ( FuncArgs(..) )
-import Data.FuncBody ( FuncBody(..) )
 import Data.FuncImpureArgs ( FuncImpureArgs(..) )
 import Data.Ident ( Ident(..) )
 import Data.Lst ( LstKind(..) )
-import Data.Maybe ( fromMaybe )
-import Data.Nat ( Nat(Z) )
-import Data.Symb ( Symb(..), symb )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
 import Idents ( identList, identDict )
-import Types
+import Types ( Dict, Func(impArgs), StackFrame(..) )
 import Text.Parsec.Pos ( newPos )
 
 toForm :: Pos -> LstKind -> [WithPos AstExpr] -> [WithPos AstExpr]
