@@ -6,6 +6,7 @@ import Test.QuickCheck
 import Ast
 import Control.Monad
 import Data.Ident
+import Data.Lst
 import Data.LstSpec
 import Data.Numb
 import Data.NumbSpec
@@ -57,7 +58,7 @@ parseExprSpec = describe "parseExpr" $ do
             g = parseExpr ignore g
         property $ \p (Few es) -> do
             forM_ kinds $ \k -> do
-                parse g "tests" (unparseList k f es) `shouldBe` Right (WithPos p $ AstList k es)
+                parse g "tests" (unparseList k f es) `shouldBe` Right (WithPos p $ AstList $ Lst k es)
 
 unparseExprSpec :: Spec
 unparseExprSpec = describe "unparseExpr" $ do
@@ -81,4 +82,4 @@ unparseExprSpec = describe "unparseExpr" $ do
         let f Nothing = ""; f (Just e) = unparseExpr f e
         property $ \p (Few es) -> do
             forM_ kinds $ \k -> do
-                unparseExpr f (WithPos p $ AstList k es) `shouldBe` unparseList k f es
+                unparseExpr f (WithPos p $ AstList $ Lst k es) `shouldBe` unparseList k f es

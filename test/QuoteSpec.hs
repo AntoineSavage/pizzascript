@@ -54,18 +54,18 @@ quoteSpec = describe "quote" $ do
 
     it "converts lists into 'list-prefixed lists" $ do
         property $ \p (Few es) -> do
-            quote (WithPos p $ AstList KindList es) `shouldBe`
-                WithPos p (AstList KindList $ map quote $ toForm p KindList es)
+            quote (WithPos p $ AstList $ Lst KindList es) `shouldBe`
+                WithPos p (AstList $ Lst KindList $ map quote $ toForm p KindList es)
 
     it "converts dicts into 'dict-prefixed lists" $ do
         property $ \p (Few es) -> do
-            quote (WithPos p $ AstList KindDict es) `shouldBe`
-                WithPos p (AstList KindList $ map quote $ toForm p KindDict es)
+            quote (WithPos p $ AstList $ Lst KindDict es) `shouldBe`
+                WithPos p (AstList $ Lst KindList $ map quote $ toForm p KindDict es)
 
     it "converts forms into lists" $ do
         property $ \p (Few es) -> do
-            quote (WithPos p $ AstList KindForm es) `shouldBe`
-                WithPos p (AstList KindList $ map quote es)
+            quote (WithPos p $ AstList $ Lst KindForm es) `shouldBe`
+                WithPos p (AstList $ Lst KindList $ map quote es)
 
 unquoteSpec :: Spec
 unquoteSpec = describe "unquote" $ do
@@ -94,20 +94,20 @@ unquoteSpec = describe "unquote" $ do
 
     it "converts lists into forms" $ do
         property $ \p (UnquoteValids es) -> do
-            let list = AstList KindList es
+            let list = AstList $ Lst KindList es
                 mactual = unquote $ WithPos p list
             isRight mactual `shouldBe` True
-            mactual `shouldBe` (WithPos p . AstList KindForm <$> mapM unquote es)
+            mactual `shouldBe` (WithPos p . AstList . Lst KindForm <$> mapM unquote es)
    
     it "rejects dictionaries" $ do
         property $ \p (Few es) -> do
-            let dictionary = AstList KindDict es
+            let dictionary = AstList $ Lst KindDict es
             unquote (WithPos p dictionary) `shouldBe`
                 Left ("Unquote: unexpected dictionary: " ++ unparseList KindDict unparse es)
 
     it "rejects forms" $ do
         property $ \p (Few es) -> do
-            let form = AstList KindForm es
+            let form = AstList $ Lst KindForm es
             unquote (WithPos p form) `shouldBe`
                 Left ("Unquote: unexpected form: " ++ unparseList KindForm unparse es)
 
@@ -124,7 +124,7 @@ instance ArbWithDepth UnquoteValid where
         , AstSymb <$> liftM2 Symb arbitrary arbitrary
         ] ++
         ( if depth <= 0 then [] else
-            [ AstList KindList <$> arbFew arbUnquoteValid
+            [ (AstList . Lst KindList) <$> arbFew arbUnquoteValid
             ]
         )
 

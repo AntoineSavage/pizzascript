@@ -4,7 +4,7 @@ module Ast where
 import Control.Monad ( liftM2, void )
 import Data.Char ( isControl )
 import Data.Ident ( parseIdent, unparseIdent )
-import Data.Lst ( LstKind(..), parseLst, unparseLst )
+import Data.Lst ( Lst(..), LstKind(..), parseLst, unparseLst )
 import Data.Numb ( parseNumb, unparseNumb )
 import Data.Str ( parseStr, unparseStr )
 import Data.Symb ( parseSymb, unparseSymb )
@@ -66,9 +66,7 @@ parseExpr ign p = liftM2 WithPos getPosition $
         <|> AstStr <$> (parseStr <?> "string")
         <|> AstIdent <$> (parseIdent <?> "identifier")
         <|> AstSymb <$> (parseSymb <?> "symbol")
-        <|> AstList KindList <$> (parseList KindList ign p <?> "list")
-        <|> AstList KindDict <$> (parseList KindDict ign p <?> "dictionary")
-        <|> AstList KindForm <$> (parseList KindForm ign p <?> "form")
+        <|> AstList <$> (parseLst ign p <?> "list (or dictionary or form)")
 
 unparseExpr :: (Maybe (WithPos AstExpr) -> String) -> WithPos AstExpr -> String
 unparseExpr f e =
@@ -77,4 +75,4 @@ unparseExpr f e =
         AstStr s -> unparseStr s
         AstIdent i -> unparseIdent i
         AstSymb s -> unparseSymb s
-        AstList k l -> unparseList k f l
+        AstList (Lst k l) -> unparseList k f l

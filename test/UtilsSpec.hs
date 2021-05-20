@@ -117,7 +117,7 @@ getIdentSpec = describe "getIdent" $ do
 
     it "rejects list" $ do
         property $ \p k l ->
-            isLeft (getIdent (WithPos p $ AstList k l)) `shouldBe` True
+            isLeft (getIdent (WithPos p $ AstList $ Lst k l)) `shouldBe` True
 
 getArgPassSpec :: Spec
 getArgPassSpec = describe "getArgPass" $ do

@@ -31,9 +31,9 @@ parseLst :: Parser () -> Parser a -> Parser (Lst a)
 parseLst ign p =
     let parseList k = fmap (Lst k) $ char (getStart k) >> parseMany ign p (void $ char $ getEnd k)
     in choice
-        [ parseList KindList <?> "list"
-        , parseList KindDict <?> "dictionary"
-        , parseList KindForm <?> "form"
+        [ parseList KindList
+        , parseList KindDict
+        , parseList KindForm
         ]
 
 unparseLst :: (Maybe a -> String) -> Lst a -> String

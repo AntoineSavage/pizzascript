@@ -36,7 +36,7 @@ instance ArbWithDepth AstExpr where
         , AstSymb <$> liftM2 Symb arbitrary arbitrary
         ] ++
         (if depth <= 0 then [] else
-            [ liftM2 AstList arbitrary $ arbFew $ arbWithDepth $ depth-1
+            [ fmap AstList $ liftM2 Lst arbitrary $ arbFew $ arbWithDepth $ depth-1
             ]
         )
 

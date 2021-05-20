@@ -3,7 +3,7 @@ module Types where
 import qualified Data.Map as M
 
 import Data.Ident ( Ident )
-import Data.Lst ( Lst, LstKind )
+import Data.Lst ( Lst )
 import Data.Numb ( Numb )
 import Data.Str ( Str )
 import Data.Symb ( Symb )
@@ -16,7 +16,7 @@ data AstExpr
     | AstStr Str
     | AstIdent Ident
     | AstSymb Symb
-    | AstList LstKind [WithPos AstExpr]
+    | AstList (Lst (WithPos AstExpr))
     deriving (Show, Eq, Ord)
 
 -- Value types

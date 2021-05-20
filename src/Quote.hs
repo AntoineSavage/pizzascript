@@ -2,7 +2,7 @@ module Quote (quote, unquote, unparse) where
 
 import Ast ( unparseExpr, unparseList )
 import Data.Ident ( unparseIdent )
-import Data.Lst ( LstKind(..) )
+import Data.Lst ( Lst(..), LstKind(..) )
 import Data.Nat ( Nat(..) )
 import Data.Symb ( Symb(Symb), symb )
 import Data.WithPos ( WithPos(WithPos) )
@@ -28,8 +28,8 @@ quote e@(WithPos p v) =
         -- Lists quote as forms prepended with list
         -- Dicts quote as forms prepended with dict
         -- Forms quote as list with elements quoted recursively
-        AstList k es ->
-            toExpr $ AstList KindList $ map quote $ toForm p k es
+        AstList (Lst k es) ->
+            toExpr $ AstList $ Lst KindList $ map quote $ toForm p k es
 
 unquote :: WithPos AstExpr -> Either String (WithPos AstExpr)
 unquote e@(WithPos p v) =
@@ -52,9 +52,9 @@ unquote e@(WithPos p v) =
 
         -- Lists unquote to forms with elements unquoted recursively
         -- Dicts and forms cannot be unquoted
-        AstList k es ->
+        AstList (Lst k es) ->
             case k of
-                KindList -> withPos . AstList KindForm <$> mapM unquote es
+                KindList -> withPos . AstList . Lst KindForm <$> mapM unquote es
                 KindDict -> Left $ "Unquote: unexpected dictionary: " ++ unparseList KindDict unparse es
                 KindForm -> Left $ "Unquote: unexpected form: " ++ unparseList KindForm unparse es
 

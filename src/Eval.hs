@@ -9,7 +9,7 @@ import Quote ( quote, unquote )
 import BuiltIns ( withPos )
 import Control.Monad ( forM_, liftM2 )
 import Data.Ident ( Ident )
-import Data.Lst ( LstKind(..) )
+import Data.Lst ( Lst(..), LstKind(..) )
 import Data.Nat ( Nat(Z) )
 import Data.Symb ( Symb(Symb), symb )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
@@ -38,7 +38,7 @@ evalExpr ctx e@(WithPos p v) eval =
         (AstIdent ident, DeepUnquote) -> evalIdent ctx ident >>= \r -> evalExpr ctx (unevalExpr r) Unquote
 
         -- lists
-        (AstList k elems, Eval) -> return $ ExprForm p $ toForm p k elems
+        (AstList (Lst k elems), Eval) -> return $ ExprForm p $ toForm p k elems
 
         -- quote and unquote
         (_, Quote) -> evalExpr ctx (quote e) Eval
@@ -48,17 +48,17 @@ evalExpr ctx e@(WithPos p v) eval =
 
 unevalExpr :: WithPos PzVal -> WithPos AstExpr
 unevalExpr val = flip fmap val $ \case
-    PzUnit -> AstList KindForm []
+    PzUnit -> AstList $ Lst KindForm []
     PzNum n -> AstNum n
     PzStr s -> AstStr s
     PzSymb s -> AstSymb s
-    PzList l -> AstList KindList $ map unevalExpr l
-    PzDict m -> AstList KindDict $ flip map (M.assocs m) $
-        \(k, v) -> withPos $ AstList KindForm [unevalExpr k, unevalExpr v]
+    PzList l -> AstList $ Lst KindList $ map unevalExpr l
+    PzDict m -> AstList $ Lst KindDict $ flip map (M.assocs m) $
+        \(k, v) -> withPos $ AstList $ Lst KindForm [unevalExpr k, unevalExpr v]
     PzFunc f ->
         case toFuncCustom f of
             Left ident -> AstIdent ident
-            Right fc -> AstList KindForm $ unevalFuncCustom fc
+            Right fc -> AstList $ Lst KindForm $ unevalFuncCustom fc
 
 evalFuncCustom :: [WithPos AstExpr] -> Either String FuncCustom
 evalFuncCustom es0 = do
@@ -73,7 +73,7 @@ unevalFuncCustom (FuncCustom impArgs args body) = unevalImpureArgs impArgs ++ un
 evalImpureArgs :: [WithPos AstExpr] -> Either String (FuncImpureArgs, [WithPos AstExpr])
 evalImpureArgs elems = case elems of
     -- form starting with argument-passing behaviour symbol, followed by...
-    WithPos p (AstList KindForm ((WithPos p2 (AstSymb s@(Symb Z _))):as)):es -> do
+    WithPos p (AstList (Lst KindForm ((WithPos p2 (AstSymb s@(Symb Z _))):as))):es -> do
         argPass <- case symbToArgPass s of
             Just r -> return $ WithPos p2 r
             Nothing -> Left $
@@ -99,7 +99,7 @@ evalImpureArgs elems = case elems of
 unevalImpureArgs :: FuncImpureArgs -> [WithPos AstExpr]
 unevalImpureArgs impArgs =
     let toExpr = fmap $ AstSymb .argPassToSymb
-        toForm p = WithPos p . AstList KindForm
+        toForm p = WithPos p . AstList . Lst KindForm
     in case impArgs of
         None -> []
         ArgPass p ap -> [ toForm p [toExpr ap] ]
@@ -108,7 +108,7 @@ unevalImpureArgs impArgs =
 evalArgs :: [WithPos AstExpr] -> Either String (FuncArgs, [WithPos AstExpr])
 evalArgs elems = case elems of
     ie@(WithPos _ (AstIdent _)):es -> (,es) . ArgsVaria <$> getIdent ie
-    WithPos p (AstList KindForm ies):es -> (,es) . ArgsArity p <$> mapM getIdent ies
+    WithPos p (AstList (Lst KindForm ies)):es -> (,es) . ArgsArity p <$> mapM getIdent ies
     _ -> Left $
         "Error: Function argument definition must be either:"
         ++ "\n - a single varargs identifier"
@@ -119,7 +119,7 @@ unevalArgs :: FuncArgs -> [WithPos AstExpr]
 unevalArgs args =
     case args of
         ArgsVaria ident -> [fmap AstIdent ident]
-        ArgsArity p is -> [WithPos p $ AstList KindForm $ map (fmap AstIdent) is]
+        ArgsArity p is -> [WithPos p $ AstList $ Lst KindForm $ map (fmap AstIdent) is]
 
 -- Utils
 evalIdent :: Dict -> Ident -> Either String (WithPos PzVal)

@@ -157,26 +157,26 @@ evalExprSpec = describe "evalExpr" $ do
 
     it "evals lists (Eval) as the associated form" $ do
         property $ \(ArbDict ctx) p k (Few es) -> do
-            evalExpr ctx (WithPos p $ AstList k es) Eval `shouldBe`
+            evalExpr ctx (WithPos p $ AstList $ Lst k es) Eval `shouldBe`
                 Right (ExprForm p $ toForm p k es)
 
     it "evals lists (Quote and DeepQuote) as themselves, quoted" $ do
         property $ \(ArbDict ctx) p k (Few es) -> do
             forM_ [Quote, DeepQuote] $ \eval -> do
-                evalExpr ctx (WithPos p $ AstList k es) eval `shouldBe`
-                    evalExpr ctx (quote $ WithPos p $ AstList k es) Eval
+                evalExpr ctx (WithPos p $ AstList $ Lst k es) eval `shouldBe`
+                    evalExpr ctx (quote $ WithPos p $ AstList $ Lst k es) Eval
 
     it "evals lists (Unquote and DeepUnquote) as themselves, unquoted" $ do
         property $ \(ArbDict ctx) p k (UnquoteValids es) -> do
             forM_ [Unquote, DeepUnquote] $ \eval -> do
-                evalExpr ctx (WithPos p $ AstList k es) eval `shouldBe`
-                    (unquote (WithPos p $ AstList k es) >>= \e' -> evalExpr ctx e' Eval)
+                evalExpr ctx (WithPos p $ AstList $ Lst k es) eval `shouldBe`
+                    (unquote (WithPos p $ AstList $ Lst k es) >>= \e' -> evalExpr ctx e' Eval)
 
 unevalExprSpec :: Spec
 unevalExprSpec = describe "unevalExpr" $ do
     it "unevals unit to empty form" $ do
         property $ \p -> do
-            unevalExpr (WithPos p PzUnit) `shouldBe` WithPos p (AstList KindForm [])
+            unevalExpr (WithPos p PzUnit) `shouldBe` WithPos p (AstList $ Lst KindForm [])
 
     it "unevals number to itself" $ do
         property $ \p d -> do
@@ -192,12 +192,12 @@ unevalExprSpec = describe "unevalExpr" $ do
 
     it "unevals list to itself" $ do
         property $ \p (Few l) -> do
-            unevalExpr (WithPos p $ PzList l) `shouldBe` WithPos p (AstList KindList $ map unevalExpr l)
+            unevalExpr (WithPos p $ PzList l) `shouldBe` WithPos p (AstList $ Lst KindList $ map unevalExpr l)
 
     it "unevals dict to itself" $ do
         property $ \p (ArbDict d) -> do
             unevalExpr (WithPos p $ PzDict d) `shouldBe`
-                WithPos p (AstList KindDict $ flip map (M.assocs d) $ \(k, v) -> withPos $ AstList KindForm [unevalExpr k, unevalExpr v])
+                WithPos p (AstList $ Lst KindDict $ flip map (M.assocs d) $ \(k, v) -> withPos $ AstList $ Lst KindForm [unevalExpr k, unevalExpr v])
 
     it "unevals built-in function to identifier" $ do
         property $ \p (ArbDict implCtx) impArgs args ident -> do
@@ -205,7 +205,7 @@ unevalExprSpec = describe "unevalExpr" $ do
 
     it "unevals custom function to list" $ do
         property $ \p (ArbDict implCtx) f@(FuncCustom impArgs args body) -> do
-            unevalExpr (WithPos p $ PzFunc $ Func implCtx impArgs args $ BodyCustom body) `shouldBe` WithPos p (AstList KindForm $ unevalFuncCustom f)
+            unevalExpr (WithPos p $ PzFunc $ Func implCtx impArgs args $ BodyCustom body) `shouldBe` WithPos p (AstList $ Lst KindForm $ unevalFuncCustom f)
 
 evalFuncCustomVsUnevalFuncCustomSpec :: Spec
 evalFuncCustomVsUnevalFuncCustomSpec = describe "evalFuncCustom vs unevalFuncCustom" $ do
@@ -247,16 +247,16 @@ evalImpureArgsSpec = describe "evalImpureArgs" $ do
                 , [AstStr $ Str ""]
                 , [AstIdent $ Ident ""]
                 , [AstSymb $ symb $ Ident ""]
-                , [AstList KindList [withPos $ AstSymb $ symb $ Ident ""]]
-                , [AstList KindDict [withPos $ AstSymb $ symb $ Ident ""]]
-                , [AstList KindForm []]
+                , [AstList $ Lst KindList [withPos $ AstSymb $ symb $ Ident ""]]
+                , [AstList $ Lst KindDict [withPos $ AstSymb $ symb $ Ident ""]]
+                , [AstList $ Lst KindForm []]
             ] $ \es -> do
             let elems = map withPos es
             evalImpureArgs elems `shouldBe` Right (None, elems)
 
     it "evals singleton form to ArgPass" $ do
         property $ \p p2 ap (Few es) -> do
-            let elems = (WithPos p $ AstList KindForm [
+            let elems = (WithPos p $ AstList $ Lst KindForm [
                         WithPos p2 $ AstSymb $ argPassToSymb ap
                     ]) : es
             evalImpureArgs elems `shouldBe` Right (ArgPass p $ WithPos p2 ap, es)
@@ -264,7 +264,7 @@ evalImpureArgsSpec = describe "evalImpureArgs" $ do
     it "evals size-2 form to Both" $ do
         property $ \p p2 p3 ap s (Few es) -> do
             let ec = Ident [s]
-                elems = (WithPos p $ AstList KindForm [
+                elems = (WithPos p $ AstList $ Lst KindForm [
                         WithPos p2 $ AstSymb $ argPassToSymb ap,
                         WithPos p3 $ AstIdent ec
                     ]) : es
@@ -272,14 +272,14 @@ evalImpureArgsSpec = describe "evalImpureArgs" $ do
 
     it "rejects invalid arg-pass symbol" $ do
         property $ \s (Few es) -> do
-            let elems = (withPos $ AstList KindForm [
+            let elems = (withPos $ AstList $ Lst KindForm [
                         withPos $ AstSymb $ symb $ Ident $ '_' : s
                     ]) : es
             isLeft (evalImpureArgs elems) `shouldBe` True
 
     it "rejects size-3 (or more) form" $ do
         property $ \ap ec a (Few as) (Few es) -> do
-            let elems = (withPos $ AstList KindForm $ [
+            let elems = (withPos $ AstList $ Lst KindForm $ [
                         withPos $ AstSymb $ argPassToSymb ap,
                         withPos $ AstIdent ec
                     ] ++ [a] ++ as) : es
@@ -293,14 +293,14 @@ unevalImpureArgsSpec = describe "unevalImpureArgs" $ do
     it "unevals ArgPass to singleton list" $ do
         property $ \p p2 ap -> do
             unevalImpureArgs (ArgPass p $ WithPos p2 ap) `shouldBe`
-                [WithPos p $ AstList KindForm [
+                [WithPos p $ AstList $ Lst KindForm [
                     WithPos p2 $ AstSymb $ argPassToSymb ap
                 ]]
 
     it "unevals Both to size-2 list" $ do
         property $ \p p2 p3 ap ec -> do
             unevalImpureArgs (Both p (WithPos p2 ap) $ WithPos p3 ec) `shouldBe`
-                [WithPos p $ AstList KindForm [
+                [WithPos p $ AstList $ Lst KindForm [
                     WithPos p2 $ AstSymb $ argPassToSymb ap,
                     WithPos p3 $ AstIdent ec
                 ]]
@@ -325,7 +325,7 @@ evalArgsSpec = describe "evalArgs" $ do
 
     it "evals arity args idents" $ do
         property $ \p ps (Few es) -> do
-            let elems = WithPos p (AstList KindForm $ map (uncurry toAstIdent) ps) : es
+            let elems = WithPos p (AstList $ Lst KindForm $ map (uncurry toAstIdent) ps) : es
             evalArgs elems `shouldBe` Right (ArgsArity p $ map (uncurry toIdent) ps, es)
 
     it "rejects empty list" $ do
@@ -335,8 +335,8 @@ evalArgsSpec = describe "evalArgs" $ do
         property $ \(Few es) -> do
             forM_   [ AstNum $ Numb 0, AstStr $ Str ""
                     , AstSymb $ symb $ Ident ""
-                    , AstList KindList []
-                    , AstList KindDict []
+                    , AstList $ Lst KindList []
+                    , AstList $ Lst KindDict []
                     ] $ \e ->
                 isLeft (evalArgs $ withPos e:es) `shouldBe` True
 
@@ -348,7 +348,7 @@ unevalArgsSpec = describe "unevalArgs" $ do
 
     it "unevals arity args idents" $ do
         property $ \p is -> do
-            unevalArgs (ArgsArity p is) `shouldBe` [WithPos p (AstList KindForm $ flip map is $ fmap AstIdent)]
+            unevalArgs (ArgsArity p is) `shouldBe` [WithPos p (AstList $ Lst KindForm $ flip map is $ fmap AstIdent)]
 
 evalIdentSpec :: Spec
 evalIdentSpec = describe "evalIdent" $ do
