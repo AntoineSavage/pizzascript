@@ -6,6 +6,7 @@ import qualified Data.Set as S
 
 import Data.Maybe ( fromMaybe )
 import Data.Ident ( Ident(..) )
+import Data.Lst ( LstKind(..) )
 import Data.Nat ( Nat(Z) )
 import Data.Symb ( Symb(..), symb )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
@@ -30,7 +31,7 @@ symbToArgPass = flip M.lookup m where
         , (symbDeepUnquote, DeepUnquote)
         ]
 
-toForm :: Pos -> AstListKind -> [WithPos AstExpr] -> [WithPos AstExpr]
+toForm :: Pos -> LstKind -> [WithPos AstExpr] -> [WithPos AstExpr]
 toForm p k =
     let identToExpr ident = WithPos p $ AstIdent ident
     in case k of

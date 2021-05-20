@@ -6,6 +6,7 @@ import Test.QuickCheck
 import Ast
 import Control.Monad
 import Data.Ident
+import Data.LstSpec
 import Data.Numb
 import Data.NumbSpec
 import Data.Str

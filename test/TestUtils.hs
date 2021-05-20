@@ -8,6 +8,7 @@ import Control.Monad
 import Data.Ident
 import Data.IdentSpec
 import Data.List
+import Data.Lst
 import Data.NatSpec
 import Data.Numb
 import Data.Str
@@ -23,7 +24,6 @@ import Utils
 import Utils.ArbWithDepth
 
 -- Constants
-kinds = [ KindList, KindDict, KindForm ]
 argPasses = [ Eval, Quote, Unquote, DeepQuote, DeepUnquote ]
 
 -- Types and instances
@@ -40,7 +40,7 @@ instance ArbWithDepth AstExpr where
             ]
         )
 
-instance Arbitrary AstListKind where arbitrary = elements [ KindList, KindDict, KindForm ]
+instance Arbitrary LstKind where arbitrary = elements [ KindList, KindDict, KindForm ]
 
 instance Arbitrary PzVal where arbitrary = arbDepth
 instance ArbWithDepth PzVal where

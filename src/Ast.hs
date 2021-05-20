@@ -4,13 +4,14 @@ module Ast where
 import Control.Monad ( liftM2, void )
 import Data.Char ( isControl )
 import Data.Ident ( parseIdent, unparseIdent )
+import Data.Lst ( LstKind(..), parseLst, unparseLst )
 import Data.Numb ( parseNumb, unparseNumb )
 import Data.Str ( parseStr, unparseStr )
 import Data.Symb ( parseSymb, unparseSymb )
 import Data.WithPos ( WithPos(WithPos, val) )
 import Text.Parsec
 import Text.Parsec.String ( Parser )
-import Types ( AstExpr(..), AstListKind(..) )
+import Types ( AstExpr(..) )
 
 -- Ignore
 ignore :: Parser ()
@@ -27,21 +28,21 @@ comment = char '#' >> go where
             (_, _) -> anyChar >> go
 
 -- Lists
-parseList :: AstListKind -> Parser () -> Parser a -> Parser [a]
+parseList :: LstKind -> Parser () -> Parser a -> Parser [a]
 parseList k ign p =
     char (getListStart k) >>
         parseMany ign p (void $ char $ getListEnd k)
 
-unparseList :: AstListKind ->  (Maybe a -> String) -> [a] -> String
+unparseList :: LstKind ->  (Maybe a -> String) -> [a] -> String
 unparseList k f es = [getListStart k] ++ unparseMany f es ++ [getListEnd k]
 
-getListStart :: AstListKind -> Char
+getListStart :: LstKind -> Char
 getListStart = \case
     KindList -> '['
     KindDict -> '{'
     KindForm -> '('
 
-getListEnd :: AstListKind -> Char
+getListEnd :: LstKind -> Char
 getListEnd = \case
     KindList -> ']'
     KindDict -> '}'
