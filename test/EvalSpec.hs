@@ -6,6 +6,7 @@ import Test.QuickCheck
 import qualified Data.Map as M
 
 import Control.Monad
+import Data.AstExpr
 import Data.Either
 import Data.Ident
 import Data.Lst

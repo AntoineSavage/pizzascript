@@ -4,6 +4,7 @@ module Utils where
 import qualified Data.Map as M
 import qualified Data.Set as S
 
+import Data.AstExpr ( AstExpr(..) )
 import Data.Maybe ( fromMaybe )
 import Data.Ident ( Ident(..) )
 import Data.Lst ( LstKind(..) )

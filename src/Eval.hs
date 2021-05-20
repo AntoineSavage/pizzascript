@@ -8,6 +8,7 @@ import qualified Data.Map as M
 import Quote ( quote, unquote )
 import BuiltIns ( withPos )
 import Control.Monad ( forM_, liftM2 )
+import Data.AstExpr ( AstExpr(..) )
 import Data.Ident ( Ident )
 import Data.Lst ( Lst(..), LstKind(..) )
 import Data.Nat ( Nat(Z) )

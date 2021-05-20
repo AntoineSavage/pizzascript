@@ -6,6 +6,7 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Control.Monad
+import Data.AstExpr
 import Data.Either
 import Data.Ident
 import Data.List

@@ -5,6 +5,7 @@ import qualified Data.Map as M
 
 import BuiltIns
 import Control.Monad
+import Data.AstExpr
 import Data.Ident
 import Data.IdentSpec
 import Data.List

@@ -2,11 +2,11 @@
 module Pretty where
 
 import Ast ( unparseExpr )
+import Data.AstExpr ( AstExpr )
 import Data.Ident ( Ident, unparseIdent )
 import Data.Symb ( Symb, unparseSymb )
 import Data.WithPos ( WithPos )
 import Text.Parsec ( SourcePos )
-import Types ( AstExpr )
 
 identSize :: Int
 identSize = 2

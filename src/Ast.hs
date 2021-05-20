@@ -2,6 +2,7 @@
 module Ast where
 
 import Control.Monad ( liftM2, void )
+import Data.AstExpr ( AstExpr(..) )
 import Data.Char ( isControl )
 import Data.Ident ( parseIdent, unparseIdent )
 import Data.Lst ( Lst(..), LstKind(..), parseLst, unparseLst )
@@ -11,7 +12,6 @@ import Data.Symb ( parseSymb, unparseSymb )
 import Data.WithPos ( WithPos(WithPos, val) )
 import Text.Parsec
 import Text.Parsec.String ( Parser )
-import Types ( AstExpr(..) )
 
 -- Ignore
 ignore :: Parser ()
