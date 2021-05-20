@@ -12,6 +12,8 @@ import Data.AstExpr
 import Data.Either
 import Data.FuncArgs
 import Data.FuncBody
+import Data.FuncCustom
+import Data.FuncCustomSpec
 import Data.FuncImpureArgs
 import Data.Ident
 import Data.Lst

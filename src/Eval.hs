@@ -10,16 +10,15 @@ import Control.Monad ( forM_, liftM2 )
 import Data.ArgPass ( ArgPass(..), argPassToSymb, symbToArgPass )
 import Data.AstExpr ( AstExpr(..) )
 import Data.FuncArgs ( FuncArgs(..) )
+import Data.FuncCustom ( FuncCustom(..), toFuncCustom )
 import Data.FuncImpureArgs ( FuncImpureArgs(..) )
 import Data.Ident ( Ident )
 import Data.Lst ( Lst(..), LstKind(..) )
 import Data.Nat ( Nat(Z) )
 import Data.Symb ( Symb(Symb), symb )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
-import Idents
-import Symbs
-import Types
-import Utils
+import Types ( Dict, PzVal(..) )
+import Utils ( getDuplicates, getIdent, toForm )
 
 data ExprEvalResult
     = Evaled (WithPos PzVal)

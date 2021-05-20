@@ -54,22 +54,6 @@ instance Arbitrary FuncArgs where arbitrary = oneof [ArgsVaria <$> arbitrary, li
 instance Arbitrary FuncBody where arbitrary = arbDepth
 instance ArbWithDepth FuncBody where arbWithDepth depth = oneof [BodyBuiltIn <$> arbitrary, BodyCustom <$> arbFew (arbWithDepth depth)]
 
-instance Arbitrary FuncCustom where arbitrary = arbDepth
-instance ArbWithDepth FuncCustom where
-    arbWithDepth depth = do
-        let getImpArgsIdents (Both _ _ i) = [i]
-            getImpArgsIdents _            = []
-
-            getArgsIdents (ArgsVaria i)    = [i]
-            getArgsIdents (ArgsArity _ is) = is
-
-        impArgs <- arbitrary
-        args <- arbitrary
-        let is = getImpArgsIdents impArgs ++ getArgsIdents args
-        if is == nub is
-            then fmap (FuncCustom impArgs args) $ arbWithDepth depth
-            else arbWithDepth depth
-
 instance Arbitrary StackFrame where arbitrary = arbDepth
 instance ArbWithDepth StackFrame where
     arbWithDepth depth = oneof

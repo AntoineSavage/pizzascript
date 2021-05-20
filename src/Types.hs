@@ -2,7 +2,6 @@ module Types where
 
 import qualified Data.Map as M
 
-import Data.ArgPass ( ArgPass )
 import Data.AstExpr ( AstExpr )
 import Data.FuncArgs ( FuncArgs )
 import Data.FuncBody ( FuncBody )

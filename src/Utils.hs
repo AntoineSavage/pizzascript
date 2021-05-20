@@ -76,20 +76,3 @@ setCtx ctx frames = case frames of
         Block _ es -> Block ctx es
         Form _ p mfi es-> Form ctx p mfi es
         Invoc _ p mfi f as es -> Invoc ctx p mfi f as es
-
-----------------------
--- Custom functions
-----------------------
-data FuncCustom
-    = FuncCustom FuncImpureArgs FuncArgs [WithPos AstExpr]
-    deriving (Show, Eq)
-
-toFuncCustom :: Func -> Either Ident FuncCustom
-toFuncCustom func =
-    case body func of
-        BodyBuiltIn ident -> Left ident
-        BodyCustom es -> return $ FuncCustom (impArgs func) (args func) es
-
-fromFuncCustom :: Dict -> FuncCustom -> Func
-fromFuncCustom implCtx (FuncCustom impArgs args es) =
-    Func implCtx impArgs args $ BodyCustom es
