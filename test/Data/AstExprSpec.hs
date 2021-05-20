@@ -8,6 +8,7 @@ import Data.AstExpr
 import Data.Ident
 import Data.Lst
 import Data.LstSpec
+import Data.NatSpec
 import Data.Numb
 import Data.NumbSpec
 import Data.Str
@@ -18,6 +19,7 @@ import Data.WithPos
 import TestUtils
 import Text.Parsec
 import Types
+import Utils.ArbWithDepth
 
 spec :: Spec
 spec = do
@@ -86,3 +88,16 @@ unparseExprSpec = describe "unparseExpr" $ do
 
 -- Utils
 ignore = spaces
+
+instance Arbitrary AstExpr where arbitrary = arbDepth
+instance ArbWithDepth AstExpr where
+    arbWithDepth depth = oneof $
+        [ AstNum . Numb <$> arbitrary
+        , AstStr . Str <$> arbitrary
+        , AstIdent <$> arbitrary
+        , AstSymb <$> liftM2 Symb arbitrary arbitrary
+        ] ++
+        (if depth <= 0 then [] else
+            [ fmap AstList $ liftM2 Lst arbitrary $ arbFew $ arbWithDepth $ depth-1
+            ]
+        )

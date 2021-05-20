@@ -55,8 +55,9 @@ unlenSpec = describe "unlen" $ do
 
 -- Utils
 toInt :: Nat -> Int
-toInt Z     = 0
-toInt (S n) = 1 + toInt n
+toInt k = case k of
+    Z -> 0
+    S n -> 1 + toInt n
 
 instance Arbitrary Nat where
     arbitrary = do

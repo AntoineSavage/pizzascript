@@ -59,5 +59,4 @@ instance Arbitrary Ident where
         nexts <- chooseInt (0, 10) >>= flip vectorOf (elements validNexts)
         return $ Ident $ first : nexts
 
-instance ArbWithDepth Ident where
-    arbWithDepth _ = arbitrary
+instance ArbWithDepth Ident where arbWithDepth _ = arbitrary

@@ -7,7 +7,7 @@ import Test.QuickCheck
 import Control.Monad
 import Data.Either
 import Data.Lst
-import TestUtils hiding ( kinds )
+import TestUtils
 import Text.Parsec
 import Text.Parsec.String
 
@@ -154,6 +154,7 @@ unparseManySpec = describe "unparseMany" $ do
 
 -- Utils
 kinds = [ KindList, KindDict, KindForm ]
+instance Arbitrary LstKind where arbitrary = elements kinds
 
 newtype Elem = Elem Int deriving (Show, Eq)
 instance Arbitrary Elem where arbitrary = do Positive x <- arbitrary; return $ Elem x

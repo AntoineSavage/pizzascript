@@ -20,6 +20,7 @@ import Data.Symb
 import Data.SymbSpec
 import Data.WithPos
 import TestUtils
+import TestUtils2
 import Types
 import Utils
 

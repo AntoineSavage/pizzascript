@@ -15,6 +15,7 @@ import Data.Symb
 import Data.WithPos
 import Quote
 import TestUtils
+import TestUtils2
 import Types
 import Utils
 import Utils.ArbWithDepth

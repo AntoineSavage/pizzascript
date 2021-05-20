@@ -52,5 +52,4 @@ unparseSymbSpec = describe "unparseSymb" $ do
             unparseSymb (Symb n ident) `shouldBe` "'" ++ unlen n '\'' ++ unparseIdent ident
 
 -- Utils
-instance Arbitrary Symb where
-    arbitrary = liftM2 Symb arbitrary arbitrary
+instance Arbitrary Symb where arbitrary = liftM2 Symb arbitrary arbitrary

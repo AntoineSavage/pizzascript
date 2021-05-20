@@ -10,7 +10,7 @@ import Data.Numb
 import Data.Str
 import Data.Symb
 import Data.WithPos
-import TestUtils
+import TestUtils2
 import Types
 import Utils
 

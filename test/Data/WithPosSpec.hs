@@ -76,9 +76,5 @@ p1 = newPos "abc" 1 1
 p2 = newPos "xyz" 2 2
 
 instance Arbitrary SourcePos where arbitrary = liftM3 newPos arbitrary arbitrary arbitrary
-
-instance ArbWithDepth a => Arbitrary (WithPos a) where
-    arbitrary = arbDepth
-
-instance ArbWithDepth a => ArbWithDepth (WithPos a) where
-    arbWithDepth = liftM2 WithPos arbitrary . arbWithDepth
+instance ArbWithDepth a => Arbitrary (WithPos a) where arbitrary = arbDepth
+instance ArbWithDepth a => ArbWithDepth (WithPos a) where arbWithDepth = liftM2 WithPos arbitrary . arbWithDepth
