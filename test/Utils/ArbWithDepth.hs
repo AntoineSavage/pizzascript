@@ -3,6 +3,7 @@ module Utils.ArbWithDepth where
 import qualified Data.Map as M
 
 import Control.Monad
+import TestUtils
 import Test.QuickCheck
 
 class Arbitrary a => ArbWithDepth a where
@@ -25,10 +26,3 @@ instance (Ord k, ArbWithDepth k, ArbWithDepth v) => ArbWithDepth (M.Map k v) whe
 
 arbDepth :: ArbWithDepth a => Gen a
 arbDepth = chooseInt (0, 3) >>= arbWithDepth
-
--- TODO Find better home for these
-arbFew :: Gen a -> Gen [a]
-arbFew = arbMany 0 4
-
-arbMany :: Int -> Int -> Gen a -> Gen [a]
-arbMany min max me = chooseInt (min, max) >>= flip vectorOf me

@@ -9,8 +9,11 @@ import Data.ArgPass
 import Data.ArgPassSpec
 import Data.AstExprSpec
 import Data.FuncArgs
+import Data.FuncArgsSpec
 import Data.FuncBody
+import Data.FuncBodySpec
 import Data.FuncImpureArgs
+import Data.FuncImpureArgsSpec
 import Data.IdentSpec
 import Data.List
 import Data.Numb
@@ -18,6 +21,7 @@ import Data.Str
 import Data.Symb
 import Data.WithPos
 import Data.WithPosSpec
+import TestUtils
 import Test.QuickCheck
 import Types
 import Utils
@@ -42,17 +46,6 @@ instance ArbWithDepth PzVal where
 instance Arbitrary Func where arbitrary = arbDepth
 instance ArbWithDepth Func where
     arbWithDepth depth = liftM4 Func (arbWithDepth depth) arbitrary arbitrary (arbWithDepth depth)
-
-instance Arbitrary FuncImpureArgs where
-    arbitrary = oneof
-        [ return None
-        , liftM2 ArgPass arbitrary arbitrary
-        , liftM3 Both arbitrary arbitrary arbitrary
-        ]
-
-instance Arbitrary FuncArgs where arbitrary = oneof [ArgsVaria <$> arbitrary, liftM2 ArgsArity arbitrary $ arbFew arbitrary]
-instance Arbitrary FuncBody where arbitrary = arbDepth
-instance ArbWithDepth FuncBody where arbWithDepth depth = oneof [BodyBuiltIn <$> arbitrary, BodyCustom <$> arbFew (arbWithDepth depth)]
 
 instance Arbitrary StackFrame where arbitrary = arbDepth
 instance ArbWithDepth StackFrame where

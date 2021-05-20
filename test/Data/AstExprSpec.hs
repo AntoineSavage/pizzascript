@@ -16,6 +16,7 @@ import Data.StrSpec
 import Data.Symb
 import Data.Str
 import Data.WithPos
+import Data.WithPosSpec
 import TestUtils
 import Text.Parsec
 import Types
