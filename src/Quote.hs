@@ -1,7 +1,7 @@
 module Quote (quote, unquote, unparse) where
 
-import Ast ( unparseExpr, unparseList )
-import Data.AstExpr ( AstExpr(..) )
+import Ast ( unparseList )
+import Data.AstExpr ( AstExpr(..), unparseExpr )
 import Data.Ident ( unparseIdent )
 import Data.Lst ( Lst(..), LstKind(..) )
 import Data.Nat ( Nat(..) )

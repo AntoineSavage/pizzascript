@@ -3,10 +3,10 @@ module Reduce where
 import qualified Ast as A
 import qualified Data.Map as M
 
-import Ast ( parseExpr, parseMany, ignore )
+import Ast ( parseMany, ignore )
 import BuiltIns ( FuncReturn, builtInCtx, func, _not, _or, _and )
 import Control.Monad ( forM_, liftM2 )
-import Data.AstExpr ( AstExpr )
+import Data.AstExpr ( AstExpr, parseExpr )
 import Data.Ident ( Ident(..) )
 import Data.Maybe ( fromMaybe )
 import Data.Nat ( Nat(..) )

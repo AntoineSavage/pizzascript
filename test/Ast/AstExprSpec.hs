@@ -5,7 +5,7 @@ import Test.QuickCheck
 
 import Ast
 import Control.Monad
-import Data.AstExpr hiding ( parseExpr, unparseExpr )
+import Data.AstExpr
 import Data.Ident
 import Data.Lst
 import Data.LstSpec
