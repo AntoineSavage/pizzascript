@@ -14,6 +14,8 @@ import Data.Numb
 import Data.Str
 import Data.Symb
 import Data.WithPos
+import Idents
+import Symbs
 import TestUtils2
 import Types
 import Utils

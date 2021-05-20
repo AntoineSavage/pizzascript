@@ -14,9 +14,16 @@ import Text.Parsec
 
 spec :: Spec
 spec = do
+    symbSpec
     parseSymbVsUnparseSymbSpec
     parseSymbSpec
     unparseSymbSpec
+
+symbSpec :: Spec
+symbSpec = describe "symb" $ do
+    it "converts ident to symb" $ do
+        property $ \i -> do
+            symb i `shouldBe` Symb Z i
 
 parseSymbVsUnparseSymbSpec :: Spec
 parseSymbVsUnparseSymbSpec = describe "parseSymb vs unparseSymb" $ do

@@ -23,6 +23,8 @@ import Data.StrSpec
 import Data.Symb
 import Data.SymbSpec
 import Data.WithPos
+import Idents
+import Symbs
 import TestUtils
 import TestUtils2
 import Types
@@ -30,10 +32,6 @@ import Utils
 
 spec :: Spec
 spec = do
-    symbSpec
-    argPassToSymbVsSymbToArgPassSpec
-    argPassToSymbSpec
-    symbToArgPassSpec
     toFormSpec
     getIdentSpec
     getArgPassSpec
@@ -49,45 +47,6 @@ spec = do
     toFuncCustomVsFromFuncCustomSpec
     toFuncCustomSpec
     fromFuncCustomSpec
-
-symbSpec :: Spec
-symbSpec = describe "symb" $ do
-    it "converts ident to symb" $ do
-        property $ \i -> do
-            symb i `shouldBe` Symb Z i
-
-argPassToSymbVsSymbToArgPassSpec :: Spec
-argPassToSymbVsSymbToArgPassSpec = describe "argPassToSymb vs symbToArgPass" $ do
-    it "composes argPassToSymb and symbToArgPass into id" $ do
-        property $ \argPass -> do
-            let symb = argPassToSymb argPass
-            symbToArgPass symb `shouldBe` Just argPass
-            argPassToSymb <$> symbToArgPass symb `shouldBe` Just symb
-
-argPassToSymbSpec :: Spec
-argPassToSymbSpec = describe "argPassToSymb" $ do
-    it "converts known arg passes" $ do
-        argPassToSymb Eval `shouldBe` symbEval
-        argPassToSymb Quote `shouldBe` symbQuote
-        argPassToSymb Unquote `shouldBe` symbUnquote
-        argPassToSymb DeepQuote `shouldBe` symbDeepQuote
-        argPassToSymb DeepUnquote `shouldBe` symbDeepUnquote
-
-symbToArgPassSpec :: Spec
-symbToArgPassSpec = describe "symbToArgPass" $ do
-    it "converts known arg pass symbols" $ do
-        symbToArgPass symbEval `shouldBe` Just Eval
-        symbToArgPass symbQuote `shouldBe` Just Quote
-        symbToArgPass symbUnquote `shouldBe` Just Unquote
-        symbToArgPass symbDeepQuote `shouldBe` Just DeepQuote
-        symbToArgPass symbDeepUnquote `shouldBe` Just DeepUnquote
-
-    it "rejects unknown symbols" $ do
-        symbToArgPass (symb $ Ident "ABC") `shouldBe` Nothing
-
-    it "rejects unknown symbols (prop)" $ do
-        property $ \s ->
-            symbToArgPass (symb $ Ident $ "_" ++ s) `shouldBe` Nothing
 
 toFormSpec :: Spec
 toFormSpec = describe "toForm" $ do

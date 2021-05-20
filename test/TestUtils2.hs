@@ -6,6 +6,7 @@ import qualified Data.Map as M
 
 import Control.Monad
 import Data.ArgPass
+import Data.ArgPassSpec
 import Data.AstExprSpec
 import Data.FuncArgs
 import Data.FuncBody
@@ -21,9 +22,6 @@ import Test.QuickCheck
 import Types
 import Utils
 import Utils.ArbWithDepth
-
--- Constants
-argPasses = [ Eval, Quote, Unquote, DeepQuote, DeepUnquote ]
 
 -- Types and instances
 instance Arbitrary PzVal where arbitrary = arbDepth
@@ -51,9 +49,6 @@ instance Arbitrary FuncImpureArgs where
         , liftM2 ArgPass arbitrary arbitrary
         , liftM3 Both arbitrary arbitrary arbitrary
         ]
-
-instance Arbitrary ArgPass where arbitrary = elements argPasses
-instance ArbWithDepth ArgPass where arbWithDepth _ = arbitrary
 
 instance Arbitrary FuncArgs where arbitrary = oneof [ArgsVaria <$> arbitrary, liftM2 ArgsArity arbitrary $ arbFew arbitrary]
 instance Arbitrary FuncBody where arbitrary = arbDepth

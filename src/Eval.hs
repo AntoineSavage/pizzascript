@@ -7,7 +7,7 @@ import qualified Data.Map as M
 import Quote ( quote, unquote )
 import BuiltIns ( withPos )
 import Control.Monad ( forM_, liftM2 )
-import Data.ArgPass ( ArgPass(..) )
+import Data.ArgPass ( ArgPass(..), argPassToSymb, symbToArgPass )
 import Data.AstExpr ( AstExpr(..) )
 import Data.FuncArgs ( FuncArgs(..) )
 import Data.FuncImpureArgs ( FuncImpureArgs(..) )
@@ -16,6 +16,8 @@ import Data.Lst ( Lst(..), LstKind(..) )
 import Data.Nat ( Nat(Z) )
 import Data.Symb ( Symb(Symb), symb )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
+import Idents
+import Symbs
 import Types
 import Utils
 

@@ -10,9 +10,10 @@ import Data.Numb ( Numb(Numb) )
 import Data.Str ( Str(Str) )
 import Data.Symb ( symb )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
+import Idents ( identNot, identOr, identAnd, identFunc, identCtx, identArgs, identX, identY )
+import Symbs ( symbFalse, symbTrue )
 import Text.Parsec.Pos ( newPos )
-import Types
-import Utils
+import Types ( Dict, Func(Func), PzVal(..) )
 
 builtInPos :: Pos
 builtInPos = newPos "<built-in>" 0 0

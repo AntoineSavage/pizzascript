@@ -15,26 +15,9 @@ import Data.Maybe ( fromMaybe )
 import Data.Nat ( Nat(Z) )
 import Data.Symb ( Symb(..), symb )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
+import Idents ( identList, identDict )
 import Types
 import Text.Parsec.Pos ( newPos )
-
-argPassToSymb :: ArgPass -> Symb
-argPassToSymb = \case
-    Eval -> symbEval
-    Quote -> symbQuote
-    Unquote -> symbUnquote
-    DeepQuote -> symbDeepQuote
-    DeepUnquote -> symbDeepUnquote
-
-symbToArgPass :: Symb -> Maybe ArgPass
-symbToArgPass = flip M.lookup m where
-    m = M.fromList
-        [ (symbEval, Eval)
-        , (symbQuote, Quote)
-        , (symbUnquote, Unquote)
-        , (symbDeepQuote, DeepQuote)
-        , (symbDeepUnquote, DeepUnquote)
-        ]
 
 toForm :: Pos -> LstKind -> [WithPos AstExpr] -> [WithPos AstExpr]
 toForm p k =
@@ -110,102 +93,3 @@ toFuncCustom func =
 fromFuncCustom :: Dict -> FuncCustom -> Func
 fromFuncCustom implCtx (FuncCustom impArgs args es) =
     Func implCtx impArgs args $ BodyCustom es
-
------------------
--- Identifiers
------------------
-
--- numbers
--- TODO
-
--- strings
--- TODO
-
--- symbols
--- TODO
-
--- booleans
-identFalse :: Ident
-identFalse = Ident "false"
-
-identTrue :: Ident
-identTrue = Ident "true"
-
-identNot :: Ident
-identNot = Ident "not"
-
-identOr :: Ident
-identOr = Ident "or"
-
-identAnd :: Ident
-identAnd = Ident "and"
-
--- lists
-identList :: Ident
-identList = Ident "list"
-
--- dictionaries
-identDict :: Ident
-identDict = Ident "dict"
-
--- functions
-identFunc :: Ident
-identFunc = Ident "func"
-
--- miscellaneous
-identCtx :: Ident
-identCtx = Ident "ctx"
-
-identArgs :: Ident
-identArgs = Ident "args"
-
-identX :: Ident
-identX = Ident "x"
-
-identY :: Ident
-identY = Ident "y"
-
--------------
--- Symbols
--------------
-
--- numbers
--- TODO
-
--- strings
--- TODO
-
--- symbols
--- TODO
-
--- booleans
-symbFalse :: Symb
-symbFalse = symb identFalse
-
-symbTrue :: Symb
-symbTrue = symb identTrue
-
--- lists
--- TODO
-
--- dictionaries
--- TODO
-
--- functions
-symbEval :: Symb
-symbEval = symb $ Ident "eval"
-
-symbQuote :: Symb
-symbQuote = symb $ Ident "quote"
-
-symbUnquote :: Symb
-symbUnquote = symb $ Ident "unquote"
-
-symbDeepQuote :: Symb
-symbDeepQuote = symb $ Ident "deep_quote"
-
-symbDeepUnquote :: Symb
-symbDeepUnquote = symb $ Ident "deep_unquote"
-
--- miscellaneous
--- TODO
