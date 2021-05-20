@@ -104,13 +104,13 @@ unquoteSpec = describe "unquote" $ do
         property $ \p (Few es) -> do
             let dictionary = AstList $ Lst KindDict es
             unquote (WithPos p dictionary) `shouldBe`
-                Left ("Unquote: unexpected dictionary: " ++ unparseList KindDict unparse es)
+                Left ("Unquote: unexpected dictionary: " ++ unparseLst unparse (Lst KindDict es))
 
     it "rejects forms" $ do
         property $ \p (Few es) -> do
             let form = AstList $ Lst KindForm es
             unquote (WithPos p form) `shouldBe`
-                Left ("Unquote: unexpected form: " ++ unparseList KindForm unparse es)
+                Left ("Unquote: unexpected form: " ++ unparseLst unparse (Lst KindForm es))
 
 -- Utils
 arbUnquoteValid :: Gen (WithPos AstExpr)

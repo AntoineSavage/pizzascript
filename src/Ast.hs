@@ -1,19 +1,10 @@
-{-# LANGUAGE LambdaCase #-}
-module Ast where
+module Ast ( ignore, comment ) where
 
-import Control.Monad ( liftM2, void )
-import Data.AstExpr ( AstExpr(..) )
+import Control.Monad ( void )
 import Data.Char ( isControl )
-import Data.Ident ( parseIdent, unparseIdent )
-import Data.Lst ( Lst(..), LstKind(..), parseLst, unparseLst )
-import Data.Numb ( parseNumb, unparseNumb )
-import Data.Str ( parseStr, unparseStr )
-import Data.Symb ( parseSymb, unparseSymb )
-import Data.WithPos ( WithPos(WithPos, val) )
-import Text.Parsec
+import Text.Parsec ( anyChar, char, newline, satisfy, space, eof, many1, optionMaybe, (<|>), many )
 import Text.Parsec.String ( Parser )
 
--- Ignore
 ignore :: Parser ()
 ignore = void $ many (comment <|> void (many1 space) <|> void (many1 $ satisfy isControl))
 
@@ -26,35 +17,3 @@ comment = char '#' >> go where
             (Just _, _) -> return ()
             (_, Just nl) -> return ()
             (_, _) -> anyChar >> go
-
--- Lists
-parseList :: LstKind -> Parser () -> Parser a -> Parser [a]
-parseList k ign p =
-    char (getListStart k) >>
-        parseMany ign p (void $ char $ getListEnd k)
-
-unparseList :: LstKind ->  (Maybe a -> String) -> [a] -> String
-unparseList k f es = [getListStart k] ++ unparseMany f es ++ [getListEnd k]
-
-getListStart :: LstKind -> Char
-getListStart = \case
-    KindList -> '['
-    KindDict -> '{'
-    KindForm -> '('
-
-getListEnd :: LstKind -> Char
-getListEnd = \case
-    KindList -> ']'
-    KindDict -> '}'
-    KindForm -> ')'
-
-parseMany :: Parser () -> Parser a -> Parser () -> Parser [a]
-parseMany ign elem end = go [] where
-    go acc = ign >> optionMaybe end >>= \case
-        Just _ -> return $ reverse acc
-        Nothing -> elem >>= go . (:acc)
-
-unparseMany :: (Maybe a -> String) -> [a] -> String
-unparseMany f = \case
-    []     -> f Nothing
-    (x:xs) -> f (Just x) ++ unparseMany f xs

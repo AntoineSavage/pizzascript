@@ -59,7 +59,7 @@ parseExprSpec = describe "parseExpr" $ do
             g = parseExpr ignore g
         property $ \p (Few es) -> do
             forM_ kinds $ \k -> do
-                parse g "tests" (unparseList k f es) `shouldBe` Right (WithPos p $ AstList $ Lst k es)
+                parse g "tests" (unparseLst f $ Lst k es) `shouldBe` Right (WithPos p $ AstList $ Lst k es)
 
 unparseExprSpec :: Spec
 unparseExprSpec = describe "unparseExpr" $ do
@@ -83,4 +83,4 @@ unparseExprSpec = describe "unparseExpr" $ do
         let f Nothing = ""; f (Just e) = unparseExpr f e
         property $ \p (Few es) -> do
             forM_ kinds $ \k -> do
-                unparseExpr f (WithPos p $ AstList $ Lst k es) `shouldBe` unparseList k f es
+                unparseExpr f (WithPos p $ AstList $ Lst k es) `shouldBe` unparseLst f (Lst k es)

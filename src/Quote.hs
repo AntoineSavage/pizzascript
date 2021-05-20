@@ -1,9 +1,8 @@
 module Quote (quote, unquote, unparse) where
 
-import Ast ( unparseList )
 import Data.AstExpr ( AstExpr(..), unparseExpr )
 import Data.Ident ( unparseIdent )
-import Data.Lst ( Lst(..), LstKind(..) )
+import Data.Lst ( Lst(..), LstKind(..), unparseLst )
 import Data.Nat ( Nat(..) )
 import Data.Symb ( Symb(Symb), symb )
 import Data.WithPos ( WithPos(WithPos) )
@@ -55,8 +54,8 @@ unquote e@(WithPos p v) =
         AstList (Lst k es) ->
             case k of
                 KindList -> withPos . AstList . Lst KindForm <$> mapM unquote es
-                KindDict -> Left $ "Unquote: unexpected dictionary: " ++ unparseList KindDict unparse es
-                KindForm -> Left $ "Unquote: unexpected form: " ++ unparseList KindForm unparse es
+                KindDict -> Left $ "Unquote: unexpected dictionary: " ++ unparseLst unparse (Lst KindDict es)
+                KindForm -> Left $ "Unquote: unexpected form: " ++ unparseLst unparse (Lst KindForm es)
 
 -- TODO Replace with pretty
 unparse :: Maybe (WithPos AstExpr) -> String
