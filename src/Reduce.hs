@@ -1,9 +1,7 @@
 module Reduce where
 
-import qualified Ast as A
 import qualified Data.Map as M
 
-import Ast ( ignore )
 import BuiltIns ( FuncReturn, builtInCtx, func, _not, _or, _and )
 import Control.Monad ( forM_, liftM2 )
 import Data.AstExpr ( AstExpr, parseExpr )
