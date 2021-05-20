@@ -11,8 +11,8 @@ import Data.Nat ( Nat(..) )
 import Quote ( quote, unquote )
 import Text.Parsec ( eof )
 import Text.Parsec.String ( parseFromFile )
-import Types
-import Reduce
+import Types ( StackFrame(Block), Acc(..) )
+import Reduce ( evalFrame )
 
 main :: IO ()
 main = do

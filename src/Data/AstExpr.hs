@@ -1,6 +1,6 @@
 module Data.AstExpr ( AstExpr(..), parseExpr, unparseExpr ) where
 
-import Control.Monad
+import Control.Monad ( liftM2 )
 import Data.Ident ( Ident, parseIdent, unparseIdent )
 import Data.Lst ( Lst, parseLst, unparseLst )
 import Data.Numb ( Numb, parseNumb, unparseNumb )
