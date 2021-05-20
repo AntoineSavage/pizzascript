@@ -2,7 +2,6 @@
 {-# LANGUAGE TupleSections #-}
 module Eval where
 
-import qualified Ast as A
 import qualified Data.Map as M
 
 import Quote ( quote, unquote )

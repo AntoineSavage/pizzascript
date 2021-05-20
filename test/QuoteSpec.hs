@@ -3,7 +3,6 @@ module QuoteSpec where
 import Test.Hspec
 import Test.QuickCheck
 
-import Ast
 import Control.Monad
 import Data.AstExpr
 import Data.Either

@@ -1,10 +1,10 @@
-module Ast.AstIgnoreSpec where
+module IgnoreSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
-import Ast
 import Data.Either
+import Ignore
 import Text.Parsec
 
 spec :: Spec

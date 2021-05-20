@@ -1,4 +1,4 @@
-module Ast ( ignore, comment ) where
+module Ignore ( ignore, comment ) where
 
 import Control.Monad ( void )
 import Data.Char ( isControl )

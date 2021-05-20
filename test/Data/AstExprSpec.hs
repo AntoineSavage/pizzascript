@@ -1,9 +1,8 @@
-module Ast.AstExprSpec where
+module Data.AstExprSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
-import Ast
 import Control.Monad
 import Data.AstExpr
 import Data.Ident
@@ -84,3 +83,6 @@ unparseExprSpec = describe "unparseExpr" $ do
         property $ \p (Few es) -> do
             forM_ kinds $ \k -> do
                 unparseExpr f (WithPos p $ AstList $ Lst k es) `shouldBe` unparseLst f (Lst k es)
+
+-- Utils
+ignore = spaces
