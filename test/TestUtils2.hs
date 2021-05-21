@@ -19,6 +19,7 @@ import Data.FuncImpureArgsSpec
 import Data.IdentSpec
 import Data.List
 import Data.Numb
+import Data.PzVal
 import Data.Str
 import Data.Symb
 import Data.WithPos

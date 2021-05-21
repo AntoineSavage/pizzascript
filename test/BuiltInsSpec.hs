@@ -12,6 +12,7 @@ import Data.FuncArgs
 import Data.FuncBody
 import Data.FuncImpureArgs
 import Data.Numb
+import Data.PzVal
 import Data.Str
 import Data.Symb
 import Data.WithPos

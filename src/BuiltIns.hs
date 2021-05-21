@@ -8,13 +8,13 @@ import Data.FuncArgs ( FuncArgs(..) )
 import Data.FuncBody ( FuncBody(..) )
 import Data.FuncImpureArgs ( FuncImpureArgs(..) )
 import Data.Numb ( Numb(Numb) )
+import Data.PzVal ( Dict, PzVal(..) )
 import Data.Str ( Str(Str) )
 import Data.Symb ( symb )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
 import Idents ( identNot, identOr, identAnd, identFunc, identCtx, identArgs, identX, identY )
 import Symbs ( symbFalse, symbTrue )
 import Text.Parsec.Pos ( newPos )
-import Types ( Dict, PzVal(..) )
 
 builtInPos :: Pos
 builtInPos = newPos "<built-in>" 0 0

@@ -12,19 +12,7 @@ import Data.Numb ( Numb )
 import Data.Str ( Str )
 import Data.Symb ( Symb )
 import Data.WithPos ( Pos, WithPos )
-
--- Value types
-data PzVal
-    = PzUnit
-    | PzNum Numb
-    | PzStr Str
-    | PzSymb Symb
-    | PzList [WithPos PzVal]
-    | PzDict Dict
-    | PzFunc Dict Func
-    deriving (Show, Eq, Ord)
-
-type Dict = M.Map (WithPos PzVal) (WithPos PzVal)
+import Data.PzVal ( Dict, PzVal )
 
 -- Evaluator types
 type Result = Maybe (WithPos PzVal)

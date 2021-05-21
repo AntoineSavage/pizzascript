@@ -8,7 +8,6 @@ import Data.FuncBody ( FuncBody(..) )
 import Data.FuncImpureArgs ( FuncImpureArgs )
 import Data.Ident ( Ident )
 import Data.WithPos ( WithPos )
-import Types ( Dict )
 
 data FuncCustom
     = FuncCustom FuncImpureArgs FuncArgs [WithPos AstExpr]

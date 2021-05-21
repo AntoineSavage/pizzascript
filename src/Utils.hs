@@ -10,9 +10,10 @@ import Data.Func ( Func(..) )
 import Data.FuncImpureArgs ( FuncImpureArgs(..) )
 import Data.Ident ( Ident(..) )
 import Data.Lst ( LstKind(..) )
+import Data.PzVal ( Dict )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
 import Idents ( identList, identDict )
-import Types ( Dict, StackFrame(..) )
+import Types ( StackFrame(..) )
 import Text.Parsec.Pos ( newPos )
 
 toForm :: Pos -> LstKind -> [WithPos AstExpr] -> [WithPos AstExpr]

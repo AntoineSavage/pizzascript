@@ -15,9 +15,9 @@ import Data.FuncImpureArgs ( FuncImpureArgs(..) )
 import Data.Ident ( Ident )
 import Data.Lst ( Lst(..), LstKind(..) )
 import Data.Nat ( Nat(Z) )
+import Data.PzVal ( Dict, PzVal(..) )
 import Data.Symb ( Symb(Symb), symb )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
-import Types ( Dict, PzVal(..) )
 import Utils ( getDuplicates, getIdent, toForm )
 
 data ExprEvalResult
