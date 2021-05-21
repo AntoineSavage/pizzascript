@@ -21,8 +21,6 @@ import Data.WithPos
 import Idents
 import Impls
 import Symbs
-import TestUtils2
-import Types
 import Utils
 import Values
 

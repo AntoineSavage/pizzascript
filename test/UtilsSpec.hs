@@ -19,6 +19,8 @@ import Data.Nat
 import Data.Numb
 import Data.NumbSpec
 import Data.PzValSpec
+import Data.StackFrame
+import Data.StackFrameSpec
 import Data.Str
 import Data.StrSpec
 import Data.Symb
@@ -27,8 +29,6 @@ import Data.WithPos
 import Idents
 import Symbs
 import TestUtils
-import TestUtils2
-import Types
 import Utils
 
 spec :: Spec

@@ -16,6 +16,7 @@ import Data.Lst ( parseMany )
 import Data.Maybe ( fromMaybe )
 import Data.Nat ( Nat(..) )
 import Data.PzVal ( Dict, PzVal(..) )
+import Data.StackFrame ( StackFrame(..), setCtx )
 import Data.Symb ( symb )
 import Data.WithPos ( WithPos(..), Pos )
 import Eval ( ExprEvalResult(..), evalExpr, evalFuncCustom )
@@ -23,11 +24,14 @@ import Impls ( FuncReturn, _not, _or, _and )
 import Quote ( quote, unquote )
 import Text.Parsec ( eof )
 import Text.Parsec.String ( parseFromFile )
-import Types ( Acc(..), Result, StackFrame(..) )
-import Utils ( addIdentAndPos, f1, f2, fpure, getIdent, setCtx )
+import Utils ( addIdentAndPos, f1, f2, fpure, getIdent )
 import Values ( func )
 
 type EvalResult = Either String Acc
+type Result = Maybe (WithPos PzVal)
+data Acc
+    = Acc Result [StackFrame]
+    deriving (Show, Eq)
 
 evalFrame :: Result -> StackFrame -> [StackFrame] -> EvalResult
 evalFrame result frame frames =

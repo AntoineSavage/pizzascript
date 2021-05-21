@@ -13,7 +13,6 @@ import Data.Lst ( LstKind(..) )
 import Data.PzVal ( Dict )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
 import Idents ( identList, identDict )
-import Types ( StackFrame(..) )
 import Text.Parsec.Pos ( newPos )
 
 toForm :: Pos -> LstKind -> [WithPos AstExpr] -> [WithPos AstExpr]
@@ -58,11 +57,3 @@ f3 args f = case args of [x, y, z] -> f x y z; _ -> Left $ invalidArityMsg 3 arg
 
 fpure :: Dict -> a -> Either String (Dict, a)
 fpure ctx r = return (ctx, r)
-
-setCtx :: Dict -> [StackFrame] -> [StackFrame]
-setCtx ctx frames = case frames of
-    [] -> []
-    (frame:fs) -> (:fs) $ case frame of
-        Block _ es -> Block ctx es
-        Form _ p mfi es-> Form ctx p mfi es
-        Invoc _ p mfi ic f as es -> Invoc ctx p mfi ic f as es

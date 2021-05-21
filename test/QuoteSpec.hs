@@ -5,18 +5,20 @@ import Test.QuickCheck
 
 import Control.Monad
 import Data.AstExpr
+import Data.AstExprSpec
 import Data.Either
 import Data.Ident
+import Data.IdentSpec
 import Data.Lst
 import Data.Nat
+import Data.NatSpec
 import Data.Numb
 import Data.Str
 import Data.Symb
 import Data.WithPos
+import Data.WithPosSpec
 import Quote
 import TestUtils
-import TestUtils2
-import Types
 import Utils
 
 spec :: Spec

@@ -33,8 +33,6 @@ import Quote
 import QuoteSpec
 import Text.Parsec.Pos 
 import TestUtils
-import TestUtils2
-import Types
 import Utils
 
 spec :: Spec

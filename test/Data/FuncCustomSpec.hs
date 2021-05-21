@@ -5,14 +5,16 @@ import Test.QuickCheck
 
 import qualified Data.Map as M
 
+import Data.AstExprSpec
 import Data.Func
 import Data.FuncArgs
+import Data.FuncArgsSpec
 import Data.FuncImpureArgs
+import Data.FuncImpureArgsSpec
 import Data.FuncBody
 import Data.FuncCustom
 import Data.List
 import TestUtils
-import TestUtils2
 import Types
 
 spec :: Spec
