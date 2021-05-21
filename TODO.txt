@@ -1,3 +1,5 @@
+test/rename reduce (aka Acc stuff)
+
 built-ins:
     - typeof, eq, lt
     - num, add, sub, mult, div, exp, log, floor, ceil, trunc
