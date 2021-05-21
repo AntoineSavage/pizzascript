@@ -2,7 +2,7 @@ module Main where
 
 import qualified Data.Map as M
 
-import BuiltIns ( FuncReturn, builtInCtx, func, _not, _or, _and )
+import BuiltIns ( builtInCtx )
 import Control.Monad ( forM_, liftM2 )
 import Data.AstExpr ( parseExpr )
 import Data.Lst ( parseMany )
