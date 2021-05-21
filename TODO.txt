@@ -1,5 +1,3 @@
-move PzVal and Dict from Types into a new file
-move Boolish and boolish from BuiltIns
 folder Data.Func for all func stuff
 folder BuiltIns with Values (ctx, true, etc), Functions (not, and, or, etc)
 

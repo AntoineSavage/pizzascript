@@ -22,6 +22,7 @@ import Data.Nat
 import Data.Numb
 import Data.NumbSpec
 import Data.PzVal
+import Data.PzValSpec
 import Data.Str
 import Data.StrSpec
 import Data.Symb

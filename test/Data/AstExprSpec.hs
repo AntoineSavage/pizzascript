@@ -20,7 +20,6 @@ import Data.WithPosSpec
 import TestUtils
 import Text.Parsec
 import Types
-import Utils.ArbWithDepth
 
 spec :: Spec
 spec = do

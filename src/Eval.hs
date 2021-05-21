@@ -4,8 +4,6 @@ module Eval where
 
 import qualified Data.Map as M
 
-import Quote ( quote, unquote )
-import BuiltIns ( withPos )
 import Control.Monad ( forM_, liftM2 )
 import Data.ArgPass ( ArgPass(..), argPassToSymb, symbToArgPass )
 import Data.AstExpr ( AstExpr(..) )
@@ -18,7 +16,9 @@ import Data.Nat ( Nat(Z) )
 import Data.PzVal ( Dict, PzVal(..) )
 import Data.Symb ( Symb(Symb), symb )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
+import Quote ( quote, unquote )
 import Utils ( getDuplicates, getIdent, toForm )
+import Values ( withPos )
 
 data ExprEvalResult
     = Evaled (WithPos PzVal)

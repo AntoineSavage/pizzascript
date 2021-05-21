@@ -12,7 +12,7 @@ import Data.FuncImpureArgs
 import Data.FuncImpureArgsSpec
 import Data.WithPos
 import Data.WithPosSpec
-import Utils.ArbWithDepth
+import TestUtils
 
 spec :: Spec
 spec = do

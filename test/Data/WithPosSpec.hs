@@ -6,9 +6,9 @@ import Test.QuickCheck
 
 import Control.Monad
 import Data.WithPos
+import TestUtils
 import Text.Parsec.Pos
 import Types
-import Utils.ArbWithDepth
 
 spec :: Spec
 spec = do

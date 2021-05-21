@@ -7,7 +7,7 @@ import Data.ArgPass
 import Data.Ident
 import Data.Symb
 import Symbs
-import Utils.ArbWithDepth
+import TestUtils
 
 spec :: Spec
 spec = do

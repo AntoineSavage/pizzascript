@@ -6,8 +6,8 @@ import Test.QuickCheck
 import Control.Monad
 import Data.Either
 import Data.Ident
+import TestUtils
 import Text.Parsec
-import Utils.ArbWithDepth
 
 spec :: Spec
 spec = do

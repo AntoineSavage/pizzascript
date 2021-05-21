@@ -7,7 +7,6 @@ import Data.AstExprSpec
 import Data.FuncBody
 import Data.WithPosSpec
 import TestUtils
-import Utils.ArbWithDepth
 
 spec :: Spec
 spec = return ()

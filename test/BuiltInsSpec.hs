@@ -7,6 +7,8 @@ import Test.QuickCheck
 
 import BuiltIns
 import Data.ArgPass
+import Data.Boolish
+import Data.BoolishSpec
 import Data.Func
 import Data.FuncArgs
 import Data.FuncBody
@@ -17,10 +19,12 @@ import Data.Str
 import Data.Symb
 import Data.WithPos
 import Idents
+import Impls
 import Symbs
 import TestUtils2
 import Types
 import Utils
+import Values
 
 spec :: Spec
 spec = do
@@ -31,7 +35,6 @@ spec = do
     _notSpec
     _orSpec
     _andSpec
-    boolishSpec
 
 builtInCtxSpec :: Spec
 builtInCtxSpec = describe "builtInCtx" $ do
@@ -158,34 +161,3 @@ _andSpec = describe "_and (falsest wins)" $ do
     it "returns y for x=true, y=*" $ do
         property $ \(PzTruish x) y -> do
             _and x y `shouldBe` y
-
-boolishSpec :: Spec
-boolishSpec = describe "boolish" $ do
-    it "converts false and true" $ do
-        boolish pzFalse `shouldBe` FalseReal
-        boolish pzTrue `shouldBe` TrueReal
-
-    it "converts falsish values" $ do
-        property $ \p -> do
-            boolish (WithPos p PzUnit) `shouldBe` Falsish
-            boolish (WithPos p $ PzNum $ Numb 0) `shouldBe` Falsish
-            boolish (WithPos p $ PzStr $ Str "") `shouldBe` Falsish
-            boolish (WithPos p $ PzList []) `shouldBe` Falsish
-            boolish (WithPos p $ PzDict M.empty) `shouldBe` Falsish
-
-    it "converts falsish values (prop)" $ do
-        property $ \(PzFalsish v) -> do
-            boolish v `shouldBe` Falsish
-   
-    it "converts simple truish values" $ do
-        property $ \(ArbDict ctx) p f -> do
-            let unit = WithPos p PzUnit
-            boolish (WithPos p $ PzNum $ Numb 1) `shouldBe` Truish
-            boolish (WithPos p $ PzStr $ Str "0") `shouldBe` Truish
-            boolish (WithPos p $ PzList [unit]) `shouldBe` Truish
-            boolish (WithPos p $ PzDict $ M.fromList [(unit, unit)]) `shouldBe` Truish
-            boolish (WithPos p $ PzFunc ctx f) `shouldBe` Truish
-   
-    it "converts truish values (prop)" $ do
-        property $ \(PzTruish v) -> do
-            boolish v `shouldBe` Truish

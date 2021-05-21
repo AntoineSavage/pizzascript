@@ -2,7 +2,7 @@ module Reduce where
 
 import qualified Data.Map as M
 
-import BuiltIns ( FuncReturn, builtInCtx, func, _not, _or, _and )
+import BuiltIns ( builtInCtx )
 import Control.Monad ( forM_, liftM2 )
 import Data.ArgPass ( ArgPass(..) )
 import Data.AstExpr ( AstExpr, parseExpr )
@@ -19,11 +19,13 @@ import Data.PzVal ( Dict, PzVal(..) )
 import Data.Symb ( symb )
 import Data.WithPos ( WithPos(..), Pos )
 import Eval ( ExprEvalResult(..), evalExpr, evalFuncCustom )
+import Impls ( FuncReturn, _not, _or, _and )
 import Quote ( quote, unquote )
 import Text.Parsec ( eof )
 import Text.Parsec.String ( parseFromFile )
-import Types
-import Utils
+import Types ( Acc(..), Result, StackFrame(..) )
+import Utils ( addIdentAndPos, f1, f2, fpure, getIdent, setCtx )
+import Values ( func )
 
 type EvalResult = Either String Acc
 
