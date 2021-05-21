@@ -4,9 +4,9 @@ import qualified Data.Map as M
 
 import Data.AstExpr ( AstExpr )
 import Data.Func ( Func )
-import Data.FuncArgs ( FuncArgs )
-import Data.FuncBody ( FuncBody )
-import Data.FuncImpureArgs ( FuncImpureArgs )
+import Data.Func.FuncArgs ( FuncArgs )
+import Data.Func.FuncBody ( FuncBody )
+import Data.Func.FuncImpureArgs ( FuncImpureArgs )
 import Data.Ident ( Ident )
 import Data.Numb ( Numb )
 import Data.Str ( Str )

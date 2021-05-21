@@ -8,7 +8,6 @@ import Control.Monad
 import Data.WithPos
 import TestUtils
 import Text.Parsec.Pos
-import Types
 
 spec :: Spec
 spec = do

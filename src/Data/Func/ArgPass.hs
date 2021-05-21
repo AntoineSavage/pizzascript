@@ -1,5 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
-module Data.ArgPass ( ArgPass(..), argPassToSymb, symbToArgPass ) where
+module Data.Func.ArgPass ( ArgPass(..), argPassToSymb, symbToArgPass ) where
 
 import qualified Data.Map as M
 

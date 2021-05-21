@@ -1,10 +1,10 @@
-module Data.FuncBodySpec where
+module Data.Func.FuncBodySpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
 import Data.AstExprSpec
-import Data.FuncBody
+import Data.Func.FuncBody
 import Data.WithPosSpec
 import TestUtils
 

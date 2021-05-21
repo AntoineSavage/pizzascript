@@ -1,9 +1,9 @@
-module Data.ArgPassSpec where
+module Data.Func.ArgPassSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
-import Data.ArgPass
+import Data.Func.ArgPass
 import Data.Ident
 import Data.Symb
 import Symbs

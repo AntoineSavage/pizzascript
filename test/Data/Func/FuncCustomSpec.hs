@@ -1,4 +1,4 @@
-module Data.FuncCustomSpec where
+module Data.Func.FuncCustomSpec where
 
 import Test.Hspec
 import Test.QuickCheck
@@ -7,15 +7,14 @@ import qualified Data.Map as M
 
 import Data.AstExprSpec
 import Data.Func
-import Data.FuncArgs
-import Data.FuncArgsSpec
-import Data.FuncImpureArgs
-import Data.FuncImpureArgsSpec
-import Data.FuncBody
-import Data.FuncCustom
+import Data.Func.FuncArgs
+import Data.Func.FuncArgsSpec
+import Data.Func.FuncImpureArgs
+import Data.Func.FuncImpureArgsSpec
+import Data.Func.FuncBody
+import Data.Func.FuncCustom
 import Data.List
 import TestUtils
-import Types
 
 spec :: Spec
 spec = do

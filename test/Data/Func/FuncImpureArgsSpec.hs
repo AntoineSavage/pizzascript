@@ -1,11 +1,11 @@
-module Data.FuncImpureArgsSpec where
+module Data.Func.FuncImpureArgsSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
 import Control.Monad
-import Data.ArgPassSpec
-import Data.FuncImpureArgs
+import Data.Func.ArgPassSpec
+import Data.Func.FuncImpureArgs
 import Data.IdentSpec
 import Data.WithPosSpec
 

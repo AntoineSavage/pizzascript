@@ -2,11 +2,11 @@ module Values where
 
 import qualified Data.Map as M
 
-import Data.ArgPass ( ArgPass(Quote) )
 import Data.Func ( Func(Func) )
-import Data.FuncArgs ( FuncArgs(ArgsVaria, ArgsArity) )
-import Data.FuncBody ( FuncBody(BodyBuiltIn) )
-import Data.FuncImpureArgs ( FuncImpureArgs(Both, None) )
+import Data.Func.ArgPass ( ArgPass(Quote) )
+import Data.Func.FuncArgs ( FuncArgs(ArgsVaria, ArgsArity) )
+import Data.Func.FuncBody ( FuncBody(BodyBuiltIn) )
+import Data.Func.FuncImpureArgs ( FuncImpureArgs(Both, None) )
 import Data.PzVal ( PzVal(PzFunc, PzSymb) )
 import Data.WithPos ( Pos, WithPos(WithPos) )
 import Idents ( identAnd, identArgs, identCtx, identFunc, identNot, identOr, identX, identY )

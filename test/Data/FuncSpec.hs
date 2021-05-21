@@ -4,12 +4,12 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Control.Monad
-import Data.ArgPass
 import Data.Func
-import Data.FuncArgsSpec
-import Data.FuncBodySpec
-import Data.FuncImpureArgs
-import Data.FuncImpureArgsSpec
+import Data.Func.ArgPass
+import Data.Func.FuncArgsSpec
+import Data.Func.FuncBodySpec
+import Data.Func.FuncImpureArgs
+import Data.Func.FuncImpureArgsSpec
 import Data.WithPos
 import Data.WithPosSpec
 import TestUtils

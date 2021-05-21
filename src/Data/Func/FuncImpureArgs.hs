@@ -1,6 +1,6 @@
-module Data.FuncImpureArgs where
+module Data.Func.FuncImpureArgs where
 
-import Data.ArgPass ( ArgPass )
+import Data.Func.ArgPass ( ArgPass )
 import Data.Ident ( Ident )
 import Data.WithPos ( Pos, WithPos )
 

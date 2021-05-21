@@ -19,7 +19,6 @@ import Data.WithPos
 import Data.WithPosSpec
 import TestUtils
 import Text.Parsec
-import Types
 
 spec :: Spec
 spec = do

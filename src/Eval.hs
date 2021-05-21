@@ -5,11 +5,11 @@ module Eval where
 import qualified Data.Map as M
 
 import Control.Monad ( forM_, liftM2 )
-import Data.ArgPass ( ArgPass(..), argPassToSymb, symbToArgPass )
 import Data.AstExpr ( AstExpr(..) )
-import Data.FuncArgs ( FuncArgs(..) )
-import Data.FuncCustom ( FuncCustom(..), toFuncCustom )
-import Data.FuncImpureArgs ( FuncImpureArgs(..) )
+import Data.Func.ArgPass ( ArgPass(..), argPassToSymb, symbToArgPass )
+import Data.Func.FuncArgs ( FuncArgs(..) )
+import Data.Func.FuncCustom ( FuncCustom(..), toFuncCustom )
+import Data.Func.FuncImpureArgs ( FuncImpureArgs(..) )
 import Data.Ident ( Ident )
 import Data.Lst ( Lst(..), LstKind(..) )
 import Data.Nat ( Nat(Z) )

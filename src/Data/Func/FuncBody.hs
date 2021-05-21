@@ -1,4 +1,4 @@
-module Data.FuncBody where
+module Data.Func.FuncBody where
 
 import Data.AstExpr ( AstExpr )
 import Data.Ident ( Ident )

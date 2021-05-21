@@ -5,7 +5,6 @@ import qualified Data.Map as M
 import Control.Monad
 import Data.List
 import Test.QuickCheck
-import Types
 
 newtype Few a = Few [a] deriving (Show, Eq)
 instance Arbitrary a => Arbitrary (Few a) where arbitrary = Few <$> arbFew arbitrary

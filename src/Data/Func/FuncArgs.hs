@@ -1,4 +1,4 @@
-module Data.FuncArgs where
+module Data.Func.FuncArgs where
 
 import Data.AstExpr ( AstExpr )
 import Data.Ident ( Ident )

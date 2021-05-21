@@ -6,13 +6,13 @@ import Test.Hspec
 import Test.QuickCheck
 
 import BuiltIns
-import Data.ArgPass
 import Data.Boolish
 import Data.BoolishSpec
 import Data.Func
-import Data.FuncArgs
-import Data.FuncBody
-import Data.FuncImpureArgs
+import Data.Func.ArgPass
+import Data.Func.FuncArgs
+import Data.Func.FuncBody
+import Data.Func.FuncImpureArgs
 import Data.Numb
 import Data.PzVal
 import Data.Str

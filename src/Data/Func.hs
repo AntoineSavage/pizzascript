@@ -1,9 +1,9 @@
 module Data.Func ( Func(..), getArgPass ) where
 
-import Data.ArgPass ( ArgPass(Eval) )
-import Data.FuncArgs ( FuncArgs )
-import Data.FuncBody ( FuncBody )
-import Data.FuncImpureArgs ( FuncImpureArgs(..) )
+import Data.Func.ArgPass ( ArgPass(Eval) )
+import Data.Func.FuncArgs ( FuncArgs )
+import Data.Func.FuncBody ( FuncBody )
+import Data.Func.FuncImpureArgs ( FuncImpureArgs(..) )
 import Data.WithPos ( WithPos(val) )
 
 data Func

@@ -4,10 +4,10 @@ module Utils where
 import qualified Data.Map as M
 import qualified Data.Set as S
 
-import Data.ArgPass ( ArgPass(..) )
 import Data.AstExpr ( AstExpr(..) )
 import Data.Func ( Func(..) )
-import Data.FuncImpureArgs ( FuncImpureArgs(..) )
+import Data.Func.ArgPass ( ArgPass(..) )
+import Data.Func.FuncImpureArgs ( FuncImpureArgs(..) )
 import Data.Ident ( Ident(..) )
 import Data.Lst ( LstKind(..) )
 import Data.PzVal ( Dict )

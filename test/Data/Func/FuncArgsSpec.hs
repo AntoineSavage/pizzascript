@@ -1,10 +1,10 @@
-module Data.FuncArgsSpec where
+module Data.Func.FuncArgsSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
 import Control.Monad
-import Data.FuncArgs
+import Data.Func.FuncArgs
 import Data.IdentSpec
 import Data.WithPosSpec
 import TestUtils
