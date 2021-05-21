@@ -1,9 +1,9 @@
 module UtilsSpec where
 
-import qualified Data.Map as M
-
 import Test.Hspec
 import Test.QuickCheck
+
+import qualified Data.Map as M
 
 import Control.Monad
 import Data.AstExpr

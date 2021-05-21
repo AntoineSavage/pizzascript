@@ -1,24 +1,17 @@
-module Values where
+module BuiltIns.Values where
 
 import qualified Data.Map as M
 
+import BuiltIns.Pos ( builtInPos, withPos )
 import Data.Func ( Func(Func) )
 import Data.Func.ArgPass ( ArgPass(Quote) )
 import Data.Func.FuncArgs ( FuncArgs(ArgsVaria, ArgsArity) )
 import Data.Func.FuncBody ( FuncBody(BodyBuiltIn) )
 import Data.Func.FuncImpureArgs ( FuncImpureArgs(Both, None) )
 import Data.PzVal ( PzVal(PzFunc, PzSymb) )
-import Data.WithPos ( Pos, WithPos(WithPos) )
+import Data.WithPos ( WithPos )
 import Idents ( identAnd, identArgs, identCtx, identFunc, identNot, identOr, identX, identY )
 import Symbs ( symbFalse, symbTrue )
-import Text.Parsec.Pos ( newPos )
-
--- position
-builtInPos :: Pos
-builtInPos = newPos "<built-in>" 0 0
-
-withPos :: a -> WithPos a
-withPos = WithPos builtInPos
 
 -- numbers
 -- TODO

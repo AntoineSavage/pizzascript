@@ -1,10 +1,11 @@
 module Data.BoolishSpec where
 
-import qualified Data.Map as M
-
 import Test.Hspec
 import Test.QuickCheck
 
+import qualified Data.Map as M
+
+import BuiltIns.Values
 import Control.Monad
 import Data.Boolish
 import Data.Numb
@@ -13,7 +14,6 @@ import Data.PzValSpec
 import Data.Str
 import Data.WithPos
 import TestUtils
-import Values
 
 spec :: Spec
 spec = do

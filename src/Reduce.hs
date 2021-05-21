@@ -2,7 +2,9 @@ module Reduce where
 
 import qualified Data.Map as M
 
-import BuiltIns ( builtInCtx )
+import BuiltIns.Ctx ( builtInCtx )
+import BuiltIns.Impls ( FuncReturn, _not, _or, _and )
+import BuiltIns.Values ( func )
 import Control.Monad ( forM_, liftM2 )
 import Data.AstExpr ( AstExpr, parseExpr )
 import Data.Func ( Func(Func, impArgs), getArgPass )
@@ -20,12 +22,10 @@ import Data.StackFrame ( StackFrame(..), setCtx )
 import Data.Symb ( symb )
 import Data.WithPos ( WithPos(..), Pos )
 import Eval ( ExprEvalResult(..), evalExpr, evalFuncCustom )
-import Impls ( FuncReturn, _not, _or, _and )
 import Quote ( quote, unquote )
 import Text.Parsec ( eof )
 import Text.Parsec.String ( parseFromFile )
 import Utils ( addIdentAndPos, f1, f2, fpure, getIdent )
-import Values ( func )
 
 type EvalResult = Either String Acc
 type Result = Maybe (WithPos PzVal)

@@ -1,6 +1,5 @@
 module Data.WithPosSpec where
 
-
 import Test.Hspec
 import Test.QuickCheck
 

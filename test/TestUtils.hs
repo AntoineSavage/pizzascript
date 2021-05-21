@@ -6,6 +6,7 @@ import Control.Monad
 import Data.List
 import Test.QuickCheck
 
+-- Arbitrary constraints
 newtype Few a = Few [a] deriving (Show, Eq)
 instance Arbitrary a => Arbitrary (Few a) where arbitrary = Few <$> arbFew arbitrary
 

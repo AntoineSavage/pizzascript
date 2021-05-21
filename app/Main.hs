@@ -2,7 +2,7 @@ module Main where
 
 import qualified Data.Map as M
 
-import BuiltIns ( builtInCtx )
+import BuiltIns.Ctx ( builtInCtx )
 import Control.Monad ( forM_, liftM2 )
 import Data.AstExpr ( parseExpr )
 import Data.Lst ( parseMany )

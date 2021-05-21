@@ -1,9 +1,9 @@
-module Impls where
+module BuiltIns.Impls where
 
+import BuiltIns.Values ( pzFalse, pzTrue )
 import Data.PzVal ( Dict, PzVal )
 import Data.WithPos ( WithPos )
 import Data.Boolish ( Boolish(..), boolish )
-import Values ( pzFalse, pzTrue )
 
 type FuncReturn = Either String (Dict, WithPos PzVal)
 

@@ -1,13 +1,13 @@
-module BuiltIns where
+module BuiltIns.Ctx where
 
 import qualified Data.Map as M
 
+import BuiltIns.Pos ( withPos )
+import BuiltIns.Values ( pzFalse, pzTrue, pzNot, pzOr, pzAnd, pzFunc )
 import Data.PzVal ( Dict, PzVal(PzSymb) )
 import Data.Symb ( symb )
 import Idents ( identAnd, identFunc, identNot, identOr )
-import Values ( pzFalse, pzTrue, pzNot, pzOr, pzAnd, pzFunc, withPos )
 
--- Built-in context
 builtInCtx :: Dict
 builtInCtx = M.fromList
     [

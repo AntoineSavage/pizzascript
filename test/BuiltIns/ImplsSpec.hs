@@ -1,66 +1,19 @@
-module BuiltInsSpec where
-
-import qualified Data.Map as M
+module BuiltIns.ImplsSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
-import BuiltIns
+import BuiltIns.Impls
+import BuiltIns.Values
 import Data.Boolish
 import Data.BoolishSpec
-import Data.Func
-import Data.Func.ArgPass
-import Data.Func.FuncArgs
-import Data.Func.FuncBody
-import Data.Func.FuncImpureArgs
-import Data.Numb
-import Data.PzVal
-import Data.Str
-import Data.Symb
-import Data.WithPos
-import Idents
-import Impls
-import Symbs
-import Utils
-import Values
 
 spec :: Spec
 spec = do
-    builtInCtxSpec
-    constantsSpec
-    funcSpec
     ifThenElseSpec
     _notSpec
     _orSpec
     _andSpec
-
-builtInCtxSpec :: Spec
-builtInCtxSpec = describe "builtInCtx" $ do
-    it "contains the required keys" $ do
-        let keyIdents = [identFalse, identTrue, identNot, identOr, identAnd, identFunc]
-            keys = flip map keyIdents $ withPos . PzSymb . symb
-            values = [pzFalse, pzTrue, pzNot, pzOr, pzAnd, pzFunc]
-        builtInCtx `shouldBe` M.fromList (zip keys values)
-
-constantsSpec :: Spec
-constantsSpec = describe "constants" $ do
-    it "declares boolean constants" $ do
-        pzFalse `shouldBe` withPos (PzSymb symbFalse)
-        pzTrue `shouldBe` withPos (PzSymb symbTrue)
-        pzNot `shouldBe` withPos (PzFunc M.empty $ Func None (ArgsArity builtInPos [withPos identX]) (BodyBuiltIn identNot))
-        pzOr `shouldBe` withPos (PzFunc M.empty $ Func None (ArgsArity builtInPos [withPos identX, withPos identY]) (BodyBuiltIn identOr))
-        pzAnd `shouldBe` withPos (PzFunc M.empty $ Func None (ArgsArity builtInPos [withPos identX, withPos identY]) (BodyBuiltIn identAnd))
-
-    it "declares function constants" $ do
-        pzFunc `shouldBe` withPos (PzFunc M.empty func)
-
-funcSpec :: Spec
-funcSpec = describe "func" $ do
-    it "returns func value" $ do
-        let f = func
-        impArgs f `shouldBe` Both builtInPos (withPos Quote) (withPos identCtx)
-        args f `shouldBe` ArgsVaria (withPos identArgs)
-        body f `shouldBe` BodyBuiltIn identFunc
 
 ifThenElseSpec :: Spec
 ifThenElseSpec = describe "simulate if-then-else with not-or-and" $ do
