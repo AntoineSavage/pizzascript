@@ -39,13 +39,13 @@ instance ArbWithDepth PzVal where
         (if depth <= 0 then [] else
             [ fmap PzList $ arbWithDepth depth
             , fmap PzDict $ arbWithDepth depth
-            , PzFunc <$> arbWithDepth depth
+            , liftM2 PzFunc (arbWithDepth depth) $ arbWithDepth depth
             ]
         )
 
 instance Arbitrary Func where arbitrary = arbDepth
 instance ArbWithDepth Func where
-    arbWithDepth depth = liftM4 Func (arbWithDepth depth) arbitrary arbitrary (arbWithDepth depth)
+    arbWithDepth depth = liftM3 Func arbitrary arbitrary (arbWithDepth depth)
 
 instance Arbitrary StackFrame where arbitrary = arbDepth
 instance ArbWithDepth StackFrame where
@@ -59,7 +59,8 @@ instance ArbWithDepth StackFrame where
             d <- arbDepth
             e <- arbDepth
             f <- arbDepth
-            return $ Invoc a b c d e f
+            g <- arbDepth
+            return $ Invoc a b c d e f g
         ]
 
 -- Test-only types
@@ -86,5 +87,5 @@ instance Arbitrary PzTruish where
             , PzStr . Str . getNonEmpty <$> arbitrary
             , PzList  <$> liftM2 (:) arbDepth (arbFew arbDepth)
             , fmap PzDict $ liftM3 M.insert arbDepth arbDepth arbDepth
-            , PzFunc <$> arbitrary
+            , liftM2 PzFunc arbDepth arbitrary
             ]

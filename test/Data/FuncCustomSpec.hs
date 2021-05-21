@@ -24,30 +24,30 @@ spec = do
 toFuncCustomVsFromFuncCustomSpec :: Spec
 toFuncCustomVsFromFuncCustomSpec = describe "toFuncCustom vs fromFuncCustom" $ do
     it "composes toFuncCustom and fromFuncCustom into id" $ do
-        property $ \(ArbDict ctx) funcCustom -> do
-            let func = fromFuncCustom ctx funcCustom
+        property $ \funcCustom -> do
+            let func = fromFuncCustom funcCustom
             toFuncCustom func `shouldBe` Right funcCustom
-            fromFuncCustom ctx <$> toFuncCustom func `shouldBe` Right func
+            fromFuncCustom <$> toFuncCustom func `shouldBe` Right func
 
 toFuncCustomSpec :: Spec
 toFuncCustomSpec = describe "toFuncCustom" $ do
     it "rejects built-in function" $ do
         property $ \impArgs args ident ->
-            toFuncCustom (Func undefined impArgs args $ BodyBuiltIn ident) `shouldBe` Left ident
+            toFuncCustom (Func impArgs args $ BodyBuiltIn ident) `shouldBe` Left ident
 
     it "converts custom function" $ do
         property $ \impArgs args es ->
-            toFuncCustom (Func undefined impArgs args $ BodyCustom es) `shouldBe` Right (FuncCustom impArgs args es)
+            toFuncCustom (Func impArgs args $ BodyCustom es) `shouldBe` Right (FuncCustom impArgs args es)
 
 fromFuncCustomSpec :: Spec
 fromFuncCustomSpec = describe "fromFuncCustom" $ do
     it "converts to function (smallest)" $ do
         property $ \p -> do
-            fromFuncCustom M.empty (FuncCustom None (ArgsArity p []) []) `shouldBe` Func M.empty None (ArgsArity p []) (BodyCustom [])
+            fromFuncCustom (FuncCustom None (ArgsArity p []) []) `shouldBe` Func None (ArgsArity p []) (BodyCustom [])
 
     it "converts to function (prop)" $ do
-        property $ \(ArbDict implCtx) impArgs args (Few es) -> do
-            fromFuncCustom implCtx (FuncCustom impArgs args es) `shouldBe` Func implCtx impArgs args (BodyCustom es)
+        property $ \impArgs args (Few es) -> do
+            fromFuncCustom (FuncCustom impArgs args es) `shouldBe` Func impArgs args (BodyCustom es)
 
 -- Utils
 instance Arbitrary FuncCustom where arbitrary = arbDepth

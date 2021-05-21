@@ -59,7 +59,7 @@ unevalExpr val = flip fmap val $ \case
     PzList l -> AstList $ Lst KindList $ map unevalExpr l
     PzDict m -> AstList $ Lst KindDict $ flip map (M.assocs m) $
         \(k, v) -> withPos $ AstList $ Lst KindForm [unevalExpr k, unevalExpr v]
-    PzFunc f ->
+    PzFunc _ f ->
         case toFuncCustom f of
             Left ident -> AstIdent ident
             Right fc -> AstList $ Lst KindForm $ unevalFuncCustom fc

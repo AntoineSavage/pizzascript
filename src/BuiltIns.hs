@@ -75,17 +75,17 @@ pzTrue :: WithPos PzVal
 pzTrue = withPos $ PzSymb symbTrue
 
 pzNot :: WithPos PzVal
-pzNot = withPos $ PzFunc $ Func M.empty None
+pzNot = withPos $ PzFunc M.empty $ Func None
     (ArgsArity builtInPos [withPos identX])
     $ BodyBuiltIn identNot
 
 pzOr :: WithPos PzVal
-pzOr = withPos $ PzFunc $ Func M.empty None
+pzOr = withPos $ PzFunc M.empty $ Func None
     (ArgsArity builtInPos $ map withPos [identX, identY])
     $ BodyBuiltIn identOr
 
 pzAnd :: WithPos PzVal
-pzAnd = withPos $ PzFunc $ Func M.empty None
+pzAnd = withPos $ PzFunc M.empty $ Func None
     (ArgsArity builtInPos $ map withPos [identX, identY])
     $ BodyBuiltIn identAnd
 
@@ -97,10 +97,10 @@ pzAnd = withPos $ PzFunc $ Func M.empty None
 
 -- functions
 pzFunc :: WithPos PzVal
-pzFunc = withPos $ PzFunc func
+pzFunc = withPos $ PzFunc M.empty func
 
 func :: Func
-func = Func M.empty
+func = Func
     (Both builtInPos (withPos Quote) (withPos identCtx))
     (ArgsVaria $ withPos identArgs)
     $ BodyBuiltIn identFunc

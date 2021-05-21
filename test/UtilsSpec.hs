@@ -84,16 +84,16 @@ getIdentSpec = describe "getIdent" $ do
 getArgPassSpec :: Spec
 getArgPassSpec = describe "getArgPass" $ do
     it "converts None to Eval" $ do
-        property $ \implCtx args body ->
-            getArgPass (Func implCtx None args body) `shouldBe` Eval
+        property $ \args body ->
+            getArgPass (Func None args body) `shouldBe` Eval
 
     it "converts ArgPass" $ do
-        property $ \p implCtx ap args body ->
-            getArgPass (Func implCtx (ArgPass p $ WithPos p ap) args body) `shouldBe` ap
+        property $ \p ap args body ->
+            getArgPass (Func (ArgPass p $ WithPos p ap) args body) `shouldBe` ap
 
     it "converts Both" $ do
-        property $ \p implCtx ap explCtx args body ->
-            getArgPass (Func implCtx (Both p (WithPos p ap) explCtx) args body) `shouldBe` ap
+        property $ \p ap explCtx args body ->
+            getArgPass (Func (Both p (WithPos p ap) explCtx) args body) `shouldBe` ap
 
 getDuplicatesSpec :: Spec
 getDuplicatesSpec = describe "getDuplicates" $ do
@@ -212,11 +212,11 @@ setCtxSpec = describe "setCtx" $ do
 
     it "sets context on invoc frame (with args left to eval)" $ do
         property $ \(ArbDict ctx) p mfi f (Few as) (Few es) (Few fs) -> do
-            setCtx ctx (Invoc undefined p mfi f as (Just es):fs) `shouldBe` (Invoc ctx p mfi f as (Just es):fs)
+            setCtx ctx (Invoc undefined p mfi ctx f as (Just es):fs) `shouldBe` (Invoc ctx p mfi ctx f as (Just es):fs)
 
     it "sets context on invoc frame (with no args left to eval)" $ do
         property $ \(ArbDict ctx) p mfi f (Few as) (Few fs) -> do
-            setCtx ctx (Invoc undefined p mfi f as Nothing:fs) `shouldBe` (Invoc ctx p mfi f as Nothing:fs)
+            setCtx ctx (Invoc undefined p mfi ctx f as Nothing:fs) `shouldBe` (Invoc ctx p mfi ctx f as Nothing:fs)
 
 -- Utils
 undefinedOrResult0 :: Either String Int -> () -> Either String Int

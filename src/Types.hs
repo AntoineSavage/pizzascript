@@ -20,12 +20,12 @@ data PzVal
     | PzSymb Symb
     | PzList [WithPos PzVal]
     | PzDict Dict
-    | PzFunc Func
+    | PzFunc Dict Func
     deriving (Show, Eq, Ord)
 
 type Dict = M.Map (WithPos PzVal) (WithPos PzVal)
 data Func
-    = Func { implCtx :: Dict, impArgs :: FuncImpureArgs, args :: FuncArgs, body :: FuncBody }
+    = Func { impArgs :: FuncImpureArgs, args :: FuncArgs, body :: FuncBody }
     deriving (Show, Eq, Ord)
 
 -- Evaluator types
@@ -37,5 +37,5 @@ data Acc
 data StackFrame
     = Block Dict [WithPos AstExpr]
     | Form Dict Pos (Maybe (WithPos Ident)) [WithPos AstExpr]
-    | Invoc Dict Pos (Maybe (WithPos Ident)) Func [WithPos PzVal] (Maybe [WithPos AstExpr])
+    | Invoc Dict Pos (Maybe (WithPos Ident)) Dict Func [WithPos PzVal] (Maybe [WithPos AstExpr])
     deriving (Show, Eq)

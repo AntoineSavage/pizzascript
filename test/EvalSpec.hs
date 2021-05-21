@@ -210,11 +210,11 @@ unevalExprSpec = describe "unevalExpr" $ do
 
     it "unevals built-in function to identifier" $ do
         property $ \p (ArbDict implCtx) impArgs args ident -> do
-            unevalExpr (WithPos p $ PzFunc $ Func implCtx impArgs args $ BodyBuiltIn ident) `shouldBe` WithPos p (AstIdent ident)
+            unevalExpr (WithPos p $ PzFunc implCtx $ Func impArgs args $ BodyBuiltIn ident) `shouldBe` WithPos p (AstIdent ident)
 
     it "unevals custom function to list" $ do
         property $ \p (ArbDict implCtx) f@(FuncCustom impArgs args body) -> do
-            unevalExpr (WithPos p $ PzFunc $ Func implCtx impArgs args $ BodyCustom body) `shouldBe` WithPos p (AstList $ Lst KindForm $ unevalFuncCustom f)
+            unevalExpr (WithPos p $ PzFunc implCtx $ Func impArgs args $ BodyCustom body) `shouldBe` WithPos p (AstList $ Lst KindForm $ unevalFuncCustom f)
 
 evalFuncCustomVsUnevalFuncCustomSpec :: Spec
 evalFuncCustomVsUnevalFuncCustomSpec = describe "evalFuncCustom vs unevalFuncCustom" $ do

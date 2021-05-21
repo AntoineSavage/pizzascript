@@ -19,6 +19,6 @@ toFuncCustom func =
         BodyBuiltIn ident -> Left ident
         BodyCustom es -> return $ FuncCustom (impArgs func) (args func) es
 
-fromFuncCustom :: Dict -> FuncCustom -> Func
-fromFuncCustom implCtx (FuncCustom impArgs args es) =
-    Func implCtx impArgs args $ BodyCustom es
+fromFuncCustom :: FuncCustom -> Func
+fromFuncCustom (FuncCustom impArgs args es) =
+    Func impArgs args $ BodyCustom es

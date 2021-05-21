@@ -44,18 +44,17 @@ constantsSpec = describe "constants" $ do
     it "declares boolean constants" $ do
         pzFalse `shouldBe` withPos (PzSymb symbFalse)
         pzTrue `shouldBe` withPos (PzSymb symbTrue)
-        pzNot `shouldBe` withPos (PzFunc $ Func M.empty None (ArgsArity builtInPos [withPos identX]) (BodyBuiltIn identNot))
-        pzOr `shouldBe` withPos (PzFunc $ Func M.empty None (ArgsArity builtInPos [withPos identX, withPos identY]) (BodyBuiltIn identOr))
-        pzAnd `shouldBe` withPos (PzFunc $ Func M.empty None (ArgsArity builtInPos [withPos identX, withPos identY]) (BodyBuiltIn identAnd))
+        pzNot `shouldBe` withPos (PzFunc M.empty $ Func None (ArgsArity builtInPos [withPos identX]) (BodyBuiltIn identNot))
+        pzOr `shouldBe` withPos (PzFunc M.empty $ Func None (ArgsArity builtInPos [withPos identX, withPos identY]) (BodyBuiltIn identOr))
+        pzAnd `shouldBe` withPos (PzFunc M.empty $ Func None (ArgsArity builtInPos [withPos identX, withPos identY]) (BodyBuiltIn identAnd))
 
     it "declares function constants" $ do
-        pzFunc `shouldBe` withPos (PzFunc func)
+        pzFunc `shouldBe` withPos (PzFunc M.empty func)
 
 funcSpec :: Spec
 funcSpec = describe "func" $ do
     it "returns func value" $ do
         let f = func
-        implCtx f `shouldBe` M.empty
         impArgs f `shouldBe` Both builtInPos (withPos Quote) (withPos identCtx)
         args f `shouldBe` ArgsVaria (withPos identArgs)
         body f `shouldBe` BodyBuiltIn identFunc
@@ -177,13 +176,13 @@ boolishSpec = describe "boolish" $ do
             boolish v `shouldBe` Falsish
    
     it "converts simple truish values" $ do
-        property $ \p f -> do
+        property $ \(ArbDict ctx) p f -> do
             let unit = WithPos p PzUnit
             boolish (WithPos p $ PzNum $ Numb 1) `shouldBe` Truish
             boolish (WithPos p $ PzStr $ Str "0") `shouldBe` Truish
             boolish (WithPos p $ PzList [unit]) `shouldBe` Truish
             boolish (WithPos p $ PzDict $ M.fromList [(unit, unit)]) `shouldBe` Truish
-            boolish (WithPos p $ PzFunc f) `shouldBe` Truish
+            boolish (WithPos p $ PzFunc ctx f) `shouldBe` Truish
    
     it "converts truish values (prop)" $ do
         property $ \(PzTruish v) -> do
