@@ -25,10 +25,8 @@ data PzVal
 
 type Dict = M.Map (WithPos PzVal) (WithPos PzVal)
 data Func
-    = Func { implCtx :: FuncImplCtx, impArgs :: FuncImpureArgs, args :: FuncArgs, body :: FuncBody }
+    = Func { implCtx :: Dict, impArgs :: FuncImpureArgs, args :: FuncArgs, body :: FuncBody }
     deriving (Show, Eq, Ord)
-
-type FuncImplCtx = Dict
 
 -- Evaluator types
 type Result = Maybe (WithPos PzVal)
