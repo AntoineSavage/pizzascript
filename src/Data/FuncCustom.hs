@@ -2,12 +2,13 @@ module Data.FuncCustom ( FuncCustom(..), fromFuncCustom, toFuncCustom ) where
 
 import Data.ArgPass ( ArgPass )
 import Data.AstExpr ( AstExpr )
+import Data.Func ( Func(..) )
 import Data.FuncArgs ( FuncArgs )
 import Data.FuncBody ( FuncBody(..) )
 import Data.FuncImpureArgs ( FuncImpureArgs )
 import Data.Ident ( Ident )
 import Data.WithPos ( WithPos )
-import Types ( Dict, Func(Func, body, impArgs, args) )
+import Types ( Dict )
 
 data FuncCustom
     = FuncCustom FuncImpureArgs FuncArgs [WithPos AstExpr]

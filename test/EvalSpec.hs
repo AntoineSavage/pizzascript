@@ -10,6 +10,7 @@ import Data.ArgPass
 import Data.ArgPassSpec
 import Data.AstExpr
 import Data.Either
+import Data.Func
 import Data.FuncArgs
 import Data.FuncBody
 import Data.FuncCustom

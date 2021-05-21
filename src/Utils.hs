@@ -6,12 +6,13 @@ import qualified Data.Set as S
 
 import Data.ArgPass ( ArgPass(..) )
 import Data.AstExpr ( AstExpr(..) )
+import Data.Func ( Func(..) )
 import Data.FuncImpureArgs ( FuncImpureArgs(..) )
 import Data.Ident ( Ident(..) )
 import Data.Lst ( LstKind(..) )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
 import Idents ( identList, identDict )
-import Types ( Dict, Func(impArgs), StackFrame(..) )
+import Types ( Dict, StackFrame(..) )
 import Text.Parsec.Pos ( newPos )
 
 toForm :: Pos -> LstKind -> [WithPos AstExpr] -> [WithPos AstExpr]
@@ -28,13 +29,6 @@ getIdent (WithPos p v) = case v of
     _ -> Left $ "Expected identifier"
         ++ "\n was: " ++ show v
         ++ "\n at: " ++ show p
-
-getArgPass :: Func -> ArgPass
-getArgPass func = case impArgs func of
-    None -> Eval
-    ArgPass _ ap -> val ap
-    Both _ ap _ -> val ap
-
 getDuplicates :: Ord a => [a] -> [a]
 getDuplicates = go S.empty S.empty where
     go s dups []     = S.toList dups

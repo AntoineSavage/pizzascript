@@ -5,6 +5,7 @@ import Test.QuickCheck
 
 import qualified Data.Map as M
 
+import Data.Func
 import Data.FuncArgs
 import Data.FuncImpureArgs
 import Data.FuncBody

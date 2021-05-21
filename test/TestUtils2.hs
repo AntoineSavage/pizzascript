@@ -8,6 +8,8 @@ import Control.Monad
 import Data.ArgPass
 import Data.ArgPassSpec
 import Data.AstExprSpec
+import Data.Func
+import Data.FuncSpec
 import Data.FuncArgs
 import Data.FuncArgsSpec
 import Data.FuncBody
@@ -42,10 +44,6 @@ instance ArbWithDepth PzVal where
             , liftM2 PzFunc (arbWithDepth depth) $ arbWithDepth depth
             ]
         )
-
-instance Arbitrary Func where arbitrary = arbDepth
-instance ArbWithDepth Func where
-    arbWithDepth depth = liftM3 Func arbitrary arbitrary (arbWithDepth depth)
 
 instance Arbitrary StackFrame where arbitrary = arbDepth
 instance ArbWithDepth StackFrame where

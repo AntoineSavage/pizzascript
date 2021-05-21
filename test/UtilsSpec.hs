@@ -34,7 +34,6 @@ spec :: Spec
 spec = do
     toFormSpec
     getIdentSpec
-    getArgPassSpec
     getDuplicatesSpec
     addIdentAndPosSpec
     invalidArityMsgSpec
@@ -80,20 +79,6 @@ getIdentSpec = describe "getIdent" $ do
     it "rejects list" $ do
         property $ \p k l ->
             isLeft (getIdent (WithPos p $ AstList $ Lst k l)) `shouldBe` True
-
-getArgPassSpec :: Spec
-getArgPassSpec = describe "getArgPass" $ do
-    it "converts None to Eval" $ do
-        property $ \args body ->
-            getArgPass (Func None args body) `shouldBe` Eval
-
-    it "converts ArgPass" $ do
-        property $ \p ap args body ->
-            getArgPass (Func (ArgPass p $ WithPos p ap) args body) `shouldBe` ap
-
-    it "converts Both" $ do
-        property $ \p ap explCtx args body ->
-            getArgPass (Func (Both p (WithPos p ap) explCtx) args body) `shouldBe` ap
 
 getDuplicatesSpec :: Spec
 getDuplicatesSpec = describe "getDuplicates" $ do

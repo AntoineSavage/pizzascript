@@ -3,6 +3,7 @@ module BuiltIns where
 import qualified Data.Map as M
 
 import Data.ArgPass ( ArgPass(..) )
+import Data.Func ( Func(..) )
 import Data.FuncArgs ( FuncArgs(..) )
 import Data.FuncBody ( FuncBody(..) )
 import Data.FuncImpureArgs ( FuncImpureArgs(..) )
@@ -13,7 +14,7 @@ import Data.WithPos ( WithPos(WithPos, val), Pos )
 import Idents ( identNot, identOr, identAnd, identFunc, identCtx, identArgs, identX, identY )
 import Symbs ( symbFalse, symbTrue )
 import Text.Parsec.Pos ( newPos )
-import Types ( Dict, Func(Func), PzVal(..) )
+import Types ( Dict, PzVal(..) )
 
 builtInPos :: Pos
 builtInPos = newPos "<built-in>" 0 0

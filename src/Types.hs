@@ -3,6 +3,7 @@ module Types where
 import qualified Data.Map as M
 
 import Data.AstExpr ( AstExpr )
+import Data.Func ( Func )
 import Data.FuncArgs ( FuncArgs )
 import Data.FuncBody ( FuncBody )
 import Data.FuncImpureArgs ( FuncImpureArgs )
@@ -24,9 +25,6 @@ data PzVal
     deriving (Show, Eq, Ord)
 
 type Dict = M.Map (WithPos PzVal) (WithPos PzVal)
-data Func
-    = Func { impArgs :: FuncImpureArgs, args :: FuncArgs, body :: FuncBody }
-    deriving (Show, Eq, Ord)
 
 -- Evaluator types
 type Result = Maybe (WithPos PzVal)

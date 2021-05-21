@@ -7,6 +7,7 @@ import Test.QuickCheck
 
 import BuiltIns
 import Data.ArgPass
+import Data.Func
 import Data.FuncArgs
 import Data.FuncBody
 import Data.FuncImpureArgs
