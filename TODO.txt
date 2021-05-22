@@ -1,3 +1,4 @@
+not/or/and must return value with invoc position
 enforce at compile time not empty: ident, func body
 test/rename reduce (aka Acc stuff)
 
