@@ -3,7 +3,7 @@ module Reduce where
 import qualified Data.Map as M
 
 import BuiltIns.Ctx ( builtInCtx )
-import BuiltIns.Impls ( FuncReturn, _not, _or, _and )
+import BuiltIns.Impls ( _not, _or, _and )
 import BuiltIns.Values ( func )
 import Control.Monad ( forM_, liftM2 )
 import Data.AstExpr ( AstExpr, parseExpr )
@@ -25,37 +25,38 @@ import Eval ( ExprEvalResult(..), evalExpr, evalFuncCustom )
 import Quote ( quote, unquote )
 import Text.Parsec ( eof )
 import Text.Parsec.String ( parseFromFile )
-import Utils ( addIdentAndPos, f1, f2, fpure, getIdent )
+import Utils ( Result, addIdentAndPos, f1, f2, fpure, getIdent )
 
-type EvalResult = Either String Acc
-type Result = Maybe (WithPos PzVal)
+type FuncReturn = Result (Dict, WithPos PzVal)
+type EvalResult = Result Acc
+type ReturnValue = Maybe (WithPos PzVal)
 data Acc
-    = Acc Result [StackFrame]
+    = Acc ReturnValue [StackFrame]
     deriving (Show, Eq)
 
-evalFrame :: Result -> StackFrame -> [StackFrame] -> EvalResult
-evalFrame result frame frames =
+evalFrame :: ReturnValue -> StackFrame -> [StackFrame] -> EvalResult
+evalFrame rval frame frames =
     case frame of
-        Block ctx es -> evalBlock result ctx es frames
-        Form ctx p mfi es -> evalForm result ctx p mfi es frames
-        Invoc ctx p fi ic f as es -> evalInvoc result ctx p fi ic f as es frames
+        Block ctx es -> evalBlock rval ctx es frames
+        Form ctx p mfi es -> evalForm rval ctx p mfi es frames
+        Invoc ctx p fi ic f as es -> evalInvoc rval ctx p fi ic f as es frames
 
-evalBlock :: Result -> Dict -> [WithPos AstExpr] -> [StackFrame] -> EvalResult
-evalBlock result ctx es frames =
+evalBlock :: ReturnValue -> Dict -> [WithPos AstExpr] -> [StackFrame] -> EvalResult
+evalBlock rval ctx es frames =
     case es of
         [] ->
             -- block finished: pop frame
-            return $ Acc result frames
+            return $ Acc rval frames
        
         e:es ->
             -- evaluate next block expression
             evalExpr ctx e Eval >>= toAcc ctx e (Block ctx es : frames)
 
-evalForm :: Result -> Dict -> Pos -> Maybe (WithPos Ident) -> [WithPos AstExpr] -> [StackFrame] -> EvalResult
-evalForm result ctx p mfi elems frames =
-    case result of
+evalForm :: ReturnValue -> Dict -> Pos -> Maybe (WithPos Ident) -> [WithPos AstExpr] -> [StackFrame] -> EvalResult
+evalForm rval ctx p mfi elems frames =
+    case rval of
         Nothing ->
-            -- no result to process yet
+            -- no return value to process yet
             case elems of
                 [] ->
                     -- empty form -> return unit type (and pop frame)
@@ -66,7 +67,7 @@ evalForm result ctx p mfi elems frames =
                     evalExpr ctx e Eval >>= toAcc ctx e (Form ctx p mfi es : frames)
        
         Just f ->
-            -- process result (first form elem, should be a function)
+            -- process return value (first form elem, should be a function)
             case val f of
                 PzFunc ic f ->
 
@@ -85,11 +86,11 @@ evalForm result ctx p mfi elems frames =
                     ++ "\n at: " ++ show p
                     ++ "\n" ++ show f
 
-evalInvoc :: Result -> Dict -> Pos -> Maybe (WithPos Ident) -> Dict -> Func -> [WithPos PzVal] -> Maybe [WithPos AstExpr] -> [StackFrame] -> EvalResult
-evalInvoc result ctx p mfi implCtx f as melems frames =
-    case result of
+evalInvoc :: ReturnValue -> Dict -> Pos -> Maybe (WithPos Ident) -> Dict -> Func -> [WithPos PzVal] -> Maybe [WithPos AstExpr] -> [StackFrame] -> EvalResult
+evalInvoc rval ctx p mfi implCtx f as melems frames =
+    case rval of
         Nothing ->
-            -- no result to process yet
+            -- no return value to process yet
             case melems of
                 Nothing ->
                     -- marked for invocation: invoke function
@@ -108,14 +109,14 @@ evalInvoc result ctx p mfi implCtx f as melems frames =
                         Right acc -> return acc
 
         Just r ->
-            -- process result
+            -- process return value
             case melems of
                 Just es ->
-                    -- argument evaluation result
+                    -- argument evaluation return value
                     return $ Acc Nothing $ Invoc ctx p mfi implCtx f (r:as) (Just es) : frames
 
                 _ ->
-                    -- function invocation result (pop frame)
+                    -- function invocation return value (pop frame)
                     case impArgs f of
                         Both {} -> case r of
                             -- Impure functions: handle explicit output context

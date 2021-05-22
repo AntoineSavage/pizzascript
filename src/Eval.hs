@@ -18,14 +18,14 @@ import Data.PzVal ( Dict, PzVal(..) )
 import Data.Symb ( Symb(Symb), symb )
 import Data.WithPos ( WithPos(WithPos, val), Pos )
 import Quote ( quote, unquote )
-import Utils ( getDuplicates, getIdent, toForm )
+import Utils ( Result, getDuplicates, getIdent, toForm )
 
 data ExprEvalResult
     = Evaled (WithPos PzVal)
     | ExprForm Pos [WithPos AstExpr]
     deriving (Show, Eq)
 
-evalExpr :: Dict -> WithPos AstExpr -> ArgPass -> Either String ExprEvalResult
+evalExpr :: Dict -> WithPos AstExpr -> ArgPass -> Result ExprEvalResult
 evalExpr ctx e@(WithPos p v) eval =
     let evaled = return . Evaled . WithPos p in
     case (v, eval) of
@@ -64,7 +64,7 @@ unevalExpr val = flip fmap val $ \case
             Left ident -> AstIdent ident
             Right fc -> AstList $ Lst KindForm $ unevalFuncCustom fc
 
-evalFuncCustom :: [WithPos AstExpr] -> Either String FuncCustom
+evalFuncCustom :: [WithPos AstExpr] -> Result FuncCustom
 evalFuncCustom es0 = do
     (impArgs, es1) <- evalImpureArgs es0
     (args, body) <- evalArgs es1
@@ -74,7 +74,7 @@ evalFuncCustom es0 = do
 unevalFuncCustom :: FuncCustom -> [WithPos AstExpr]
 unevalFuncCustom (FuncCustom impArgs args body) = unevalImpureArgs impArgs ++ unevalArgs args ++ body
 
-evalImpureArgs :: [WithPos AstExpr] -> Either String (FuncImpureArgs, [WithPos AstExpr])
+evalImpureArgs :: [WithPos AstExpr] -> Result (FuncImpureArgs, [WithPos AstExpr])
 evalImpureArgs elems = case elems of
     -- form starting with argument-passing behaviour symbol, followed by...
     WithPos p (AstList (Lst KindForm ((WithPos p2 (AstSymb s@(Symb Z _))):as))):es -> do
@@ -109,7 +109,7 @@ unevalImpureArgs impArgs =
         ArgPass p ap -> [ toForm p [toExpr ap] ]
         Both p ap ec -> [ toForm p [toExpr ap, fmap AstIdent ec] ]
 
-evalArgs :: [WithPos AstExpr] -> Either String (FuncArgs, [WithPos AstExpr])
+evalArgs :: [WithPos AstExpr] -> Result (FuncArgs, [WithPos AstExpr])
 evalArgs elems = case elems of
     ie@(WithPos _ (AstIdent _)):es -> (,es) . ArgsVaria <$> getIdent ie
     WithPos p (AstList (Lst KindForm ies)):es -> (,es) . ArgsArity p <$> mapM getIdent ies
@@ -126,14 +126,14 @@ unevalArgs args =
         ArgsArity p is -> [WithPos p $ AstList $ Lst KindForm $ map (fmap AstIdent) is]
 
 -- Utils
-evalIdent :: Dict -> Ident -> Either String (WithPos PzVal)
+evalIdent :: Dict -> Ident -> Result (WithPos PzVal)
 evalIdent ctx ident = case M.lookup (withPos $ PzSymb $ symb ident) ctx of
     Just v -> Right v
     Nothing -> Left $
         "Error: Undefined identifier: " ++ show ident
         ++ "\n context keys: " ++ show (M.keys ctx)
 
-validateNoDuplicateIdents :: FuncImpureArgs -> FuncArgs -> Either String ()
+validateNoDuplicateIdents :: FuncImpureArgs -> FuncArgs -> Result ()
 validateNoDuplicateIdents impArgs args =
     let explCtxIdents = case impArgs of
             Both _ _ i -> [i]

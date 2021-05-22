@@ -4,8 +4,7 @@ import BuiltIns.Values ( pzFalse, pzTrue )
 import Data.PzVal ( Dict, PzVal )
 import Data.WithPos ( WithPos )
 import Data.Boolish ( Boolish(..), boolish )
-
-type FuncReturn = Either String (Dict, WithPos PzVal)
+import Utils ( Result )
 
 -- numbers
 -- TODO

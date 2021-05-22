@@ -1,3 +1,4 @@
+enforce at compile time not empty: ident, func body
 test/rename reduce (aka Acc stuff)
 
 built-ins:

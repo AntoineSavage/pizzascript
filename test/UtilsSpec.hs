@@ -205,26 +205,28 @@ setCtxSpec = describe "setCtx" $ do
             setCtx ctx (Invoc undefined p mfi ctx f as Nothing:fs) `shouldBe` (Invoc ctx p mfi ctx f as Nothing:fs)
 
 -- Utils
-undefinedOrResult0 :: Either String Int -> () -> Either String Int
+type R = Utils.Result -- conflict with QuickCheck
+
+undefinedOrResult0 :: R Int -> () -> R Int
 undefinedOrResult0 r _ = r
 
-undefinedOrResult1 :: Int -> Either String Int -> Int -> Either String Int
+undefinedOrResult1 :: Int -> R Int -> Int -> R Int
 undefinedOrResult1 v r x = if [x] /= [v] then undefined else r
 
-undefinedOrResult2 :: Int -> Int -> Either String Int -> Int -> Int -> Either String Int
+undefinedOrResult2 :: Int -> Int -> R Int -> Int -> Int -> R Int
 undefinedOrResult2 v1 v2 r x1 x2 = if [x1, x2] /= [v1, v2] then undefined else r
 
-undefinedOrResult3 :: Int -> Int -> Int -> Either String Int -> Int -> Int -> Int -> Either String Int
+undefinedOrResult3 :: Int -> Int -> Int -> R Int -> Int -> Int -> Int -> R Int
 undefinedOrResult3 v1 v2 v3 r x1 x2 x3 = if [x1, x2, x3] /= [v1, v2, v3] then undefined else r
 
-undef0 :: () -> Either String Int
+undef0 :: () -> R Int
 undef0 = undefined
 
-undef1 :: Int -> Either String Int
+undef1 :: Int -> R Int
 undef1 = undefined
 
-undef2 :: Int -> Int -> Either String Int
+undef2 :: Int -> Int -> R Int
 undef2 = undefined
 
-undef3 :: Int -> Int -> Int -> Either String Int
+undef3 :: Int -> Int -> Int -> R Int
 undef3 = undefined

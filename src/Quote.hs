@@ -6,7 +6,7 @@ import Data.Lst ( Lst(..), LstKind(..), unparseLst )
 import Data.Nat ( Nat(..) )
 import Data.Symb ( Symb(Symb), symb )
 import Data.WithPos ( WithPos(WithPos) )
-import Utils ( toForm )
+import Utils ( Result, toForm )
 
 quote :: WithPos AstExpr -> WithPos AstExpr
 quote e@(WithPos p v) =
@@ -30,7 +30,7 @@ quote e@(WithPos p v) =
         AstList (Lst k es) ->
             toExpr $ AstList $ Lst KindList $ map quote $ toForm p k es
 
-unquote :: WithPos AstExpr -> Either String (WithPos AstExpr)
+unquote :: WithPos AstExpr -> Result (WithPos AstExpr)
 unquote e@(WithPos p v) =
     let withPos = WithPos p in
     case v of
