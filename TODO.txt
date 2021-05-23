@@ -1,4 +1,3 @@
-remove WithPos
 replace AstExpr with quoted PzVal (eval becomes unquote, quote becomes id, unquote becomes double-unquote, etc)
 add back enough pos stuff to have stack traces and debug info
 
