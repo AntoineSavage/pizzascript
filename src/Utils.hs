@@ -11,26 +11,24 @@ import Data.Func.FuncImpureArgs ( FuncImpureArgs(..) )
 import Data.Ident ( Ident(..) )
 import Data.Lst ( LstKind(..) )
 import Data.PzVal ( Dict )
-import Data.WithPos ( WithPos(WithPos, val), Pos )
 import Idents ( identList, identDict )
 import Text.Parsec.Pos ( newPos )
 
 type Result = Either String
 
-toForm :: Pos -> LstKind -> [WithPos AstExpr] -> [WithPos AstExpr]
-toForm p k =
-    let identToExpr ident = WithPos p $ AstIdent ident
-    in case k of
-        KindList -> (identToExpr identList:)
-        KindDict -> (identToExpr identDict:)
+toForm :: LstKind -> [AstExpr] -> [AstExpr]
+toForm k =
+    case k of
+        KindList -> (AstIdent identList:)
+        KindDict -> (AstIdent identDict:)
         KindForm -> id
 
-getIdent :: WithPos AstExpr -> Result (WithPos Ident)
-getIdent (WithPos p v) = case v of
-    AstIdent ident -> return $ WithPos p ident
+getIdent :: AstExpr -> Result Ident
+getIdent e = case e of
+    AstIdent ident -> return ident
     _ -> Left $ "Expected identifier"
-        ++ "\n was: " ++ show v
-        ++ "\n at: " ++ show p
+        ++ "\n was: " ++ show e
+
 getDuplicates :: Ord a => [a] -> [a]
 getDuplicates = go S.empty S.empty where
     go s dups []     = S.toList dups
@@ -38,9 +36,9 @@ getDuplicates = go S.empty S.empty where
         then go s (S.insert x dups) xs
         else go (S.insert x s) dups xs
 
-addIdentAndPos :: Pos -> Maybe (WithPos Ident) -> String -> String
-addIdentAndPos p Nothing s  = s ++ "\n at:" ++ show p
-addIdentAndPos p (Just fi) s = s ++ "\n at " ++ show fi ++ ": " ++ show p
+addIdentAndPos :: Maybe Ident -> String -> String
+addIdentAndPos Nothing s  = s
+addIdentAndPos (Just fi) s = s ++ "\n at " ++ show fi
 
 invalidArityMsg :: Int -> [a] -> String
 invalidArityMsg n args = "Invalid number of arguments. Expected " ++ show n ++ ", got: " ++ show (length args)

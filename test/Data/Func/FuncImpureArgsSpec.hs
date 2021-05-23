@@ -7,7 +7,6 @@ import Control.Monad
 import Data.Func.ArgPassSpec
 import Data.Func.FuncImpureArgs
 import Data.IdentSpec
-import Data.WithPosSpec
 
 spec :: Spec
 spec = return ()
@@ -16,6 +15,6 @@ spec = return ()
 instance Arbitrary FuncImpureArgs where
     arbitrary = oneof
         [ return None
-        , liftM2 ArgPass arbitrary arbitrary
-        , liftM3 Both arbitrary arbitrary arbitrary
+        , ArgPass <$> arbitrary
+        , liftM2 Both arbitrary arbitrary
         ]

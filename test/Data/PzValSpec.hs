@@ -9,8 +9,6 @@ import Data.Numb
 import Data.Str
 import Data.Symb
 import Data.PzVal
-import Data.WithPos
-import Data.WithPosSpec
 import TestUtils
 
 spec :: Spec

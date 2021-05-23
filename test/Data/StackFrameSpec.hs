@@ -17,7 +17,7 @@ instance Arbitrary StackFrame where arbitrary = arbDepth
 instance ArbWithDepth StackFrame where
     arbWithDepth depth = oneof
         [liftM2 Block arbDepth arbDepth
-        , liftM4 Form arbDepth arbitrary arbitrary arbDepth
+        , liftM3 Form arbDepth arbitrary arbDepth
         , do
             a <- arbDepth
             b <- arbitrary
@@ -25,6 +25,5 @@ instance ArbWithDepth StackFrame where
             d <- arbDepth
             e <- arbDepth
             f <- arbDepth
-            g <- arbDepth
-            return $ Invoc a b c d e f g
+            return $ Invoc a b c d e f
         ]

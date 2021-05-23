@@ -4,7 +4,6 @@ module Eval where
 
 import qualified Data.Map as M
 
-import BuiltIns.Pos ( withPos )
 import Control.Monad ( forM_, liftM2 )
 import Data.AstExpr ( AstExpr(..) )
 import Data.Func.ArgPass ( ArgPass(..), argPassToSymb, symbToArgPass )
@@ -16,19 +15,18 @@ import Data.Lst ( Lst(..), LstKind(..) )
 import Data.Nat ( Nat(Z) )
 import Data.PzVal ( Dict, PzVal(..) )
 import Data.Symb ( Symb(Symb), symb )
-import Data.WithPos ( WithPos(WithPos, val), Pos )
 import Quote ( quote, unquote )
 import Utils ( Result, getDuplicates, getIdent, toForm )
 
 data ExprEvalResult
-    = Evaled (WithPos PzVal)
-    | ExprForm Pos [WithPos AstExpr]
+    = Evaled PzVal
+    | ExprForm [AstExpr]
     deriving (Show, Eq)
 
-evalExpr :: Dict -> WithPos AstExpr -> ArgPass -> Result ExprEvalResult
-evalExpr ctx e@(WithPos p v) eval =
-    let evaled = return . Evaled . WithPos p in
-    case (v, eval) of
+evalExpr :: Dict -> AstExpr -> ArgPass -> Result ExprEvalResult
+evalExpr ctx e eval =
+    let evaled = return . Evaled in
+    case (e, eval) of
         -- numbers and strings
         (AstNum n, _) -> evaled $ PzNum n
         (AstStr s, _) -> evaled $ PzStr s
@@ -42,7 +40,7 @@ evalExpr ctx e@(WithPos p v) eval =
         (AstIdent ident, DeepUnquote) -> evalIdent ctx ident >>= \r -> evalExpr ctx (unevalExpr r) Unquote
 
         -- lists
-        (AstList (Lst k elems), Eval) -> return $ ExprForm p $ toForm p k elems
+        (AstList (Lst k elems), Eval) -> return $ ExprForm $ toForm k elems
 
         -- quote and unquote
         (_, Quote) -> evalExpr ctx (quote e) Eval
@@ -50,84 +48,83 @@ evalExpr ctx e@(WithPos p v) eval =
         (_, DeepQuote) -> evalExpr ctx e Quote
         (_, DeepUnquote) -> evalExpr ctx e Unquote
 
-unevalExpr :: WithPos PzVal -> WithPos AstExpr
-unevalExpr val = flip fmap val $ \case
+unevalExpr :: PzVal -> AstExpr
+unevalExpr = \case
     PzUnit -> AstList $ Lst KindForm []
     PzNum n -> AstNum n
     PzStr s -> AstStr s
     PzSymb s -> AstSymb s
     PzList l -> AstList $ Lst KindList $ map unevalExpr l
     PzDict m -> AstList $ Lst KindDict $ flip map (M.assocs m) $
-        \(k, v) -> withPos $ AstList $ Lst KindForm [unevalExpr k, unevalExpr v]
+        \(k, v) -> AstList $ Lst KindForm [unevalExpr k, unevalExpr v]
     PzFunc _ f ->
         case toFuncCustom f of
             Left ident -> AstIdent ident
             Right fc -> AstList $ Lst KindForm $ unevalFuncCustom fc
 
-evalFuncCustom :: [WithPos AstExpr] -> Result FuncCustom
+evalFuncCustom :: [AstExpr] -> Result FuncCustom
 evalFuncCustom es0 = do
     (impArgs, es1) <- evalImpureArgs es0
     (args, body) <- evalArgs es1
     validateNoDuplicateIdents impArgs args
     return $ FuncCustom impArgs args body
 
-unevalFuncCustom :: FuncCustom -> [WithPos AstExpr]
+unevalFuncCustom :: FuncCustom -> [AstExpr]
 unevalFuncCustom (FuncCustom impArgs args body) = unevalImpureArgs impArgs ++ unevalArgs args ++ body
 
-evalImpureArgs :: [WithPos AstExpr] -> Result (FuncImpureArgs, [WithPos AstExpr])
+evalImpureArgs :: [AstExpr] -> Result (FuncImpureArgs, [AstExpr])
 evalImpureArgs elems = case elems of
     -- form starting with argument-passing behaviour symbol, followed by...
-    WithPos p (AstList (Lst KindForm ((WithPos p2 (AstSymb s@(Symb Z _))):as))):es -> do
+    AstList (Lst KindForm ((AstSymb s@(Symb Z _)):as)):es -> do
         argPass <- case symbToArgPass s of
-            Just r -> return $ WithPos p2 r
+            Just r -> return r
             Nothing -> Left $
                 "Error: Invalid argument-passing behaviour symbol: " ++ show s
-                ++ "\n at: " ++ show p2
 
         case as of
             -- nothing else
-            [] -> return (ArgPass p argPass, es)
+            [] -> return (ArgPass argPass, es)
 
             -- identifier
-            [ e ] -> (,es) . Both p argPass <$> getIdent e
+            [ e ] -> (,es) . Both argPass <$> getIdent e
 
             _ -> Left $
                 "Error: Impure function argument definition must be either:"
                     ++ "\n - a valid argument-passsing behaviour symbol only"
                     ++ "\n - a valid argument-passsing behaviour symbol, followed by an identifier"
-                    ++ "\n was: " ++ show (map val elems)
+                    ++ "\n was: " ++ show elems
 
     -- no match: assume no impure args
     _ -> return (None, elems)
 
-unevalImpureArgs :: FuncImpureArgs -> [WithPos AstExpr]
+unevalImpureArgs :: FuncImpureArgs -> [AstExpr]
 unevalImpureArgs impArgs =
-    let toExpr = fmap $ AstSymb .argPassToSymb
-        toForm p = WithPos p . AstList . Lst KindForm
+    let toExpr = AstSymb .argPassToSymb
+        toForm = AstList . Lst KindForm
     in case impArgs of
         None -> []
-        ArgPass p ap -> [ toForm p [toExpr ap] ]
-        Both p ap ec -> [ toForm p [toExpr ap, fmap AstIdent ec] ]
+        ArgPass ap -> [ toForm [toExpr ap] ]
+        Both ap ec -> [ toForm [toExpr ap, AstIdent ec] ]
 
-evalArgs :: [WithPos AstExpr] -> Result (FuncArgs, [WithPos AstExpr])
+evalArgs :: [AstExpr] -> Result (FuncArgs, [AstExpr])
 evalArgs elems = case elems of
-    ie@(WithPos _ (AstIdent _)):es -> (,es) . ArgsVaria <$> getIdent ie
-    WithPos p (AstList (Lst KindForm ies)):es -> (,es) . ArgsArity p <$> mapM getIdent ies
+    ie@(AstIdent _):es -> (,es) . ArgsVaria <$> getIdent ie
+    AstList (Lst KindForm ies):es -> (,es) . ArgsArity <$> mapM getIdent ies
     _ -> Left $
         "Error: Function argument definition must be either:"
         ++ "\n - a single varargs identifier"
         ++ "\n - an form of arity identifiers"
-        ++ "\n was: " ++ show (map val elems)
+        ++ "\n was: " ++ show elems
 
-unevalArgs :: FuncArgs -> [WithPos AstExpr]
+unevalArgs :: FuncArgs -> [AstExpr]
 unevalArgs args =
     case args of
-        ArgsVaria ident -> [fmap AstIdent ident]
-        ArgsArity p is -> [WithPos p $ AstList $ Lst KindForm $ map (fmap AstIdent) is]
+        ArgsVaria ident -> [AstIdent ident]
+        ArgsArity is -> [AstList $ Lst KindForm $ map AstIdent is]
 
 -- Utils
-evalIdent :: Dict -> Ident -> Result (WithPos PzVal)
-evalIdent ctx ident = case M.lookup (withPos $ PzSymb $ symb ident) ctx of
+evalIdent :: Dict -> Ident -> Result PzVal
+evalIdent ctx ident = case M.lookup (PzSymb $ symb ident) ctx of
     Just v -> Right v
     Nothing -> Left $
         "Error: Undefined identifier: " ++ show ident
@@ -136,12 +133,12 @@ evalIdent ctx ident = case M.lookup (withPos $ PzSymb $ symb ident) ctx of
 validateNoDuplicateIdents :: FuncImpureArgs -> FuncArgs -> Result ()
 validateNoDuplicateIdents impArgs args =
     let explCtxIdents = case impArgs of
-            Both _ _ i -> [i]
+            Both _ i -> [i]
             _ -> []
        
         argIdents = case args of
             ArgsVaria i -> [i]
-            ArgsArity _ is -> is
+            ArgsArity is -> is
    
         duplicates = getDuplicates $ explCtxIdents ++ argIdents
     in if null duplicates

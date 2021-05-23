@@ -6,7 +6,6 @@ import BuiltIns.Values ( pzFalse, pzTrue )
 import Data.Numb ( Numb(Numb) )
 import Data.Str ( Str(Str) )
 import Data.PzVal ( PzVal(..) )
-import Data.WithPos ( WithPos(val) )
 
 data Boolish
     = FalseReal
@@ -15,11 +14,11 @@ data Boolish
     | TrueReal
     deriving (Show, Eq)
 
-boolish :: WithPos PzVal -> Boolish
+boolish :: PzVal -> Boolish
 boolish v
   | v == pzFalse = FalseReal
   | v == pzTrue = TrueReal
-  | otherwise = case val v of
+  | otherwise = case v of
     PzUnit -> Falsish
     PzNum (Numb 0) -> Falsish
     PzStr (Str "") -> Falsish

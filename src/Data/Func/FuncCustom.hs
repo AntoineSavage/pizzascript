@@ -7,10 +7,9 @@ import Data.Func.FuncArgs ( FuncArgs )
 import Data.Func.FuncBody ( FuncBody(..) )
 import Data.Func.FuncImpureArgs ( FuncImpureArgs )
 import Data.Ident ( Ident )
-import Data.WithPos ( WithPos )
 
 data FuncCustom
-    = FuncCustom FuncImpureArgs FuncArgs [WithPos AstExpr]
+    = FuncCustom FuncImpureArgs FuncArgs [AstExpr]
     deriving (Show, Eq)
 
 toFuncCustom :: Func -> Either Ident FuncCustom

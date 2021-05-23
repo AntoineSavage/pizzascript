@@ -15,8 +15,6 @@ import Data.Str
 import Data.StrSpec
 import Data.Symb
 import Data.Str
-import Data.WithPos
-import Data.WithPosSpec
 import TestUtils
 import Text.Parsec
 
@@ -39,51 +37,51 @@ parseExprVsUnparseExprSpec = describe "parseExpr vs unparseExpr" $ do
 parseExprSpec :: Spec
 parseExprSpec = describe "parseExpr" $ do
     it "parses num" $ do
-        property $ \p n -> do
-            parse (parseExpr ignore undefined) "tests" (unparseNumb n) `shouldBe` Right (WithPos p $ AstNum n)
+        property $ \n -> do
+            parse (parseExpr ignore undefined) "tests" (unparseNumb n) `shouldBe` Right (AstNum n)
 
     it "parses str" $ do
-        property $ \p s -> do
-            parse (parseExpr ignore undefined) "tests" (unparseStr s) `shouldBe` Right (WithPos p $ AstStr s)
+        property $ \s -> do
+            parse (parseExpr ignore undefined) "tests" (unparseStr s) `shouldBe` Right (AstStr s)
 
     it "parses ident" $ do
-        property $ \p ident -> do
-            parse (parseExpr ignore undefined) "tests" (unparseIdent ident) `shouldBe` Right (WithPos p $ AstIdent ident)
+        property $ \ident -> do
+            parse (parseExpr ignore undefined) "tests" (unparseIdent ident) `shouldBe` Right (AstIdent ident)
 
     it "parses symb" $ do
-        property $ \p n ident -> do
-            parse (parseExpr ignore undefined) "tests" (unparseSymb $ Symb n ident) `shouldBe` Right (WithPos p $ AstSymb $ Symb n ident)
+        property $ \n ident -> do
+            parse (parseExpr ignore undefined) "tests" (unparseSymb $ Symb n ident) `shouldBe` Right (AstSymb $ Symb n ident)
 
     it "parses list" $ do
         let f Nothing = ""; f (Just e) = unparseExpr f e ++ " "
             g = parseExpr ignore g
-        property $ \p (Few es) -> do
+        property $ \(Few es) -> do
             forM_ kinds $ \k -> do
-                parse g "tests" (unparseLst f $ Lst k es) `shouldBe` Right (WithPos p $ AstList $ Lst k es)
+                parse g "tests" (unparseLst f $ Lst k es) `shouldBe` Right (AstList $ Lst k es)
 
 unparseExprSpec :: Spec
 unparseExprSpec = describe "unparseExpr" $ do
     it "unparses num" $ do
-        property $ \p n -> do
-            unparseExpr undefined (WithPos p $ AstNum $ n) `shouldBe` unparseNumb n
+        property $ \n -> do
+            unparseExpr undefined (AstNum $ n) `shouldBe` unparseNumb n
 
     it "unparses str" $ do
-        property $ \p s -> do
-            unparseExpr undefined (WithPos p $ AstStr s) `shouldBe` unparseStr s
+        property $ \s -> do
+            unparseExpr undefined (AstStr s) `shouldBe` unparseStr s
 
     it "unparses ident" $ do
-        property $ \p ident -> do
-            unparseExpr undefined (WithPos p $ AstIdent ident) `shouldBe` unparseIdent ident
+        property $ \ident -> do
+            unparseExpr undefined (AstIdent ident) `shouldBe` unparseIdent ident
 
     it "unparses symb" $ do
-        property $ \p n ident -> do
-            unparseExpr undefined (WithPos p $ AstSymb $ Symb n ident) `shouldBe` unparseSymb (Symb n ident)
+        property $ \n ident -> do
+            unparseExpr undefined (AstSymb $ Symb n ident) `shouldBe` unparseSymb (Symb n ident)
 
     it "unparses list" $ do
         let f Nothing = ""; f (Just e) = unparseExpr f e
-        property $ \p (Few es) -> do
+        property $ \(Few es) -> do
             forM_ kinds $ \k -> do
-                unparseExpr f (WithPos p $ AstList $ Lst k es) `shouldBe` unparseLst f (Lst k es)
+                unparseExpr f (AstList $ Lst k es) `shouldBe` unparseLst f (Lst k es)
 
 -- Utils
 ignore = spaces

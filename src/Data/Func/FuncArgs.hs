@@ -2,9 +2,8 @@ module Data.Func.FuncArgs where
 
 import Data.AstExpr ( AstExpr )
 import Data.Ident ( Ident )
-import Data.WithPos ( Pos, WithPos )
 
 data FuncArgs
-    = ArgsVaria (WithPos Ident)
-    | ArgsArity Pos [WithPos Ident]
+    = ArgsVaria Ident
+    | ArgsArity [Ident]
     deriving (Show, Eq, Ord)

@@ -43,8 +43,7 @@ toFuncCustomSpec = describe "toFuncCustom" $ do
 fromFuncCustomSpec :: Spec
 fromFuncCustomSpec = describe "fromFuncCustom" $ do
     it "converts to function (smallest)" $ do
-        property $ \p -> do
-            fromFuncCustom (FuncCustom None (ArgsArity p []) []) `shouldBe` Func None (ArgsArity p []) (BodyCustom [])
+        fromFuncCustom (FuncCustom None (ArgsArity []) []) `shouldBe` Func None (ArgsArity []) (BodyCustom [])
 
     it "converts to function (prop)" $ do
         property $ \impArgs args (Few es) -> do
@@ -54,11 +53,11 @@ fromFuncCustomSpec = describe "fromFuncCustom" $ do
 instance Arbitrary FuncCustom where arbitrary = arbDepth
 instance ArbWithDepth FuncCustom where
     arbWithDepth depth = do
-        let getImpArgsIdents (Both _ _ i) = [i]
+        let getImpArgsIdents (Both _ i) = [i]
             getImpArgsIdents _            = []
 
             getArgsIdents (ArgsVaria i)    = [i]
-            getArgsIdents (ArgsArity _ is) = is
+            getArgsIdents (ArgsArity is) = is
 
         impArgs <- arbitrary
         args <- arbitrary

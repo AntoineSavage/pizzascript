@@ -25,7 +25,6 @@ import Data.Str
 import Data.StrSpec
 import Data.Symb
 import Data.SymbSpec
-import Data.WithPos
 import Idents
 import Symbs
 import TestUtils
@@ -48,38 +47,37 @@ spec = do
 toFormSpec :: Spec
 toFormSpec = describe "toForm" $ do
     it "converts empty list" $ do
-        property $ \p -> do
-            toForm p KindList [] `shouldBe` [WithPos p $ AstIdent $ identList]
-            toForm p KindDict [] `shouldBe` [WithPos p $ AstIdent $ identDict]
-            toForm p KindForm [] `shouldBe` []
+        toForm KindList [] `shouldBe` [AstIdent $ identList]
+        toForm KindDict [] `shouldBe` [AstIdent $ identDict]
+        toForm KindForm [] `shouldBe` []
 
     it "converts list" $ do
-        property $ \p es -> do
-            toForm p KindList es `shouldBe` (WithPos p $ AstIdent $ identList) : es
-            toForm p KindDict es `shouldBe` (WithPos p $ AstIdent $ identDict) : es
-            toForm p KindForm es `shouldBe` es
+        property $ \es -> do
+            toForm KindList es `shouldBe` (AstIdent $ identList) : es
+            toForm KindDict es `shouldBe` (AstIdent $ identDict) : es
+            toForm KindForm es `shouldBe` es
 
 getIdentSpec :: Spec
 getIdentSpec = describe "getIdent" $ do
     it "converts ident" $
-        property $ \p ident ->
-            getIdent (WithPos p $ AstIdent ident) `shouldBe` Right (WithPos p ident)
+        property $ \ident ->
+            getIdent (AstIdent ident) `shouldBe` Right ident
 
     it "rejects number" $ do
-        property $ \p n ->
-            isLeft (getIdent (WithPos p $ AstNum n)) `shouldBe` True
+        property $ \n ->
+            isLeft (getIdent (AstNum n)) `shouldBe` True
 
     it "rejects string" $ do
-        property $ \p s ->
-            isLeft (getIdent (WithPos p $ AstStr s)) `shouldBe` True
+        property $ \s ->
+            isLeft (getIdent (AstStr s)) `shouldBe` True
 
     it "rejects symbol" $ do
-        property $ \p s ->
-            isLeft (getIdent (WithPos p $ AstSymb s)) `shouldBe` True
+        property $ \s ->
+            isLeft (getIdent (AstSymb s)) `shouldBe` True
 
     it "rejects list" $ do
-        property $ \p k l ->
-            isLeft (getIdent (WithPos p $ AstList $ Lst k l)) `shouldBe` True
+        property $ \k l ->
+            isLeft (getIdent (AstList $ Lst k l)) `shouldBe` True
 
 getDuplicatesSpec :: Spec
 getDuplicatesSpec = describe "getDuplicates" $ do
@@ -113,12 +111,12 @@ getDuplicatesSpec = describe "getDuplicates" $ do
 addIdentAndPosSpec :: Spec
 addIdentAndPosSpec = describe "addIdentAndPos" $ do
     it "adds position without identifier" $ do
-        property $ \p s ->
-            addIdentAndPos p Nothing s `shouldBe` s ++ "\n at:" ++ show p
+        property $ \s ->
+            addIdentAndPos Nothing s `shouldBe` s
 
     it "adds position with identifier" $ do
-        property $ \p i s ->
-            addIdentAndPos p (Just i) s `shouldBe` s ++ "\n at " ++ show i ++ ": " ++ show p
+        property $ \i s ->
+            addIdentAndPos (Just i) s `shouldBe` s ++ "\n at " ++ show i
 
 invalidArityMsgSpec :: Spec
 invalidArityMsgSpec = describe "invalidArityMsg" $ do
@@ -193,16 +191,16 @@ setCtxSpec = describe "setCtx" $ do
             setCtx ctx (Block undefined es:fs) `shouldBe` (Block ctx es:fs)
 
     it "sets context on form frame" $ do
-        property $ \(ArbDict ctx) p mfi (Few es) (Few fs) -> do
-            setCtx ctx (Form undefined p mfi es:fs) `shouldBe` (Form ctx p mfi es:fs)
+        property $ \(ArbDict ctx) mfi (Few es) (Few fs) -> do
+            setCtx ctx (Form undefined mfi es:fs) `shouldBe` (Form ctx mfi es:fs)
 
     it "sets context on invoc frame (with args left to eval)" $ do
-        property $ \(ArbDict ctx) p mfi f (Few as) (Few es) (Few fs) -> do
-            setCtx ctx (Invoc undefined p mfi ctx f as (Just es):fs) `shouldBe` (Invoc ctx p mfi ctx f as (Just es):fs)
+        property $ \(ArbDict ctx) mfi f (Few as) (Few es) (Few fs) -> do
+            setCtx ctx (Invoc undefined mfi ctx f as (Just es):fs) `shouldBe` (Invoc ctx mfi ctx f as (Just es):fs)
 
     it "sets context on invoc frame (with no args left to eval)" $ do
-        property $ \(ArbDict ctx) p mfi f (Few as) (Few fs) -> do
-            setCtx ctx (Invoc undefined p mfi ctx f as Nothing:fs) `shouldBe` (Invoc ctx p mfi ctx f as Nothing:fs)
+        property $ \(ArbDict ctx) mfi f (Few as) (Few fs) -> do
+            setCtx ctx (Invoc undefined mfi ctx f as Nothing:fs) `shouldBe` (Invoc ctx mfi ctx f as Nothing:fs)
 
 -- Utils
 type R = Utils.Result -- conflict with QuickCheck

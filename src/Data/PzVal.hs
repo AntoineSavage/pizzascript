@@ -11,16 +11,15 @@ import Data.Ident ( Ident )
 import Data.Numb ( Numb )
 import Data.Str ( Str )
 import Data.Symb ( Symb )
-import Data.WithPos ( Pos, WithPos )
 
 data PzVal
     = PzUnit
     | PzNum Numb
     | PzStr Str
     | PzSymb Symb
-    | PzList [WithPos PzVal]
+    | PzList [PzVal]
     | PzDict Dict
     | PzFunc Dict Func
     deriving (Show, Eq, Ord)
 
-type Dict = M.Map (WithPos PzVal) (WithPos PzVal)
+type Dict = M.Map PzVal PzVal

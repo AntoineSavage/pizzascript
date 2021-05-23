@@ -10,8 +10,6 @@ import Data.Func.FuncArgsSpec
 import Data.Func.FuncBodySpec
 import Data.Func.FuncImpureArgs
 import Data.Func.FuncImpureArgsSpec
-import Data.WithPos
-import Data.WithPosSpec
 import TestUtils
 
 spec :: Spec
@@ -25,12 +23,12 @@ getArgPassSpec = describe "getArgPass" $ do
             getArgPass (Func None args body) `shouldBe` Eval
 
     it "converts ArgPass" $ do
-        property $ \p ap args body ->
-            getArgPass (Func (ArgPass p $ WithPos p ap) args body) `shouldBe` ap
+        property $ \ap args body ->
+            getArgPass (Func (ArgPass ap) args body) `shouldBe` ap
 
     it "converts Both" $ do
-        property $ \p ap explCtx args body ->
-            getArgPass (Func (Both p (WithPos p ap) explCtx) args body) `shouldBe` ap
+        property $ \ap explCtx args body ->
+            getArgPass (Func (Both ap explCtx) args body) `shouldBe` ap
 
 -- Utils
 instance Arbitrary Func where arbitrary = arbDepth

@@ -2,7 +2,6 @@ module BuiltIns.Impls where
 
 import BuiltIns.Values ( pzFalse, pzTrue )
 import Data.PzVal ( Dict, PzVal )
-import Data.WithPos ( WithPos )
 import Data.Boolish ( Boolish(..), boolish )
 import Utils ( Result )
 
@@ -16,14 +15,14 @@ import Utils ( Result )
 -- TODO
 
 -- booleans
-_not :: WithPos PzVal -> WithPos PzVal
+_not :: PzVal -> PzVal
 _not x = case boolish x of
     FalseReal -> pzTrue
     Falsish -> pzTrue
     Truish -> pzFalse
     TrueReal -> pzFalse
 
-_or :: WithPos PzVal -> WithPos PzVal -> WithPos PzVal
+_or :: PzVal -> PzVal -> PzVal
 _or x y = case (boolish x, boolish y) of
     (TrueReal , _)            -> x
     (Truish   , TrueReal)     -> y
@@ -32,7 +31,7 @@ _or x y = case (boolish x, boolish y) of
     (Falsish  , _)            -> y
     (FalseReal, _)            -> y
 
-_and :: WithPos PzVal -> WithPos PzVal -> WithPos PzVal
+_and :: PzVal -> PzVal -> PzVal
 _and x y = case (boolish x, boolish y) of
     (FalseReal, _)            -> x
     (Falsish  , FalseReal)    -> y

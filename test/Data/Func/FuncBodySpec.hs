@@ -5,7 +5,6 @@ import Test.QuickCheck
 
 import Data.AstExprSpec
 import Data.Func.FuncBody
-import Data.WithPosSpec
 import TestUtils
 
 spec :: Spec

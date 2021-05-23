@@ -4,7 +4,6 @@ import Data.Func.ArgPass ( ArgPass(Eval) )
 import Data.Func.FuncArgs ( FuncArgs )
 import Data.Func.FuncBody ( FuncBody )
 import Data.Func.FuncImpureArgs ( FuncImpureArgs(..) )
-import Data.WithPos ( WithPos(val) )
 
 data Func
     = Func { impArgs :: FuncImpureArgs, args :: FuncArgs, body :: FuncBody }
@@ -13,5 +12,5 @@ data Func
 getArgPass :: Func -> ArgPass
 getArgPass func = case impArgs func of
     None -> Eval
-    ArgPass _ ap -> val ap
-    Both _ ap _ -> val ap
+    ArgPass ap -> ap
+    Both ap _ -> ap
