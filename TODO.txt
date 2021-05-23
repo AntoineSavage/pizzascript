@@ -1,4 +1,6 @@
-remove WithPos. Only AstList with KindForm needs it
+remove WithPos
+replace AstExpr with quoted PzVal (eval becomes unquote, quote becomes id, unquote becomes double-unquote, etc)
+add back enough pos stuff to have stack traces and debug info
 
 not/or/and must return value with invoc position
 enforce at compile time not empty: ident, func body
