@@ -16,5 +16,5 @@ instance ArbWithDepth a => Arbitrary (FuncBody a) where arbitrary = arbDepth
 instance ArbWithDepth a => ArbWithDepth (FuncBody a) where
     arbWithDepth depth = oneof
         [ BodyBuiltIn <$> arbitrary
-        , fmap BodyCustom $ arbFew $ arbWithDepth depth
+        , BodyCustom <$> arbWithDepth depth
         ]

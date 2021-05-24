@@ -33,4 +33,4 @@ getArgPassSpec = describe "getArgPass" $ do
 -- Utils
 instance ArbWithDepth a => Arbitrary (Func a) where arbitrary = arbDepth
 instance ArbWithDepth a => ArbWithDepth (Func a) where
-    arbWithDepth depth = liftM3 Func arbitrary arbitrary (arbWithDepth depth)
+    arbWithDepth depth = liftM3 Func arbitrary arbitrary $ arbWithDepth depth

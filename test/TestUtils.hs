@@ -50,4 +50,4 @@ instance (Ord k, ArbWithDepth k, ArbWithDepth v) => ArbWithDepth (M.Map k v) whe
         in fmap M.fromList $ arbFew $ liftM2 (,) sub sub
 
 arbDepth :: ArbWithDepth a => Gen a
-arbDepth = chooseInt (0, 3) >>= arbWithDepth
+arbDepth = chooseInt (0, 2) >>= arbWithDepth
