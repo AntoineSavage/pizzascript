@@ -147,22 +147,6 @@ unevalImpureArgs impArgs =
         ArgPass ap -> [ toForm [toExpr ap] ]
         Both ap ec -> [ toForm [toExpr ap, AstIdent ec] ]
 
-evalArgs :: [AstExpr] -> Result (FuncArgs, [AstExpr])
-evalArgs elems = case elems of
-    ie@(AstIdent _):es -> (,es) . ArgsVaria <$> getIdent ie
-    AstList (Lst KindForm ies):es -> (,es) . ArgsArity <$> mapM getIdent ies
-    _ -> Left $
-        "Error: Function argument definition must be either:"
-        ++ "\n - a single varargs identifier"
-        ++ "\n - an form of arity identifiers"
-        ++ "\n was: " ++ show elems
-
-unevalArgs :: FuncArgs -> [AstExpr]
-unevalArgs args =
-    case args of
-        ArgsVaria ident -> [AstIdent ident]
-        ArgsArity is -> [AstList $ Lst KindForm $ map AstIdent is]
-
 -- Utils
 evalIdent :: Dict -> Ident -> Result PzVal
 evalIdent ctx ident = case M.lookup (PzSymb $ symb ident) ctx of

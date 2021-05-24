@@ -313,49 +313,6 @@ unevalImpureArgsSpec = describe "unevalImpureArgs" $ do
                     AstIdent ec
                 ]]
 
-evalArgsVsUnevalArgsSpec :: Spec
-evalArgsVsUnevalArgsSpec = describe "evalArgs vs unevalArgs" $ do
-    it "composes evalArgs and unevalArgs into id" $ do
-        property $ \args (Few es) -> do
-            let elems = unevalArgs args
-            evalArgs (elems ++ es) `shouldBe` Right (args, es)
-            unevalArgs <$> fst <$> evalArgs (elems ++ es) `shouldBe` Right elems
-
-evalArgsSpec :: Spec
-evalArgsSpec = describe "evalArgs" $ do
-    let toAstIdent = AstIdent . Ident
-    it "evals variadic args ident" $ do
-        property $ \s (Few es) -> do
-            let elems = toAstIdent s : es
-            evalArgs elems `shouldBe` Right (ArgsVaria $ Ident s, es)
-
-    it "evals arity args idents" $ do
-        property $ \ss (Few es) -> do
-            let elems = (AstList $ Lst KindForm $ map toAstIdent ss) : es
-            evalArgs elems `shouldBe` Right (ArgsArity $ map Ident ss, es)
-
-    it "rejects empty list" $ do
-        isLeft (evalArgs []) `shouldBe` True
-
-    it "rejects non-ident and non-form list" $ do
-        property $ \(Few es) -> do
-            forM_   [ AstNum $ Numb 0, AstStr $ Str ""
-                    , AstSymb $ symb $ Ident ""
-                    , AstList $ Lst KindList []
-                    , AstList $ Lst KindDict []
-                    ] $ \e ->
-                isLeft (evalArgs $ e:es) `shouldBe` True
-
-unevalArgsSpec :: Spec
-unevalArgsSpec = describe "unevalArgs" $ do
-    it "unevals variadic args ident" $ do
-        property $ \i -> do
-            unevalArgs (ArgsVaria i) `shouldBe` [AstIdent i]
-
-    it "unevals arity args idents" $ do
-        property $ \is -> do
-            unevalArgs (ArgsArity is) `shouldBe` [(AstList $ Lst KindForm $ map AstIdent is)]
-
 evalIdentSpec :: Spec
 evalIdentSpec = describe "evalIdent" $ do
     it "evaluates one ident part" $ do

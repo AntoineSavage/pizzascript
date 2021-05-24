@@ -53,15 +53,15 @@ fromFuncCustomSpec = describe "fromFuncCustom" $ do
 instance Arbitrary FuncCustom where arbitrary = arbDepth
 instance ArbWithDepth FuncCustom where
     arbWithDepth depth = do
-        let getImpArgsIdents (Both _ i) = [i]
-            getImpArgsIdents _            = []
+        let getImpArgsIdents (Both _ s) = [s]
+            getImpArgsIdents _          = []
 
-            getArgsIdents (ArgsVaria i)    = [i]
-            getArgsIdents (ArgsArity is) = is
+            getArgsIdents (ArgsVaria s)  = [s]
+            getArgsIdents (ArgsArity ss) = ss
 
         impArgs <- arbitrary
         args <- arbitrary
-        let is = getImpArgsIdents impArgs ++ getArgsIdents args
-        if is == nub is
+        let ss = getImpArgsIdents impArgs ++ getArgsIdents args
+        if ss == nub ss
             then fmap (FuncCustom impArgs args) $ arbWithDepth depth
             else arbWithDepth depth

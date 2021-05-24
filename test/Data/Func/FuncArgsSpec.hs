@@ -14,6 +14,6 @@ spec = return ()
 -- Utils
 instance Arbitrary FuncArgs where
     arbitrary = oneof
-        [ ArgsVaria <$> arbitrary
-        , ArgsArity <$> arbFew arbitrary
+        [ ArgsVaria <$> arbQuotedIdent
+        , ArgsArity <$> arbFew arbQuotedIdent
         ]

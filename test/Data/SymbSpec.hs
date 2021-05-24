@@ -82,3 +82,10 @@ instance Arbitrary Ident where
         first <- elements validFirsts
         nexts <- chooseInt (0, 10) >>= flip vectorOf (elements validNexts)
         return $ Ident first nexts
+
+newtype QuotedIdent = QuotedIdent Symb deriving (Show, Eq)
+instance Arbitrary QuotedIdent where arbitrary = QuotedIdent <$> arbQuotedIdent
+arbQuotedIdent = do Ident f ns <- arbitrary; return $ Symb Z f ns  
+
+newtype QuotedIdents = QuotedIdents [Symb] deriving (Show, Eq)
+instance Arbitrary QuotedIdents where arbitrary = QuotedIdents <$> arbFew arbQuotedIdent
