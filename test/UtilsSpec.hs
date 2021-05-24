@@ -3,81 +3,20 @@ module UtilsSpec where
 import Test.Hspec
 import Test.QuickCheck
 
-import qualified Data.Map as M
-
-import Control.Monad
-import Data.AstExpr
-import Data.Either
-import Data.Func.ArgPass
-import Data.Func.FuncArgs
-import Data.Func.FuncImpureArgs
-import Data.Func.FuncBody
-import Data.Ident
 import Data.List
-import Data.Lst
-import Data.Nat
-import Data.Numb
-import Data.NumbSpec
 import Data.PzValSpec
-import Data.StackFrame
-import Data.StackFrameSpec
-import Data.Str
-import Data.StrSpec
-import Data.Symb
-import Data.SymbSpec
-import Idents
-import Symbs
 import TestUtils
 import Utils
 
 spec :: Spec
 spec = do
-    toFormSpec
-    getIdentSpec
     getDuplicatesSpec
-    addIdentAndPosSpec
     invalidArityMsgSpec
     f0Spec
     f1Spec
     f2Spec
     f3Spec
     fpureSpec
-    setCtxSpec
-
-toFormSpec :: Spec
-toFormSpec = describe "toForm" $ do
-    it "converts empty list" $ do
-        toForm KindList [] `shouldBe` [AstIdent $ identList]
-        toForm KindDict [] `shouldBe` [AstIdent $ identDict]
-        toForm KindForm [] `shouldBe` []
-
-    it "converts list" $ do
-        property $ \es -> do
-            toForm KindList es `shouldBe` (AstIdent $ identList) : es
-            toForm KindDict es `shouldBe` (AstIdent $ identDict) : es
-            toForm KindForm es `shouldBe` es
-
-getIdentSpec :: Spec
-getIdentSpec = describe "getIdent" $ do
-    it "converts ident" $
-        property $ \ident ->
-            getIdent (AstIdent ident) `shouldBe` Right ident
-
-    it "rejects number" $ do
-        property $ \n ->
-            isLeft (getIdent (AstNum n)) `shouldBe` True
-
-    it "rejects string" $ do
-        property $ \s ->
-            isLeft (getIdent (AstStr s)) `shouldBe` True
-
-    it "rejects symbol" $ do
-        property $ \s ->
-            isLeft (getIdent (AstSymb s)) `shouldBe` True
-
-    it "rejects list" $ do
-        property $ \k l ->
-            isLeft (getIdent (AstList $ Lst k l)) `shouldBe` True
 
 getDuplicatesSpec :: Spec
 getDuplicatesSpec = describe "getDuplicates" $ do
@@ -108,16 +47,6 @@ getDuplicatesSpec = describe "getDuplicates" $ do
         property $ \(Uniques xs) -> do
             getDuplicates (xs ++ xs) `shouldBe` (sort xs :: [Int])
    
-addIdentAndPosSpec :: Spec
-addIdentAndPosSpec = describe "addIdentAndPos" $ do
-    it "adds position without identifier" $ do
-        property $ \s ->
-            addIdentAndPos Nothing s `shouldBe` s
-
-    it "adds position with identifier" $ do
-        property $ \i s ->
-            addIdentAndPos (Just i) s `shouldBe` s ++ "\n at " ++ show i
-
 invalidArityMsgSpec :: Spec
 invalidArityMsgSpec = describe "invalidArityMsg" $ do
     it "returns the appropriate message" $ do
@@ -180,27 +109,6 @@ fpureSpec = describe "fpure" $ do
     it "wraps in a Right tuple" $ do
         property $ \(ArbDict ctx) r -> do
             fpure ctx r `shouldBe` Right (ctx, (r :: Int))
-
-setCtxSpec :: Spec
-setCtxSpec = describe "setCtx" $ do
-    it "returns empty list unchanged" $ do
-        setCtx undefined [] `shouldBe` []
-
-    it "sets context on block frame" $ do
-        property $ \(ArbDict ctx) (Few es) (Few fs) -> do
-            setCtx ctx (Block undefined es:fs) `shouldBe` (Block ctx es:fs)
-
-    it "sets context on form frame" $ do
-        property $ \(ArbDict ctx) mfi (Few es) (Few fs) -> do
-            setCtx ctx (Form undefined mfi es:fs) `shouldBe` (Form ctx mfi es:fs)
-
-    it "sets context on invoc frame (with args left to eval)" $ do
-        property $ \(ArbDict ctx) mfi f (Few as) (Few es) (Few fs) -> do
-            setCtx ctx (Invoc undefined mfi ctx f as (Just es):fs) `shouldBe` (Invoc ctx mfi ctx f as (Just es):fs)
-
-    it "sets context on invoc frame (with no args left to eval)" $ do
-        property $ \(ArbDict ctx) mfi f (Few as) (Few fs) -> do
-            setCtx ctx (Invoc undefined mfi ctx f as Nothing:fs) `shouldBe` (Invoc ctx mfi ctx f as Nothing:fs)
 
 -- Utils
 type R = Utils.Result -- conflict with QuickCheck
