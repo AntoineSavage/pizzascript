@@ -23,7 +23,7 @@ newtype Uniques a = Uniques [a] deriving (Show, Eq)
 instance (Eq a, Arbitrary a) => Arbitrary (Uniques a) where arbitrary = Uniques . nub <$> arbMany 1 10 arbitrary
 
 arbFew :: Gen a -> Gen [a]
-arbFew = arbMany 0 4
+arbFew = arbMany 0 2
 
 arbMany :: Int -> Int -> Gen a -> Gen [a]
 arbMany min max me = chooseInt (min, max) >>= flip vectorOf me
