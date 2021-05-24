@@ -4,5 +4,5 @@ import Data.Symb ( Symb )
 
 data FuncBody a
     = BodyBuiltIn Symb
-    | BodyCustom [a]
+    | BodyCustom a [a]
     deriving (Show, Eq, Ord)

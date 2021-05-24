@@ -8,15 +8,15 @@ import Data.Symb ( Symb )
 import Data.PzVal ( PzVal )
 
 data FuncCustom
-    = FuncCustom FuncImpureArgs FuncArgs [PzVal]
+    = FuncCustom FuncImpureArgs FuncArgs PzVal [PzVal]
     deriving (Show, Eq)
 
 toFuncCustom :: Func PzVal -> Either Symb FuncCustom
 toFuncCustom func =
     case body func of
         BodyBuiltIn ident -> Left ident
-        BodyCustom xs -> return $ FuncCustom (impArgs func) (args func) xs
+        BodyCustom x xs -> return $ FuncCustom (impArgs func) (args func) x xs
 
 fromFuncCustom :: FuncCustom -> Func PzVal
-fromFuncCustom (FuncCustom impArgs args xs) =
-    Func impArgs args $ BodyCustom xs
+fromFuncCustom (FuncCustom impArgs args x xs) =
+    Func impArgs args $ BodyCustom x xs

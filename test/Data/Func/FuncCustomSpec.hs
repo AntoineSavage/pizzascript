@@ -5,6 +5,7 @@ import Test.QuickCheck
 
 import qualified Data.Map as M
 
+import Control.Monad
 import Data.Func
 import Data.Func.FuncArgs
 import Data.Func.FuncArgsSpec
@@ -37,17 +38,18 @@ toFuncCustomSpec = describe "toFuncCustom" $ do
             toFuncCustom (Func impArgs args $ BodyBuiltIn ident) `shouldBe` Left ident
 
     it "converts custom function" $ do
-        property $ \impArgs args (Few es) ->
-            toFuncCustom (Func impArgs args $ BodyCustom es) `shouldBe` Right (FuncCustom impArgs args es)
+        property $ \impArgs args e (Few es) ->
+            toFuncCustom (Func impArgs args $ BodyCustom e es) `shouldBe` Right (FuncCustom impArgs args e es)
 
 fromFuncCustomSpec :: Spec
 fromFuncCustomSpec = describe "fromFuncCustom" $ do
     it "converts to function (smallest)" $ do
-        fromFuncCustom (FuncCustom None (ArgsArity []) []) `shouldBe` Func None (ArgsArity []) (BodyCustom [])
+        property $ \e -> do
+            fromFuncCustom (FuncCustom None (ArgsArity []) e []) `shouldBe` Func None (ArgsArity []) (BodyCustom e [])
 
     it "converts to function (prop)" $ do
-        property $ \impArgs args (Few es) -> do
-            fromFuncCustom (FuncCustom impArgs args es) `shouldBe` Func impArgs args (BodyCustom es)
+        property $ \impArgs args e (Few es) -> do
+            fromFuncCustom (FuncCustom impArgs args e es) `shouldBe` Func impArgs args (BodyCustom e es)
 
 -- Utils
 instance Arbitrary FuncCustom where arbitrary = arbDepth
@@ -63,5 +65,5 @@ instance ArbWithDepth FuncCustom where
         args <- arbitrary
         let ss = getImpArgsIdents impArgs ++ getArgsIdents args
         if ss == nub ss
-            then fmap (FuncCustom impArgs args) $ arbWithDepth depth
+            then liftM2 (FuncCustom impArgs args) (arbWithDepth depth) $ arbWithDepth depth
             else arbWithDepth depth
