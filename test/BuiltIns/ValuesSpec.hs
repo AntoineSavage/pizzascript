@@ -12,7 +12,6 @@ import Data.Func.FuncArgs
 import Data.Func.FuncBody
 import Data.Func.FuncImpureArgs
 import Data.PzVal
-import Idents
 import Symbs
 
 spec :: Spec
@@ -25,9 +24,9 @@ constantsSpec = describe "constants" $ do
     it "declares boolean constants" $ do
         pzFalse `shouldBe` (PzSymb symbFalse)
         pzTrue `shouldBe` (PzSymb symbTrue)
-        pzNot `shouldBe` (PzFunc M.empty $ Func None (ArgsArity [identX]) (BodyBuiltIn identNot))
-        pzOr `shouldBe` (PzFunc M.empty $ Func None (ArgsArity [identX, identY]) (BodyBuiltIn identOr))
-        pzAnd `shouldBe` (PzFunc M.empty $ Func None (ArgsArity [identX, identY]) (BodyBuiltIn identAnd))
+        pzNot `shouldBe` (PzFunc M.empty $ Func None (ArgsArity [symbX]) (BodyBuiltIn symbNot))
+        pzOr `shouldBe` (PzFunc M.empty $ Func None (ArgsArity [symbX, symbY]) (BodyBuiltIn symbOr))
+        pzAnd `shouldBe` (PzFunc M.empty $ Func None (ArgsArity [symbX, symbY]) (BodyBuiltIn symbAnd))
 
     it "declares function constants" $ do
         pzFunc `shouldBe` (PzFunc M.empty func)
@@ -35,7 +34,7 @@ constantsSpec = describe "constants" $ do
 funcSpec :: Spec
 funcSpec = describe "func" $ do
     it "returns func value" $ do
-        let f = func
-        impArgs f `shouldBe` Both (Quote) (identCtx)
-        args f `shouldBe` ArgsVaria (identArgs)
-        body f `shouldBe` BodyBuiltIn identFunc
+        let f = func :: Func ()
+        impArgs f `shouldBe` Both (Quote) (symbCtx)
+        args f `shouldBe` ArgsVaria (symbArgs)
+        body f `shouldBe` BodyBuiltIn symbFunc
