@@ -7,11 +7,8 @@ import qualified Data.Map as M
 
 import BuiltIns.Ctx
 import BuiltIns.Values
-import Data.Boolish
-import Data.BoolishSpec
 import Data.PzVal
-import Data.Symb
-import Idents
+import Symbs
 
 spec :: Spec
 spec = do
@@ -20,7 +17,7 @@ spec = do
 builtInCtxSpec :: Spec
 builtInCtxSpec = describe "builtInCtx" $ do
     it "contains the required keys" $ do
-        let keyIdents = [identFalse, identTrue, identNot, identOr, identAnd, identFunc]
-            keys = flip map keyIdents $ PzSymb . symb
+        let keySymbs = [symbFalse, symbTrue, symbNot, symbOr, symbAnd, symbFunc]
+            keys = map PzSymb keySymbs
             values = [pzFalse, pzTrue, pzNot, pzOr, pzAnd, pzFunc]
         builtInCtx `shouldBe` M.fromList (zip keys values)

@@ -4,8 +4,7 @@ import qualified Data.Map as M
 
 import BuiltIns.Values ( pzFalse, pzTrue, pzNot, pzOr, pzAnd, pzFunc )
 import Data.PzVal ( Dict, PzVal(PzSymb) )
-import Data.Symb ( symb )
-import Idents ( identAnd, identFunc, identNot, identOr )
+import Symbs ( symbAnd, symbFunc, symbNot, symbOr )
 
 builtInCtx :: Dict
 builtInCtx = M.fromList
@@ -22,9 +21,9 @@ builtInCtx = M.fromList
     -- booleans
       (pzFalse, pzFalse)
     , (pzTrue, pzTrue)
-    , (PzSymb $ symb identNot, pzNot)
-    , (PzSymb $ symb identOr, pzOr)
-    , (PzSymb $ symb identAnd, pzAnd)
+    , (PzSymb symbNot, pzNot)
+    , (PzSymb symbOr, pzOr)
+    , (PzSymb symbAnd, pzAnd)
 
     -- lists
     -- TODO
@@ -33,7 +32,7 @@ builtInCtx = M.fromList
     -- TODO
 
     -- functions
-    , (PzSymb $ symb identFunc, pzFunc)
+    , (PzSymb symbFunc, pzFunc)
 
     -- miscellaneous
     -- TODO
