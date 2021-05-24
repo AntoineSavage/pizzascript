@@ -1,9 +1,12 @@
+{-# LANGUAGE LambdaCase #-}
 module Data.PzValSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
+import Control.Exception
 import Control.Monad
+import Data.Either
 import Data.FuncSpec
 import Data.Numb
 import Data.NumbSpec
@@ -12,238 +15,149 @@ import Data.StrSpec
 import Data.Symb
 import Data.SymbSpec
 import Data.PzVal
-import TestUtils
-
-spec :: Spec
-spec = return ()
-
--- Utils
-instance Arbitrary PzVal where arbitrary = arbDepth
-instance ArbWithDepth PzVal where
-    arbWithDepth depth = oneof $
-        [ return PzUnit
-        , PzNum <$> arbitrary
-        , PzStr <$> arbitrary
-        , PzSymb <$> arbitrary
-        ] ++
-        (if depth <= 0 then [] else
-            [ fmap PzList $ arbWithDepth depth
-            , fmap PzDict $ arbWithDepth depth
-            , liftM2 PzFunc (arbWithDepth depth) $ arbWithDepth depth
-            ]
-        )
-
-newtype ArbDict = ArbDict Dict deriving (Show, Eq)
-instance Arbitrary ArbDict where arbitrary = arbDepth
-instance ArbWithDepth ArbDict where arbWithDepth depth = ArbDict <$> arbWithDepth depth
-
-{-
-
-
-import Test.Hspec
-import Test.QuickCheck
-
-import Control.Monad
-import Data.AstExpr
-import Data.Ident
-import Data.Lst
-import Data.LstSpec
-import Data.NatSpec
-import Data.Numb
-import Data.NumbSpec
-import Data.Str
-import Data.StrSpec
-import Data.Symb
-import Data.Str
-import TestUtils
-import Text.Parsec
-
-spec :: Spec
-spec = do
-    parseExprVsUnparseExprSpec
-    parseExprSpec
-    unparseExprSpec
-
-parseExprVsUnparseExprSpec :: Spec
-parseExprVsUnparseExprSpec = describe "parseExpr vs unparseExpr" $ do
-    it "composes parseExpr and unparseExpr into id" $ do
-        let f Nothing = ""; f (Just e) = unparseExpr f e ++ " "
-            g = parseExpr ignore g
-        property $ \e -> do
-            let s = unparseExpr f e
-            parse g "tests" s `shouldBe` Right e
-            unparseExpr f <$> parse g "tests" s `shouldBe` Right s
-
-parseExprSpec :: Spec
-parseExprSpec = describe "parseExpr" $ do
-    it "parses num" $ do
-        property $ \n -> do
-            parse (parseExpr ignore undefined) "tests" (unparseNumb n) `shouldBe` Right (AstNum n)
-
-    it "parses str" $ do
-        property $ \s -> do
-            parse (parseExpr ignore undefined) "tests" (unparseStr s) `shouldBe` Right (AstStr s)
-
-    it "parses ident" $ do
-        property $ \ident -> do
-            parse (parseExpr ignore undefined) "tests" (unparseIdent ident) `shouldBe` Right (AstIdent ident)
-
-    it "parses symb" $ do
-        property $ \n ident -> do
-            parse (parseExpr ignore undefined) "tests" (unparseSymb $ Symb n ident) `shouldBe` Right (AstSymb $ Symb n ident)
-
-    it "parses list" $ do
-        let f Nothing = ""; f (Just e) = unparseExpr f e ++ " "
-            g = parseExpr ignore g
-        property $ \(Few es) -> do
-            forM_ kinds $ \k -> do
-                parse g "tests" (unparseLst f $ Lst k es) `shouldBe` Right (AstList $ Lst k es)
-
-unparseExprSpec :: Spec
-unparseExprSpec = describe "unparseExpr" $ do
-    it "unparses num" $ do
-        property $ \n -> do
-            unparseExpr undefined (AstNum $ n) `shouldBe` unparseNumb n
-
-    it "unparses str" $ do
-        property $ \s -> do
-            unparseExpr undefined (AstStr s) `shouldBe` unparseStr s
-
-    it "unparses ident" $ do
-        property $ \ident -> do
-            unparseExpr undefined (AstIdent ident) `shouldBe` unparseIdent ident
-
-    it "unparses symb" $ do
-        property $ \n ident -> do
-            unparseExpr undefined (AstSymb $ Symb n ident) `shouldBe` unparseSymb (Symb n ident)
-
-    it "unparses list" $ do
-        let f Nothing = ""; f (Just e) = unparseExpr f e
-        property $ \(Few es) -> do
-            forM_ kinds $ \k -> do
-                unparseExpr f (AstList $ Lst k es) `shouldBe` unparseLst f (Lst k es)
-
--- Utils
-ignore = spaces
-
-instance Arbitrary AstExpr where arbitrary = arbDepth
-instance ArbWithDepth AstExpr where
-    arbWithDepth depth = oneof $
-        [ AstNum . Numb <$> arbitrary
-        , AstStr . Str <$> arbitrary
-        , AstIdent <$> arbitrary
-        , AstSymb <$> liftM2 Symb arbitrary arbitrary
-        ] ++
-        (if depth <= 0 then [] else
-            [ fmap AstList $ liftM2 Lst arbitrary $ arbFew $ arbWithDepth $ depth-1
-            ]
-        )
-
-
-
-
-
-
-
-
-
-
-
-import Test.Hspec
-import Test.QuickCheck
-
-import Control.Monad
-import Data.Either
-import Data.Lst
+import Symbs
 import TestUtils
 import Text.Parsec
 import Text.Parsec.String
 
 spec :: Spec
 spec = do
-    getStartSpec
-    getEndSpec
-    parseLstVsUnparseLstSpec
-    parseLstSpec
-    unparseLstSpec
+    parseValVsUnparseValSpec
+    parseValSpec
+    unparseValSpec
+    parseListVsUnparseListSpec
+    parseListSpec
+    unparseListSpec
     parseManyVsUnparseManySpec
     parseManySpec
     unparseManySpec
 
-getStartSpec :: Spec
-getStartSpec = describe "getStart" $ do
-    it "returns start for kind" $ do
-        getStart KindList `shouldBe` '['
-        getStart KindDict `shouldBe` '{'
-        getStart KindForm `shouldBe` '('
+parseValVsUnparseValSpec :: Spec
+parseValVsUnparseValSpec = describe "parseVal vs unparseVal" $ do
+    it "composes parseVal and unparseVal into id" $ do
+        property $ \(UnparseValid v) -> do
+            let s = unparseVal upv v
+            parse pv "tests" s `shouldBe` Right v
+            unparseVal upv <$> parse pv "tests" s `shouldBe` Right s
 
-getEndSpec :: Spec
-getEndSpec = describe "getEnd" $ do
-    it "returns end for kind" $ do
-        getEnd KindList `shouldBe` ']'
-        getEnd KindDict `shouldBe` '}'
-        getEnd KindForm `shouldBe` ')'
+parseValSpec :: Spec
+parseValSpec = describe "parseVal" $ do
+    it "rejects empty string" $ do
+        isLeft (parse (parseVal ignore undefined) "tests" "") `shouldBe` True
 
-parseLstVsUnparseLstSpec :: Spec
-parseLstVsUnparseLstSpec = describe "parseLst vs unparseLst" $ do
-    forM_ kinds $ \k -> do
-        it "composes parseLst and unparseLst into id" $ do
-            property $ \(Few es) -> do
-                let s = unparseLst' k es
-                    unLst (Lst _ xs) = xs
-                parseLst' s `shouldBe` Right (Lst k es)
-                unparseLst' k . unLst <$> parseLst' s `shouldBe` Right s
-           
-parseLstSpec :: Spec
-parseLstSpec = describe "parseLst" $ do
-    forM_ kinds $ \k -> do
-        let (start, end) = (getStart k, getEnd k)
+    it "parses num" $ do
+        property $ \n -> do
+            parse (parseVal ignore undefined) "tests" (unparseNumb n) `shouldBe` Right (PzNum n)
 
-        it "rejects an empty string" $ do
-            isLeft (parseLst' "") `shouldBe` True
+    it "parses str" $ do
+        property $ \s -> do
+            parse (parseVal ignore undefined) "tests" (unparseStr s) `shouldBe` Right (PzStr s)
 
-        it "parses no elems" $ do
-            parseLst' ([start] ++ [end]) `shouldBe` Right (Lst k [])
+    it "parses symb" $ do
+        property $ \s -> do
+            parse (parseVal ignore undefined) "tests" (unparseSymb s) `shouldBe` Right (PzSymb s)
 
-        it "parses one elem" $ do
-            property $ \e ->
-                parseLst' ([start] ++ str e ++ [end]) `shouldBe` Right (Lst k [e])
+    it "parses list" $ do
+        property $ \(UnparseValids xs) -> do
+            parse (parseVal ignore pv) "tests" (unparseList pl pd upv xs) `shouldBe` Right (PzList xs)
 
-        it "parses two elems" $ do
-            property $ \e1 e2 ->
-                parseLst' ([start] ++ str e1 ++ str e2 ++ [end]) `shouldBe` Right (Lst k [e1, e2])
+unparseValSpec :: Spec
+unparseValSpec = describe "unparseVal" $ do
+    it "rejects unit" $ do
+        evaluate (unparseVal undefined PzUnit) `shouldThrow` errorCall "Can only unparse quoted values: "
 
-        it "parses three elems" $ do
-            property $ \e1 e2 e3 ->
-                parseLst' ([start] ++ str e1 ++ str e2 ++ str e3 ++ [end]) `shouldBe` Right (Lst k [e1, e2, e3])
+    it "rejects dict" $ do
+        property $ \(ArbDict d) -> do
+            evaluate (unparseVal undefined $ PzDict d) `shouldThrow` errorCall "Can only unparse quoted values: "
 
-        it "parses n elems" $ do
-            property $ \(Few es) ->
-                parseLst' ([start] ++ concatMap str es ++ [end]) `shouldBe` Right (Lst k es)
+    it "rejects func" $ do
+        property $ \(ArbDict d) f -> do
+            evaluate (unparseVal undefined $ PzFunc d f) `shouldThrow` errorCall "Can only unparse quoted values: "
 
-unparseLstSpec :: Spec
-unparseLstSpec = describe "unparseLst" $ do
-    forM_ kinds $ \k -> do
-        let (start, end) = (getStart k, getEnd k)
+    it "unparses num" $ do
+        property $ \n -> do
+            unparseVal undefined (PzNum n) `shouldBe` unparseNumb n
 
-        it "unparses zero elems" $ do
-            unparseLst' k [] `shouldBe` [start] ++ [end]
+    it "unparses str" $ do
+        property $ \s -> do
+            unparseVal undefined (PzStr s) `shouldBe` unparseStr s
 
-        it "unparses one elem" $ do
-            property $ \e -> do
-                unparseLst' k [e] `shouldBe` [start] ++ str e ++ [end]
+    it "unparses symb" $ do
+        property $ \s -> do
+            unparseVal undefined (PzSymb s) `shouldBe` unparseSymb s
 
-        it "unparses two elems" $ do
-            property $ \e1 e2 -> do
-                unparseLst' k [e1, e2] `shouldBe` [start] ++ str e1 ++ str e2 ++ [end]
+    it "unparses list" $ do
+        property $ \(UnparseValids xs) -> do
+            unparseVal upv (PzList xs) `shouldBe` unparseList pl pd upv xs
 
-        it "unparses three elems" $ do
-            property $ \e1 e2 e3  -> do
-                unparseLst' k [e1, e2, e3] `shouldBe` [start] ++ str e1 ++ str e2 ++ str e3 ++ [end]
+parseListVsUnparseListSpec :: Spec
+parseListVsUnparseListSpec = describe "parseList vs unparsesList" $ do
+    it "composes parseList and unparseList into id" $ do
+        property $ \(Few es) -> do
+            let les = ple : es
+                des = pde : es
+                sl = unparseList' les
+                sd = unparseList' des
+                sf = unparseList' es
+            parseList' sl `shouldBe` Right les
+            parseList' sd `shouldBe` Right des
+            parseList' sf `shouldBe` Right es
+            unparseList' <$> parseList' sl `shouldBe` Right sl
+            unparseList' <$> parseList' sd `shouldBe` Right sd
+            unparseList' <$> parseList' sf `shouldBe` Right sf
 
-        it "unparses n elems" $ do
-            property $ \es  -> do
-                unparseLst' k es `shouldBe` [start] ++ concatMap str es ++ [end]
+parseListSpec :: Spec
+parseListSpec = describe "parseList" $ do
+    it "rejects empty string" $ do
+        isLeft (parseList' "") `shouldBe` True
+
+    it "parses zero elements" $ do
+        parseList' "[]" `shouldBe` Right [ple]
+        parseList' "{}" `shouldBe` Right [pde]
+        parseList' "()" `shouldBe` Right []
+
+    it "parses one element" $ do
+        property $ \e -> do
+            parseList' ("[" ++ str e ++ "]") `shouldBe` Right [ple, e]
+            parseList' ("{" ++ str e ++ "}") `shouldBe` Right [pde, e]
+            parseList' ("(" ++ str e ++ ")") `shouldBe` Right [e]
+
+    it "parses two elements" $ do
+        property $ \e1 e2 -> do
+            parseList' ("[" ++ str e1 ++ str e2 ++ "]") `shouldBe` Right [ple, e1, e2]
+            parseList' ("{" ++ str e1 ++ str e2 ++ "}") `shouldBe` Right [pde, e1, e2]
+            parseList' ("(" ++ str e1 ++ str e2 ++ ")") `shouldBe` Right [e1, e2]
+
+    it "parses three elements" $ do
+        property $ \e1 e2 e3 -> do
+            parseList' ("[" ++ str e1 ++ str e2 ++ str e3 ++ "]") `shouldBe` Right [ple, e1, e2, e3]
+            parseList' ("{" ++ str e1 ++ str e2 ++ str e3 ++ "}") `shouldBe` Right [pde, e1, e2, e3]
+            parseList' ("(" ++ str e1 ++ str e2 ++ str e3 ++ ")") `shouldBe` Right [e1, e2, e3]
+
+    it "parses N elements" $ do
+        property $ \es -> do
+            parseList' ("[" ++ concatMap str es ++ "]") `shouldBe` Right (ple : es)
+            parseList' ("{" ++ concatMap str es ++ "}") `shouldBe` Right (pde : es)
+            parseList' ("(" ++ concatMap str es ++ ")") `shouldBe` Right (es)
+
+unparseListSpec :: Spec
+unparseListSpec = describe "unparseList" $ do
+    it "unparses empty list into empty form" $ do
+        unparseList' [] `shouldBe` "()"
+    
+    it "unparses list" $ do
+        property $ \(Few es) -> do
+            let elems = ple : es
+            unparseList' elems `shouldBe` "[" ++ concatMap str es ++ "]"
+    
+    it "unparses di dict" $ do
+        property $ \(Few es) -> do
+            let elems = pde : es
+            unparseList' elems `shouldBe` "{" ++ concatMap str es ++ "}"
+    
+    it "unparses form" $ do
+        property $ \(Few es) -> do
+            unparseList' es `shouldBe` "(" ++ concatMap str es ++ ")"
 
 parseManyVsUnparseManySpec :: Spec
 parseManyVsUnparseManySpec = describe "parseMany vs unparseMany" $ do
@@ -301,11 +215,49 @@ unparseManySpec = describe "unparseMany" $ do
             unparseMany' es `shouldBe` concatMap str es
 
 -- Utils
-kinds = [ KindList, KindDict, KindForm ]
-instance Arbitrary LstKind where arbitrary = elements kinds
+upv Nothing = ""
+upv (Just v) = unparseVal upv v ++ " "
 
+pv = parseVal ignore pv
+
+ignore = spaces
+str = unparseElem.Just
+
+parseList' = parse (parseList ple pde ignore parseElem) "tests"
+unparseList' = unparseList ple pde unparseElem
+
+parseMany' = parse (parseMany spaces parseElem $ void $ char '$') "tests"
+unparseMany' es = unparseMany unparseElem es
+
+-- Arbitrary instances
+instance Arbitrary PzVal where arbitrary = arbDepth
+instance ArbWithDepth PzVal where
+    arbWithDepth depth = oneof $
+        [ return PzUnit
+        , PzNum <$> arbitrary
+        , PzStr <$> arbitrary
+        , PzSymb <$> arbitrary
+        ] ++
+        (if depth <= 0 then [] else
+            [ fmap PzList $ arbWithDepth depth
+            , fmap PzDict $ arbWithDepth depth
+            , liftM2 PzFunc (arbWithDepth depth) $ arbWithDepth depth
+            ]
+        )
+
+newtype ArbDict = ArbDict Dict deriving (Show, Eq)
+instance Arbitrary ArbDict where arbitrary = arbDepth
+instance ArbWithDepth ArbDict where arbWithDepth depth = ArbDict <$> arbWithDepth depth
+
+-- Test-only types
 newtype Elem = Elem Int deriving (Show, Eq)
 instance Arbitrary Elem where arbitrary = do Positive x <- arbitrary; return $ Elem x
+
+ple :: Elem
+ple = Elem $ -1
+
+pde :: Elem
+pde = Elem $ -2
 
 parseElem :: Parser Elem
 parseElem = Elem . read <$> many1 digit
@@ -315,12 +267,34 @@ unparseElem = \case
     Nothing -> ""
     Just (Elem x) -> show x ++ " "
 
-str = unparseElem.Just
+newtype UnparseValid = UnparseValid PzVal deriving (Show, Eq)
+instance Arbitrary UnparseValid where arbitrary = arbDepth
+instance ArbWithDepth UnparseValid where
+    arbWithDepth depth = fmap UnparseValid $ oneof $
+        [ PzNum <$> arbitrary
+        , PzStr <$> arbitrary
+        , PzSymb <$> arbitrary
+        ] ++
+        ( if depth <= 0 then [] else
+            [ do UnparseValids es <- arbWithDepth depth; return $ PzList es
+            ]
+        )
 
-parseLst' = parse (parseLst spaces parseElem) "tests"
-unparseLst' k es = unparseLst unparseElem (Lst k es)
+newtype UnparseValids = UnparseValids [PzVal] deriving (Show, Eq)
+instance Arbitrary UnparseValids where arbitrary = arbDepth
+instance ArbWithDepth UnparseValids where
+    arbWithDepth depth = fmap UnparseValids $ oneof $
+        [return $ []
+        ] ++
+        ( if depth <= 0 then [] else let sub = arbUnparseValidWithDepth $ depth-1 in
+            [ (PzSymb symbList:) <$> arbFew sub
+            , (PzSymb symbDict:) <$> arbFew sub
+            , arbFew sub
+            ]
+        )
 
-parseMany' = parse (parseMany spaces parseElem $ void $ char '$') "tests"
-unparseMany' es = unparseMany unparseElem es
+arbUnparseValid :: Gen PzVal
+arbUnparseValid = do UnparseValid v <- arbitrary; return v
 
--}
+arbUnparseValidWithDepth :: Int -> Gen PzVal
+arbUnparseValidWithDepth depth = do UnparseValid v <- arbWithDepth depth; return v

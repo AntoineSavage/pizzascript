@@ -37,7 +37,7 @@ toFuncCustomSpec = describe "toFuncCustom" $ do
             toFuncCustom (Func impArgs args $ BodyBuiltIn ident) `shouldBe` Left ident
 
     it "converts custom function" $ do
-        property $ \impArgs args es ->
+        property $ \impArgs args (Few es) ->
             toFuncCustom (Func impArgs args $ BodyCustom es) `shouldBe` Right (FuncCustom impArgs args es)
 
 fromFuncCustomSpec :: Spec
