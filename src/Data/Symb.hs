@@ -1,20 +1,32 @@
+{-# LANGUAGE LambdaCase #-}
 module Data.Symb ( Symb(..), parseSymb, symb, unparseSymb ) where
 
-import Control.Monad ( liftM2 )
-import Data.Ident ( Ident, parseIdent, unparseIdent )
-import Data.Nat ( Nat(..), len, unlen )
+import Data.Nat ( Nat(Z), len, unlen )
 import Text.Parsec ( alphaNum, char, letter, (<|>), many )
 import Text.Parsec.String ( Parser )
 
+-- Symbols are implicitely quoted once
+-- i.e. n=Z corresponds to one quote
 data Symb
-    = Symb Nat Ident
+    = Symb Nat Char String
     deriving (Show, Eq, Ord)
 
-symb :: Ident -> Symb
-symb = Symb Z
+symb :: String -> Symb
+symb = \case
+    []  -> error "Symbols must contain at least one character"
+    c:s -> Symb Z c s
 
+-- The output symbol is considered a quotation
+-- i.e. n=Z corresponds to a quoted identifier
 parseSymb :: Parser Symb
-parseSymb = liftM2 Symb (char '\'' >> len <$> many (char '\'')) parseIdent
+parseSymb = do
+    n <- fmap len $ many $ char '\''
+    let us = char '_'
+    c <- letter <|> us
+    s <- many $ alphaNum <|> us
+    return $ Symb n c s
 
+-- The input symbol is considered a quotation
+-- i.e. n=Z corresponds to a quoted identifier
 unparseSymb :: Symb -> String
-unparseSymb (Symb n ident) = "'" ++ unlen n '\'' ++ unparseIdent ident
+unparseSymb (Symb n c s) = unlen n '\'' ++ c:s

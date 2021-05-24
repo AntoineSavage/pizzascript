@@ -1,9 +1,8 @@
 module Data.Func.FuncBody where
 
-import Data.AstExpr ( AstExpr )
-import Data.Ident ( Ident )
+import Data.Symb ( Symb )
 
-data FuncBody
-    = BodyBuiltIn Ident
-    | BodyCustom [AstExpr]
+data FuncBody a
+    = BodyBuiltIn Symb
+    | BodyCustom [a]
     deriving (Show, Eq, Ord)

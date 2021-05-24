@@ -1,8 +1,10 @@
 module Symbs where
 
-import Data.Ident ( Ident(Ident) )
 import Data.Symb ( Symb, symb )
-import Idents ( identFalse, identTrue )
+
+-- All the following symbols correspond to quoted identifiers
+-- i.e. identifiers that were just parsed
+-- They also correspond to single-quoted symbols
 
 -- numbers
 -- TODO
@@ -15,32 +17,56 @@ import Idents ( identFalse, identTrue )
 
 -- booleans
 symbFalse :: Symb
-symbFalse = symb identFalse
+symbFalse = symb "false"
 
 symbTrue :: Symb
-symbTrue = symb identTrue
+symbTrue = symb "true"
+
+symbNot :: Symb
+symbNot = symb "not"
+
+symbOr :: Symb
+symbOr = symb "or"
+
+symbAnd :: Symb
+symbAnd = symb "and"
 
 -- lists
--- TODO
+symbList :: Symb
+symbList = symb "list"
 
 -- dictionaries
--- TODO
+symbDict :: Symb
+symbDict = symb "dict"
 
 -- functions
+symbFunc :: Symb
+symbFunc = symb "func"
+
 symbEval :: Symb
-symbEval = symb $ Ident "eval"
+symbEval = symb "eval"
 
 symbQuote :: Symb
-symbQuote = symb $ Ident "quote"
+symbQuote = symb "quote"
 
 symbUnquote :: Symb
-symbUnquote = symb $ Ident "unquote"
+symbUnquote = symb "unquote"
 
 symbDeepQuote :: Symb
-symbDeepQuote = symb $ Ident "deep_quote"
+symbDeepQuote = symb "deep_quote"
 
 symbDeepUnquote :: Symb
-symbDeepUnquote = symb $ Ident "deep_unquote"
+symbDeepUnquote = symb "deep_unquote"
 
 -- miscellaneous
--- TODO
+symbCtx :: Symb
+symbCtx = symb "ctx"
+
+symbArgs :: Symb
+symbArgs = symb "args"
+
+symbX :: Symb
+symbX = symb "x"
+
+symbY :: Symb
+symbY = symb "y"

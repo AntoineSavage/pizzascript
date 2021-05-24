@@ -5,7 +5,6 @@ import Test.QuickCheck
 
 import qualified Data.Map as M
 
-import Data.AstExprSpec
 import Data.Func
 import Data.Func.FuncArgs
 import Data.Func.FuncArgsSpec
@@ -13,6 +12,7 @@ import Data.Func.FuncImpureArgs
 import Data.Func.FuncImpureArgsSpec
 import Data.Func.FuncBody
 import Data.Func.FuncCustom
+import Data.PzValSpec
 import Data.List
 import TestUtils
 

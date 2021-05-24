@@ -6,7 +6,6 @@ import Test.QuickCheck
 import Control.Monad
 import Data.Char
 import Data.Either
-import Data.IdentSpec
 import Data.Str
 import Numeric
 import TestUtils

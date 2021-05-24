@@ -1,9 +1,8 @@
 module Data.Func.FuncArgs where
 
-import Data.AstExpr ( AstExpr )
-import Data.Ident ( Ident )
+import Data.Symb ( Symb )
 
 data FuncArgs
-    = ArgsVaria Ident
-    | ArgsArity [Ident]
+    = ArgsVaria Symb
+    | ArgsArity [Symb]
     deriving (Show, Eq, Ord)

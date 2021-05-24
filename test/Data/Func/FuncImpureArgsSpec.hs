@@ -6,7 +6,7 @@ import Test.QuickCheck
 import Control.Monad
 import Data.Func.ArgPassSpec
 import Data.Func.FuncImpureArgs
-import Data.IdentSpec
+import Data.SymbSpec
 
 spec :: Spec
 spec = return ()

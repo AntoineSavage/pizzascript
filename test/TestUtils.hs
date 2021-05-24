@@ -6,6 +6,15 @@ import Control.Monad
 import Data.List
 import Test.QuickCheck
 
+-- Utils
+digits = ['0'..'9']
+lettersUpper = ['A'..'Z']
+lettersLower = ['a'..'z']
+symbols = " !#$%&()*+,-.:;<=>?@[]^`{|}~"
+accentChars = "àâäĉèéêëĝĥîïĵôöŝùûüŵŷÿ"
+escapees = "\"\\\b\f\n\r\t"
+underscore = '_'
+
 -- Arbitrary constraints
 newtype Few a = Few [a] deriving (Show, Eq)
 instance Arbitrary a => Arbitrary (Few a) where arbitrary = Few <$> arbFew arbitrary
@@ -22,6 +31,8 @@ arbMany min max me = chooseInt (min, max) >>= flip vectorOf me
 -- Arbitrary with depth
 class Arbitrary a => ArbWithDepth a where
     arbWithDepth :: Int -> Gen a
+
+instance ArbWithDepth Int where arbWithDepth _ = arbitrary
 
 instance ArbWithDepth a => ArbWithDepth (Maybe a) where
     arbWithDepth depth = oneof

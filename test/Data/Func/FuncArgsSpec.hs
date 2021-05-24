@@ -5,7 +5,7 @@ import Test.QuickCheck
 
 import Control.Monad
 import Data.Func.FuncArgs
-import Data.IdentSpec
+import Data.SymbSpec
 import TestUtils
 
 spec :: Spec
@@ -13,4 +13,7 @@ spec = return ()
 
 -- Utils
 instance Arbitrary FuncArgs where
-    arbitrary = oneof [ArgsVaria <$> arbitrary, ArgsArity <$> arbFew arbitrary]
+    arbitrary = oneof
+        [ ArgsVaria <$> arbitrary
+        , ArgsArity <$> arbFew arbitrary
+        ]

@@ -4,7 +4,6 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Data.Func.ArgPass
-import Data.Ident
 import Data.Symb
 import Symbs
 import TestUtils
@@ -42,11 +41,11 @@ symbToArgPassSpec = describe "symbToArgPass" $ do
         symbToArgPass symbDeepUnquote `shouldBe` Just DeepUnquote
 
     it "rejects unknown symbols" $ do
-        symbToArgPass (symb $ Ident "ABC") `shouldBe` Nothing
+        symbToArgPass (symb "ABC") `shouldBe` Nothing
 
     it "rejects unknown symbols (prop)" $ do
         property $ \s ->
-            symbToArgPass (symb $ Ident $ "_" ++ s) `shouldBe` Nothing
+            symbToArgPass (symb $ "_" ++ s) `shouldBe` Nothing
 
 -- Utils
 argPasses = [ Eval, Quote, Unquote, DeepQuote, DeepUnquote ]

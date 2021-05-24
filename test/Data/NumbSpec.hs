@@ -41,10 +41,8 @@ parseNumbSpec = describe "parseNumb" $ do
             let _ = (intPart :: Integer, decPart :: Integer, expPart :: Integer)
                 s1 = show intPart ++ "." ++ show (decPart + 1) ++ "e" ++ show expPart
                 s2 = show intPart ++ "." ++ show (decPart + 1) ++ "E" ++ show expPart
-                d1 = read s1
-                d2 = read s2
-            parse parseNumb "tests" s1 `shouldBe` Right (Numb d1)
-            parse parseNumb "tests" s1 `shouldBe` Right (Numb d2)
+            parse parseNumb "tests" s1 `shouldBe` Right (Numb $ read s1)
+            parse parseNumb "tests" s1 `shouldBe` Right (Numb $ read s2)
 
     it "parses doubles" $ do
         property $ \d -> do
