@@ -113,40 +113,6 @@ evalFuncCustom es0 = do
 unevalFuncCustom :: FuncCustom -> [AstExpr]
 unevalFuncCustom (FuncCustom impArgs args body) = unevalImpureArgs impArgs ++ unevalArgs args ++ body
 
-evalImpureArgs :: [AstExpr] -> Result (FuncImpureArgs, [AstExpr])
-evalImpureArgs elems = case elems of
-    -- form starting with argument-passing behaviour symbol, followed by...
-    AstList (Lst KindForm ((AstSymb s@(Symb Z _)):as)):es -> do
-        argPass <- case symbToArgPass s of
-            Just r -> return r
-            Nothing -> Left $
-                "Error: Invalid argument-passing behaviour symbol: " ++ show s
-
-        case as of
-            -- nothing else
-            [] -> return (ArgPass argPass, es)
-
-            -- identifier
-            [ e ] -> (,es) . Both argPass <$> getIdent e
-
-            _ -> Left $
-                "Error: Impure function argument definition must be either:"
-                    ++ "\n - a valid argument-passsing behaviour symbol only"
-                    ++ "\n - a valid argument-passsing behaviour symbol, followed by an identifier"
-                    ++ "\n was: " ++ show elems
-
-    -- no match: assume no impure args
-    _ -> return (None, elems)
-
-unevalImpureArgs :: FuncImpureArgs -> [AstExpr]
-unevalImpureArgs impArgs =
-    let toExpr = AstSymb .argPassToSymb
-        toForm = AstList . Lst KindForm
-    in case impArgs of
-        None -> []
-        ArgPass ap -> [ toForm [toExpr ap] ]
-        Both ap ec -> [ toForm [toExpr ap, AstIdent ec] ]
-
 -- Utils
 evalIdent :: Dict -> Ident -> Result PzVal
 evalIdent ctx ident = case M.lookup (PzSymb $ symb ident) ctx of

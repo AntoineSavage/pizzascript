@@ -16,5 +16,5 @@ instance Arbitrary FuncImpureArgs where
     arbitrary = oneof
         [ return None
         , ArgPass <$> arbitrary
-        , liftM2 Both arbitrary arbitrary
+        , liftM2 Both arbitrary arbQuotedIdent
         ]

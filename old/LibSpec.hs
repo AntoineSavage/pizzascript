@@ -43,12 +43,6 @@ spec = do
     evalFuncCustomVsUnevalFuncCustomSpec
     evalFuncCustomSpec
     unevalFuncCustomSpec
-    evalImpureArgsVsUnevalImpureArgsSpec
-    evalImpureArgsSpec
-    unevalImpureArgsSpec
-    evalArgsVsUnevalArgsSpec
-    evalArgsSpec
-    unevalArgsSpec
     evalIdentSpec
     validateNoDuplicateIdentsSpec
 
@@ -239,79 +233,6 @@ unevalFuncCustomSpec = describe "unevalFuncCustom" $ do
     it "unevals custom function" $ do
         property $ \func@(FuncCustom impArgs args body) -> do
             unevalFuncCustom func `shouldBe` unevalImpureArgs impArgs ++ unevalArgs args ++ body
-
-evalImpureArgsVsUnevalImpureArgsSpec :: Spec
-evalImpureArgsVsUnevalImpureArgsSpec = describe "evalImpureArgs vs unevalImpureArgs" $ do
-    it "composes evalImpureArgs and unevalImpureArgs into id" $ do
-        property $ \impArgs (Few es) -> do
-            let elems = unevalImpureArgs impArgs
-            evalImpureArgs (elems ++ es) `shouldBe` Right (impArgs, es)
-            unevalImpureArgs <$> fst <$> evalImpureArgs (elems ++ es) `shouldBe` Right elems
-
-evalImpureArgsSpec :: Spec
-evalImpureArgsSpec = describe "evalImpureArgs" $ do
-    it "evals mismatch to None" $ do
-        forM_ [ []
-                , [AstNum $ Numb 0]
-                , [AstStr $ Str ""]
-                , [AstIdent $ Ident ""]
-                , [AstSymb $ symb $ Ident ""]
-                , [AstList $ Lst KindList [AstSymb $ symb $ Ident ""]]
-                , [AstList $ Lst KindDict [AstSymb $ symb $ Ident ""]]
-                , [AstList $ Lst KindForm []]
-            ] $ \es -> do
-            evalImpureArgs es `shouldBe` Right (None, es)
-
-    it "evals singleton form to ArgPass" $ do
-        property $ \ap (Few es) -> do
-            let elems = (AstList $ Lst KindForm [
-                        AstSymb $ argPassToSymb ap
-                    ]) : es
-            evalImpureArgs elems `shouldBe` Right (ArgPass ap, es)
-
-    it "evals size-2 form to Both" $ do
-        property $ \ap s (Few es) -> do
-            let ec = Ident [s]
-                elems = (AstList $ Lst KindForm [
-                        AstSymb $ argPassToSymb ap,
-                        AstIdent ec
-                    ]) : es
-            evalImpureArgs elems `shouldBe` Right (Both ap ec, es)
-
-    it "rejects invalid arg-pass symbol" $ do
-        property $ \s (Few es) -> do
-            let elems = (AstList $ Lst KindForm [
-                        AstSymb $ symb $ Ident $ '_' : s
-                    ]) : es
-            isLeft (evalImpureArgs elems) `shouldBe` True
-
-    it "rejects size-3 (or more) form" $ do
-        property $ \ap ec a (Few as) (Few es) -> do
-            let elems = (AstList $ Lst KindForm $ [
-                        AstSymb $ argPassToSymb ap,
-                        AstIdent ec
-                    ] ++ [a] ++ as) : es
-            isLeft (evalImpureArgs elems) `shouldBe` True
-
-unevalImpureArgsSpec :: Spec
-unevalImpureArgsSpec = describe "unevalImpureArgs" $ do
-    it "unevals None to empty list" $ do
-        unevalImpureArgs None `shouldBe` []
-
-    it "unevals ArgPass to singleton list" $ do
-        property $ \ap -> do
-            unevalImpureArgs (ArgPass ap) `shouldBe`
-                [AstList $ Lst KindForm [
-                    AstSymb $ argPassToSymb ap
-                ]]
-
-    it "unevals Both to size-2 list" $ do
-        property $ \ap ec -> do
-            unevalImpureArgs (Both ap ec) `shouldBe`
-                [AstList $ Lst KindForm [
-                    AstSymb $ argPassToSymb ap,
-                    AstIdent ec
-                ]]
 
 evalIdentSpec :: Spec
 evalIdentSpec = describe "evalIdent" $ do

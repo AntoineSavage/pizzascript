@@ -9,13 +9,13 @@ import Control.Monad
 --import Data.AstExpr
 import Data.Either
 --import Data.Func
---import Data.Func.ArgPass
---import Data.Func.ArgPassSpec
+import Data.Func.ArgPass
+import Data.Func.ArgPassSpec
 import Data.Func.FuncArgs
 --import Data.Func.FuncBody
 --import Data.Func.FuncCustom
 --import Data.Func.FuncCustomSpec
---import Data.Func.FuncImpureArgs
+import Data.Func.FuncImpureArgs
 --import Data.Ident
 --import Data.Lst
 import Data.Nat
@@ -36,10 +36,69 @@ import TestUtils
 
 spec :: Spec
 spec = do
+    evalImpureArgsVsUnevalImpureArgsSpec
+    evalImpureArgsSpec
+    unevalImpureArgsSpec
     evalArgsVsUnevalArgsSpec
     evalArgsSpec
     unevalArgsSpec
     getQuotedIdentSpec
+
+evalImpureArgsVsUnevalImpureArgsSpec :: Spec
+evalImpureArgsVsUnevalImpureArgsSpec = describe "evalImpureArgs vs unevalImpureArgs" $ do
+    it "composes evalImpureArgs and unevalImpureArgs into id" $ do
+        property $ \impArgs (Few es) -> do
+            let elems = unevalImpureArgs impArgs
+            evalImpureArgs (elems ++ es) `shouldBe` Right (impArgs, es)
+            unevalImpureArgs <$> fst <$> evalImpureArgs (elems ++ es) `shouldBe` Right elems
+
+evalImpureArgsSpec :: Spec
+evalImpureArgsSpec = describe "evalImpureArgs" $ do
+    it "evals mismatch to None" $ do
+        forM_ [ []
+                , [PzNum $ Numb 0]
+                , [PzStr $ Str ""]
+                , [PzSymb $ symb "_"]
+                , [PzList $ []]
+                , [PzList $ [PzNum $ Numb 0]]
+                , [PzList $ [PzStr $ Str ""]]
+                , [PzList $ [PzList []]]
+            ] $ \es -> do
+            evalImpureArgs es `shouldBe` Right (None, es)
+
+    it "evals singleton form to ArgPass" $ do
+        property $ \ap (Few es) -> do
+            let elems = PzList [PzSymb $ argPassToSymb ap] : es
+            evalImpureArgs elems `shouldBe` Right (ArgPass ap, es)
+
+    it "evals size-2 form to Both" $ do
+        property $ \ap (QuotedIdent ec) (Few es) -> do
+            let elems = PzList [PzSymb $ argPassToSymb ap, PzSymb ec] : es
+            evalImpureArgs elems `shouldBe` Right (Both ap ec, es)
+
+    it "rejects invalid arg-pass symbol" $ do
+        property $ \s (Few es) -> do
+            let elems = PzList [PzSymb $ symb $ '_' : s] : es
+            isLeft (evalImpureArgs elems) `shouldBe` True
+
+    it "rejects size-3 (or more) form" $ do
+        property $ \ap (QuotedIdent ec) a (Few as) (Few es) -> do
+            let elems = (PzList $ [ PzSymb $ argPassToSymb ap, PzSymb ec] ++ [a] ++ as) : es
+            isLeft (evalImpureArgs elems) `shouldBe` True
+
+
+unevalImpureArgsSpec :: Spec
+unevalImpureArgsSpec = describe "unevalImpureArgs" $ do
+    it "unevals None to empty list" $ do
+        unevalImpureArgs None `shouldBe` []
+
+    it "unevals ArgPass to singleton list" $ do
+        property $ \ap -> do
+            unevalImpureArgs (ArgPass ap) `shouldBe` [PzList [PzSymb $ argPassToSymb ap]]
+
+    it "unevals Both to size-2 list" $ do
+        property $ \ap (QuotedIdent ec) -> do
+            unevalImpureArgs (Both ap ec) `shouldBe` [PzList [PzSymb $ argPassToSymb ap, PzSymb ec]]
 
 evalArgsVsUnevalArgsSpec :: Spec
 evalArgsVsUnevalArgsSpec = describe "evalArgs vs unevalArgs" $ do
