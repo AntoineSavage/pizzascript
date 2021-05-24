@@ -3,8 +3,8 @@ module Data.Boolish ( Boolish(..), boolish ) where
 import qualified Data.Map as M
 
 import BuiltIns.Values ( pzFalse, pzTrue )
-import Data.Numb ( Numb(Numb) )
-import Data.Str ( Str(Str) )
+import Data.Numb ( Numb(..) )
+import Data.Str ( Str(..) )
 import Data.PzVal ( PzVal(..) )
 
 data Boolish
