@@ -14,7 +14,7 @@ data FuncCustom
 toFuncCustom :: Func PzVal -> Either Symb FuncCustom
 toFuncCustom func =
     case body func of
-        BodyBuiltIn ident -> Left ident
+        BodyBuiltIn s -> Left s
         BodyCustom x xs -> return $ FuncCustom (impArgs func) (args func) x xs
 
 fromFuncCustom :: FuncCustom -> Func PzVal

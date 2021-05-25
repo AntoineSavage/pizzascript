@@ -173,40 +173,6 @@ evalExprSpec = describe "evalExpr" $ do
                 evalExpr ctx (AstList $ Lst k es) eval `shouldBe`
                     (unquote (AstList $ Lst k es) >>= \e' -> evalExpr ctx e' Eval)
 
-unevalExprSpec :: Spec
-unevalExprSpec = describe "unevalExpr" $ do
-    it "unevals unit to empty form" $ do
-        unevalExpr PzUnit `shouldBe` (AstList $ Lst KindForm [])
-
-    it "unevals number to itself" $ do
-        property $ \d -> do
-            unevalExpr (PzNum d) `shouldBe` (AstNum d)
-
-    it "unevals string to itself" $ do
-        property $ \s -> do
-            unevalExpr (PzStr s) `shouldBe` (AstStr s)
-
-    it "unevals symbol to itself" $ do
-        property $ \s -> do
-            unevalExpr (PzSymb s) `shouldBe` (AstSymb s)
-
-    it "unevals list to itself" $ do
-        property $ \(Few l) -> do
-            unevalExpr (PzList l) `shouldBe` (AstList $ Lst KindList $ map unevalExpr l)
-
-    it "unevals dict to itself" $ do
-        property $ \(ArbDict d) -> do
-            unevalExpr (PzDict d) `shouldBe`
-                (AstList $ Lst KindDict $ flip map (M.assocs d) $ \(k, v) -> AstList $ Lst KindForm [unevalExpr k, unevalExpr v])
-
-    it "unevals built-in function to identifier" $ do
-        property $ \(ArbDict implCtx) impArgs args ident -> do
-            unevalExpr (PzFunc implCtx $ Func impArgs args $ BodyBuiltIn ident) `shouldBe` (AstIdent ident)
-
-    it "unevals custom function to list" $ do
-        property $ \(ArbDict implCtx) f@(FuncCustom impArgs args body) -> do
-            unevalExpr (PzFunc implCtx $ Func impArgs args $ BodyCustom body) `shouldBe` (AstList $ Lst KindForm $ unevalFuncCustom f)
-
 evalIdentSpec :: Spec
 evalIdentSpec = describe "evalIdent" $ do
     it "evaluates one ident part" $ do

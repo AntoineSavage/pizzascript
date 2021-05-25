@@ -3,39 +3,32 @@ module EvalSpec where
 import Test.Hspec
 import Test.QuickCheck
 
---import qualified Data.Map as M
+import qualified Data.Map as M
 
 import Control.Monad
---import Data.AstExpr
 import Data.Either
---import Data.Func
+import Data.Func
 import Data.Func.ArgPass
 import Data.Func.ArgPassSpec
 import Data.Func.FuncArgs
---import Data.Func.FuncBody
+import Data.Func.FuncBody
 import Data.Func.FuncCustom
 import Data.Func.FuncCustomSpec
 import Data.Func.FuncImpureArgs
---import Data.Ident
 import Data.List
 import Data.Nat
 import Data.Numb
---import Data.NumbSpec
 import Data.PzVal
 import Data.PzValSpec
 import Data.Str
---import Data.StrSpec
 import Data.Symb
 import Data.SymbSpec
 import Eval
---import Quote
---import QuoteSpec
---import Text.Parsec.Pos 
 import TestUtils
---import Utils
 
 spec :: Spec
 spec = do
+    unevalSpec
     evalFuncCustomVsUnevalFuncCustomSpec
     evalFuncCustomSpec
     unevalFuncCustomSpec
@@ -49,6 +42,40 @@ spec = do
     unconsFuncBodySpec
     getQuotedIdentSpec
 
+unevalSpec :: Spec
+unevalSpec = describe "uneval" $ do
+    it "converts unit to empty form" $ do
+        uneval PzUnit `shouldBe` (PzList [])
+
+    it "converts number to itself" $ do
+        property $ \d -> do
+            uneval (PzNum d) `shouldBe` (PzNum d)
+
+    it "converts string to itself" $ do
+        property $ \s -> do
+            uneval (PzStr s) `shouldBe` (PzStr s)
+
+    it "converts symbol to itself, quoted" $ do
+        property $ \s -> do
+            uneval (PzSymb s) `shouldBe` (PzSymb $ quoteSymb s)
+
+    it "converts list to itself, unevaled recursively, prepended with list symbol" $ do
+        property $ \(Few l) -> do
+            uneval (PzList l) `shouldBe` (PzList $ (pl:) $ map uneval l)
+
+    it "converts dict to list, unevaled recursively, prepended with dict symbol" $ do
+        property $ \(ArbDict d) -> do
+            uneval (PzDict d) `shouldBe` (PzList $ (pd:) $ flip map (M.assocs d) $
+                \(k, v) -> PzList $ [uneval k, uneval v])
+
+    it "converts built-in function to quoted identifier" $ do
+        property $ \(ArbDict implCtx) impArgs args s -> do
+            uneval (PzFunc implCtx $ Func impArgs args $ BodyBuiltIn s) `shouldBe` (PzSymb s)
+
+    it "converts custom function to list" $ do
+        property $ \(ArbDict implCtx) f@(FuncCustom impArgs args x xs) -> do
+            uneval (PzFunc implCtx $ Func impArgs args $ BodyCustom x xs) `shouldBe` (PzList $ unevalFuncCustom f)
+
 evalFuncCustomVsUnevalFuncCustomSpec :: Spec
 evalFuncCustomVsUnevalFuncCustomSpec = describe "evalFuncCustom vs unevalFuncCustom" $ do
     it "composes evalFuncCustom and unevalFuncCustom into id" $ do
@@ -59,7 +86,7 @@ evalFuncCustomVsUnevalFuncCustomSpec = describe "evalFuncCustom vs unevalFuncCus
 
 evalFuncCustomSpec :: Spec
 evalFuncCustomSpec = describe "evalFuncCustom" $ do
-    it "evals custom function" $ do
+    it "converts custom function" $ do
         property $ \func@(FuncCustom impArgs args x xs) -> do
             let elems = unevalImpureArgs impArgs ++ unevalArgs args ++ [x] ++ xs
             evalFuncCustom elems `shouldBe` Right func
@@ -69,7 +96,7 @@ evalFuncCustomSpec = describe "evalFuncCustom" $ do
 
 unevalFuncCustomSpec :: Spec
 unevalFuncCustomSpec = describe "unevalFuncCustom" $ do
-    it "unevals custom function" $ do
+    it "converts custom function" $ do
         property $ \func@(FuncCustom impArgs args x xs) -> do
             unevalFuncCustom func `shouldBe` unevalImpureArgs impArgs ++ unevalArgs args ++ [x] ++ xs
 
@@ -84,7 +111,7 @@ evalImpureArgsVsUnevalImpureArgsSpec = describe "evalImpureArgs vs unevalImpureA
 
 evalImpureArgsSpec :: Spec
 evalImpureArgsSpec = describe "evalImpureArgs" $ do
-    it "evals mismatch to None" $ do
+    it "converts mismatch to None" $ do
         forM_ [ []
                 , [PzNum $ Numb 0]
                 , [PzStr $ Str ""]
@@ -97,12 +124,12 @@ evalImpureArgsSpec = describe "evalImpureArgs" $ do
             ] $ \es -> do
             evalImpureArgs es `shouldBe` Right (None, es)
 
-    it "evals singleton form to ArgPass" $ do
+    it "converts singleton form to ArgPass" $ do
         property $ \ap (Few es) -> do
             let elems = PzList [PzSymb $ argPassToSymb ap] : es
             evalImpureArgs elems `shouldBe` Right (ArgPass ap, es)
 
-    it "evals size-2 form to Both" $ do
+    it "converts size-2 form to Both" $ do
         property $ \ap (QuotedIdent ec) (Few es) -> do
             let elems = PzList [PzSymb $ argPassToSymb ap, PzSymb ec] : es
             evalImpureArgs elems `shouldBe` Right (Both ap ec, es)
@@ -120,14 +147,14 @@ evalImpureArgsSpec = describe "evalImpureArgs" $ do
 
 unevalImpureArgsSpec :: Spec
 unevalImpureArgsSpec = describe "unevalImpureArgs" $ do
-    it "unevals None to empty list" $ do
+    it "converts None to empty list" $ do
         unevalImpureArgs None `shouldBe` []
 
-    it "unevals ArgPass to singleton list" $ do
+    it "converts ArgPass to singleton list" $ do
         property $ \ap -> do
             unevalImpureArgs (ArgPass ap) `shouldBe` [PzList [PzSymb $ argPassToSymb ap]]
 
-    it "unevals Both to size-2 list" $ do
+    it "converts Both to size-2 list" $ do
         property $ \ap (QuotedIdent ec) -> do
             unevalImpureArgs (Both ap ec) `shouldBe` [PzList [PzSymb $ argPassToSymb ap, PzSymb ec]]
 
@@ -141,12 +168,12 @@ evalArgsVsUnevalArgsSpec = describe "evalArgs vs unevalArgs" $ do
 
 evalArgsSpec :: Spec
 evalArgsSpec = describe "evalArgs" $ do
-    it "evals variadic args ident" $ do
+    it "converts variadic args ident" $ do
         property $ \(QuotedIdent s) (Few es) -> do
             let elems = PzSymb s : es
             evalArgs elems `shouldBe` Right (ArgsVaria s, es)
 
-    it "evals arity args idents" $ do
+    it "converts arity args idents" $ do
         property $ \(QuotedIdents ss) (Few es) -> do
             let elems = (PzList $ map PzSymb ss) : es
             evalArgs elems `shouldBe` Right (ArgsArity ss, es)
@@ -163,11 +190,11 @@ evalArgsSpec = describe "evalArgs" $ do
 
 unevalArgsSpec :: Spec
 unevalArgsSpec = describe "unevalArgs" $ do
-    it "unevals variadic args ident" $ do
+    it "converts variadic args ident" $ do
         property $ \s -> do
             unevalArgs (ArgsVaria s) `shouldBe` [PzSymb s]
 
-    it "unevals arity args idents" $ do
+    it "converts arity args idents" $ do
         property $ \(Few ss) -> do
             unevalArgs (ArgsArity ss) `shouldBe` [PzList $ map PzSymb ss]
 

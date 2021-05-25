@@ -89,20 +89,6 @@ evalExpr ctx e eval =
         (_, DeepQuote) -> evalExpr ctx e Quote
         (_, DeepUnquote) -> evalExpr ctx e Unquote
 
-unevalExpr :: PzVal -> AstExpr
-unevalExpr = \case
-    PzUnit -> AstList $ Lst KindForm []
-    PzNum n -> AstNum n
-    PzStr s -> AstStr s
-    PzSymb s -> AstSymb s
-    PzList l -> AstList $ Lst KindList $ map unevalExpr l
-    PzDict m -> AstList $ Lst KindDict $ flip map (M.assocs m) $
-        \(k, v) -> AstList $ Lst KindForm [unevalExpr k, unevalExpr v]
-    PzFunc _ f ->
-        case toFuncCustom f of
-            Left ident -> AstIdent ident
-            Right fc -> AstList $ Lst KindForm $ unevalFuncCustom fc
-
 -- Utils
 evalIdent :: Dict -> Ident -> Result PzVal
 evalIdent ctx ident = case M.lookup (PzSymb $ symb ident) ctx of

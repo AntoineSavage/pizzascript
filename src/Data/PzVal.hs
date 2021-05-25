@@ -1,5 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
-module Data.PzVal ( PzVal(..), Dict, pl, pd, parseList, parseMany, parseVal, unparseList, unparseMany, unparseVal ) where
+module Data.PzVal ( PzVal(..), Dict, pd, pl, parseList, parseMany, parseVal, unparseList, unparseMany, unparseVal ) where
 
 import qualified Data.Map as M
 

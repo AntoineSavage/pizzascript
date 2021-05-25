@@ -1,14 +1,28 @@
 {-# LANGUAGE LambdaCase, TupleSections #-}
 module Eval where
 
-import Data.Func.ArgPass
+import qualified Data.Map as M
+
+import Data.Func.ArgPass ( argPassToSymb, symbToArgPass )
 import Data.Func.FuncArgs ( FuncArgs(..) )
-import Data.Func.FuncCustom
-import Data.Func.FuncImpureArgs
+import Data.Func.FuncCustom ( toFuncCustom, FuncCustom(..) )
+import Data.Func.FuncImpureArgs ( FuncImpureArgs(..) )
 import Data.Nat ( Nat(..) )
-import Data.PzVal ( PzVal(PzSymb, PzList) )
-import Data.Symb ( Symb(..) )
+import Data.PzVal ( PzVal(..), pd, pl )
+import Data.Symb ( Symb(..), quoteSymb )
 import Utils ( Result, getDuplicates )
+
+uneval :: PzVal -> PzVal
+uneval = \case
+    PzUnit -> PzList []
+    PzNum n -> PzNum n
+    PzStr s -> PzStr s
+    PzSymb s -> PzSymb $ quoteSymb s
+    PzList l -> PzList $ (pl:) $ map uneval l
+    PzDict m -> PzList $ (pd:) $ flip map (M.assocs m) $ \(k, v) -> PzList [uneval k, uneval v]
+    PzFunc _ f -> case toFuncCustom f of
+        Left s -> PzSymb s
+        Right fc -> PzList $ unevalFuncCustom fc
 
 evalFuncCustom :: [PzVal] -> Result FuncCustom
 evalFuncCustom es0 = do
