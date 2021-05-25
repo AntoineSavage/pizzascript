@@ -1,7 +1,7 @@
 module Symbs where
 
 import Data.Nat ( Nat(Z, S) ) 
-import Data.Symb ( Symb(..), symb )
+import Data.Symb ( Symb(..), quoteSymb, symb )
 
 -- All the following symbols correspond to quoted identifiers
 -- i.e. identifiers that were just parsed
@@ -62,16 +62,16 @@ symbY = symb "y"
 -- i.e. symbols that were just parsed
 -- They also correspond to one-or-more-quoted symbols
 symbEval :: Symb
-symbEval = Symb (S Z) 'e' "val"
+symbEval = quoteSymb $ symb "eval"
 
 symbQuote :: Symb
-symbQuote = Symb (S Z) 'q' "uote"
+symbQuote = quoteSymb $ symb "quote"
 
 symbUnquote :: Symb
-symbUnquote = Symb (S Z) 'u' "nquote"
+symbUnquote = quoteSymb $ symb "unquote"
 
 symbDeepQuote :: Symb
-symbDeepQuote = Symb (S Z) 'd' "eep_quote"
+symbDeepQuote = quoteSymb $ symb "deep_quote"
 
 symbDeepUnquote :: Symb
-symbDeepUnquote = Symb (S Z) 'd' "eep_unquote"
+symbDeepUnquote = quoteSymb $ symb "deep_unquote"

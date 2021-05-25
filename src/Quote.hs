@@ -2,7 +2,7 @@ module Quote (quote, unquote) where
 
 import Data.Nat ( Nat(..) )
 import Data.PzVal ( PzVal(..), unparseVal )
-import Data.Symb ( Symb(Symb), symb )
+import Data.Symb ( Symb(Symb), quoteSymb, symb, unquoteSymb )
 import Utils ( Result )
 
 -- Values must be unevaled before calling quote and unquote
@@ -14,8 +14,8 @@ quote v =
         PzNum _ -> v
         PzStr _ -> v
 
-        -- Symbols quote as themselves with one more quote
-        PzSymb (Symb n f ns) -> PzSymb $ Symb (S n) f ns
+        -- Symbols quote as themselves, quoted
+        PzSymb s -> PzSymb $ quoteSymb s
 
         -- Lists quote elements recursively
         PzList es -> PzList $ map quote es
@@ -29,9 +29,8 @@ unquote v =
         PzNum _ -> v
         PzStr _ -> v
 
-        -- Single-quoted symbols (i.e. parsed identifiers) cannot be unquoted
-        -- Other symbols unquote to one less quote
-        PzSymb (Symb (S n) f ns) -> PzSymb $ Symb n f ns
+        -- Symbols unquote as themselves, unquoted
+        PzSymb s -> PzSymb $ unquoteSymb s
 
         -- Lists unquote elements recursively
         PzList es -> PzList $ map unquote es

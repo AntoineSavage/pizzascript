@@ -18,6 +18,9 @@ spec = do
     parseSymbVsUnparseSymbSpec
     parseSymbSpec
     unparseSymbSpec
+    quoteSymbVsUnquoteSymbSpec
+    quoteSymbSpec
+    unquoteSymbSpec
 
 symbSpec :: Spec
 symbSpec = describe "symb" $ do
@@ -65,6 +68,32 @@ unparseSymbSpec = describe "unparseSymb" $ do
     it "unparses arbitrary symbol" $ do
         property $ \n f ns -> do
             unparseSymb (Symb n f ns) `shouldBe` unlen n '\'' ++ [f] ++ ns
+
+quoteSymbVsUnquoteSymbSpec :: Spec
+quoteSymbVsUnquoteSymbSpec = describe "quoteSymb vs unquoteSymb" $ do
+    it "composes quoteSymb and unquoteSymb into id" $ do
+        property $ \n (Ident f ns) -> do
+            let s = Symb n f ns
+                s' = Symb (S n) f ns
+            unquoteSymb (quoteSymb s) `shouldBe` s
+            quoteSymb (unquoteSymb s') `shouldBe` s'
+
+quoteSymbSpec :: Spec
+quoteSymbSpec = describe "quoteSymb" $ do
+    it "converts symbols to one-more-quoted symbols" $ do
+        property $ \n (Ident f ns) -> do
+            quoteSymb (Symb n f ns) `shouldBe` Symb (S n) f ns
+
+unquoteSymbSpec :: Spec
+unquoteSymbSpec = describe "quoteSymb vs unquoteSymb" $ do
+    it "rejects quoted identifiers" $ do
+        property $ \(Ident f ns) -> do
+            let s = Symb Z f ns
+            evaluate (unquoteSymb s) `shouldThrow` errorCall ("Quoted identifier cannot be unquoted: " ++ f:ns)
+
+    it "converts quoted symbols to one-less-quoted symbols" $ do
+        property $ \n (Ident f ns) -> do
+            unquoteSymb (Symb (S n) f ns) `shouldBe` Symb n f ns
 
 -- Utils
 validFirsts = underscore : lettersUpper ++ lettersLower ++ accentChars

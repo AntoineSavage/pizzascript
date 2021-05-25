@@ -88,7 +88,9 @@ unquoteSpec = describe "unquote" $ do
     it "rejects quoted identifiers" $ do
         property $ \(QuotedIdent s) -> do
             let v = PzSymb s
-            evaluate (unquote v) `shouldThrow` errorCall ("Value must be unevaluated before unquoting: " ++ show v)
+                Symb Z f ns = s
+                r@(PzSymb (Symb _ _ _)) = unquote v -- reach unquoteSymb error
+            evaluate r `shouldThrow` errorCall ("Quoted identifier cannot be unquoted: " ++ f:ns)
 
     it "converts quoted symbols into one-less-quoted symbols" $ do
         property $ \n f ns -> do
