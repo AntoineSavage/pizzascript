@@ -168,7 +168,7 @@ unevalArgsSpec = describe "unevalArgs" $ do
             unevalArgs (ArgsVaria s) `shouldBe` [PzSymb s]
 
     it "unevals arity args idents" $ do
-        property $ \ss -> do
+        property $ \(Few ss) -> do
             unevalArgs (ArgsArity ss) `shouldBe` [PzList $ map PzSymb ss]
 
 
