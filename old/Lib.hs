@@ -66,13 +66,6 @@ import Text.Parsec ( eof )
 import Text.Parsec.String ( parseFromFile )
 import Utils ( Result, addIdentAndPos, f1, f2, fpure, getIdent )
 
-type FuncReturn = Result (Dict, PzVal)
-type EvalResult = Result Acc
-type ReturnValue = Maybe PzVal
-data Acc
-    = Acc ReturnValue [StackFrame]
-    deriving (Show, Eq)
-
 evalFrame :: ReturnValue -> StackFrame -> [StackFrame] -> EvalResult
 evalFrame rval frame frames =
     case frame of
@@ -214,36 +207,3 @@ toAcc ctx e frames r = case r of
 
 returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
 returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) $ setCtx ctx frames
-
--- Built-in functions
--- See module BuiltIns for implementations
-invokeFuncBuiltIn :: Dict -> [PzVal] -> Ident -> [StackFrame] -> EvalResult
-invokeFuncBuiltIn ctx args (Ident s) frames =
-    case s of
-        -- numbers
-        -- TODO
-
-        -- strings
-        -- TODO
-
-        -- symbols
-        -- TODO
-
-        -- booleans
-        "not" -> returnFrom frames $ f1 args $ \x -> fpure ctx $ _not x
-        "or" -> returnFrom frames $ f2 args $ \x y -> fpure ctx $ _or x y
-        "and" -> returnFrom frames $ f2 args $ \x y -> fpure ctx $ _and x y
-
-        -- lists
-        -- TODO
-
-        -- dictionaries
-        -- TODO
-
-        -- functions
-        -- TODO
-
-        -- miscellaneous
-        -- TODO
-
-        _ -> Left $ "TODO: Implement built-in function: " ++ show s
