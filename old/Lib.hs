@@ -37,58 +37,6 @@ go (Acc result (frame:frames)) = do
         Left s -> putStrLn s
         Right acc -> go acc
 
-
--- Eval
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE TupleSections #-}
-module Eval where
-
-import qualified Data.Map as M
-
-import Control.Monad ( forM_, liftM2 )
-import Data.AstExpr ( AstExpr(..) )
-import Data.Func.ArgPass ( ArgPass(..), argPassToSymb, symbToArgPass )
-import Data.Func.FuncArgs ( FuncArgs(..) )
-import Data.Func.FuncCustom ( FuncCustom(..), toFuncCustom )
-import Data.Func.FuncImpureArgs ( FuncImpureArgs(..) )
-import Data.Ident ( Ident )
-import Data.Lst ( Lst(..), LstKind(..) )
-import Data.Nat ( Nat(Z) )
-import Data.PzVal ( Dict, PzVal(..) )
-import Data.Symb ( Symb(Symb), symb )
-import Quote ( quote, unquote )
-import Utils ( Result, getDuplicates, getIdent, toForm )
-
-data ExprEvalResult
-    = Evaled PzVal
-    | ExprForm [AstExpr]
-    deriving (Show, Eq)
-
-evalExpr :: Dict -> AstExpr -> ArgPass -> Result ExprEvalResult
-evalExpr ctx e eval =
-    let evaled = return . Evaled in
-    case (e, eval) of
-        -- numbers and strings
-        (AstNum n, _) -> evaled $ PzNum n
-        (AstStr s, _) -> evaled $ PzStr s
-
-        -- symbols
-        (AstSymb symb, Eval) -> evaled $ PzSymb symb
-
-        -- identifiers
-        (AstIdent ident, Eval) -> Evaled <$> evalIdent ctx ident
-        (AstIdent ident, DeepQuote) -> evalIdent ctx ident >>= \r -> evalExpr ctx (unevalExpr r) Quote
-        (AstIdent ident, DeepUnquote) -> evalIdent ctx ident >>= \r -> evalExpr ctx (unevalExpr r) Unquote
-
-        -- lists
-        (AstList (Lst k elems), Eval) -> return $ ExprForm $ toForm k elems
-
-        -- quote and unquote
-        (_, Quote) -> evalExpr ctx (quote e) Eval
-        (_, Unquote) -> unquote e >>= \e' -> evalExpr ctx e' Eval
-        (_, DeepQuote) -> evalExpr ctx e Quote
-        (_, DeepUnquote) -> evalExpr ctx e Unquote
-
 -- Reduce
 module Reduce where
 

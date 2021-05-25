@@ -9,14 +9,31 @@ import Data.Func.FuncCustom ( toFuncCustom, FuncCustom(..) )
 import Data.Func.FuncImpureArgs ( FuncImpureArgs(..) )
 import Data.Nat ( Nat(..) )
 import Data.PzVal ( Dict, PzVal(..), pd, pl )
-import Data.Symb ( Symb(..), quoteSymb, unparseSymb )
+import Data.Symb ( Symb(..), quoteSymb, unquoteSymb )
 import Utils ( Result, getDuplicates, unparse )
 
+data EvalResult
+    = Evaled PzVal
+    | Form [PzVal]
+    deriving (Show, Eq)
+
+eval :: Dict -> PzVal -> Result EvalResult
+eval ctx v = let evaled = return . Evaled in case v of
+    PzNum _ -> evaled v
+    PzStr _ -> evaled v
+    PzSymb s -> case s of
+        Symb Z _ _  -> Evaled <$> evalQuotedIdent ctx v
+        _           -> evaled $ PzSymb $ unquoteSymb s
+    PzList l -> case l of
+        []  -> evaled PzUnit
+        _   -> return $ Form l
+    _ -> error $ "Can only evaluate quoted values: " ++ show v
+
 uneval :: PzVal -> PzVal
-uneval = \case
+uneval v = case v of
     PzUnit -> PzList []
-    PzNum n -> PzNum n
-    PzStr s -> PzStr s
+    PzNum _ -> v
+    PzStr _ -> v
     PzSymb s -> PzSymb $ quoteSymb s
     PzList l -> PzList $ (pl:) $ map uneval l
     PzDict m -> PzList $ (pd:) $ flip map (M.assocs m) $ \(k, v) -> PzList [uneval k, uneval v]

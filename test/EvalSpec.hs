@@ -5,6 +5,7 @@ import Test.QuickCheck
 
 import qualified Data.Map as M
 
+import Control.Exception
 import Control.Monad
 import Data.Either
 import Data.Func
@@ -28,6 +29,7 @@ import TestUtils
 
 spec :: Spec
 spec = do
+    evalSpec
     unevalSpec
     evalFuncCustomVsUnevalFuncCustomSpec
     evalFuncCustomSpec
@@ -42,6 +44,54 @@ spec = do
     validateNoDuplicateQuotedIdentsSpec
     unconsFuncBodySpec
     getQuotedIdentSpec
+
+evalSpec :: Spec
+evalSpec = describe "eval" $ do
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        evaluate (eval undefined v) `shouldThrow` errorCall ("Can only evaluate quoted values: " ++ show v)
+
+    it "converts number to itself" $ do
+        property $ \d -> do
+            eval undefined (PzNum d) `shouldBe` Right (Evaled $ PzNum d)
+
+    it "converts string to itself" $ do
+        property $ \s -> do
+            eval undefined (PzStr s) `shouldBe` Right (Evaled $ PzStr s)
+
+    it "returns value associated to quoted identifier" $ do
+        property $ \(ArbDict c) (Ident f ns) v -> do
+            let k = PzSymb $ Symb Z f ns
+            eval (M.insert k v c) k `shouldBe` Right (Evaled v)
+
+    it "undefined quoted identifier" $ do
+        property $ \(ArbDict c) (Ident f ns) -> do
+            let k = PzSymb $ Symb Z f ns
+            isLeft (eval (M.delete k c) k) `shouldBe` True
+
+    it "converts symbol to itself, unquoted" $ do
+        property $ \n (Ident f ns) -> do
+            let v = PzSymb $ Symb (S n) f ns
+            eval undefined v `shouldBe` Right (Evaled $ PzSymb $ Symb n f ns)
+
+    it "converts empty list to the unit type" $ do
+        let v = PzList []
+        eval undefined v `shouldBe` Right (Evaled PzUnit)
+
+    it "converts non-empty list to a form" $ do
+        property $ \x xs -> do
+            let elems = x:xs
+            eval undefined (PzList elems) `shouldBe` Right (Form elems)
+
+    it "rejects dictionaries" $ do
+        property $ \(ArbDict d) -> do
+            let v = PzDict d
+            evaluate (eval undefined v) `shouldThrow` errorCall ("Can only evaluate quoted values: " ++ show v)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f -> do
+            let v = PzFunc d f
+            evaluate (eval undefined v) `shouldThrow` errorCall ("Can only evaluate quoted values: " ++ show v)
 
 unevalSpec :: Spec
 unevalSpec = describe "uneval" $ do
