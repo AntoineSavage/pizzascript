@@ -22,8 +22,8 @@ setCtxSpec = describe "setCtx" $ do
             setCtx ctx (StackFrame undefined (Block es) :fs) `shouldBe` StackFrame ctx (Block es) :fs
 
     it "sets context on form frame" $ do
-        property $ \(ArbDict ctx) mfs (Few es) (Few fs) -> do
-            setCtx ctx (StackFrame undefined (Form mfs es) :fs) `shouldBe` StackFrame ctx (Form mfs es) :fs
+        property $ \(ArbDict ctx) mfs e (Few es) (Few fs) -> do
+            setCtx ctx (StackFrame undefined (Form mfs e es) :fs) `shouldBe` StackFrame ctx (Form mfs e es) :fs
 
     it "sets context on invoc frame " $ do
         property $ \(ArbDict ctx) mfs f (Few as) (Few es) (Few fs) -> do
@@ -38,7 +38,7 @@ instance Arbitrary StackFrameSpec where arbitrary = arbDepth
 instance ArbWithDepth StackFrameSpec where
     arbWithDepth depth = oneof
         [ fmap Block arbDepth
-        , liftM2 Form arbitrary arbDepth
+        , liftM3 Form arbitrary arbDepth arbDepth
         , do
             a <- arbitrary
             b <- arbDepth

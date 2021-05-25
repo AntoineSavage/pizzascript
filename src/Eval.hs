@@ -14,7 +14,7 @@ import Utils ( Result, getDuplicates, unparse )
 
 data EvalResult
     = Evaled PzVal
-    | Form [PzVal]
+    | Form PzVal [PzVal]
     deriving (Show, Eq)
 
 eval :: Dict -> PzVal -> Result EvalResult
@@ -26,7 +26,7 @@ eval ctx v = let evaled = return . Evaled in case v of
         _           -> evaled $ PzSymb $ unquoteSymb s
     PzList l -> case l of
         []  -> evaled PzUnit
-        _   -> return $ Form l
+        (x:xs)   -> return $ Form x xs
     _ -> error $ "Can only evaluate quoted values: " ++ show v
 
 uneval :: PzVal -> PzVal

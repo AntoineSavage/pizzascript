@@ -11,6 +11,7 @@ data StackFrame
 type Stmts = [PzVal]
 
 type FuncSymb = Maybe Symb
+type FuncArg = PzVal
 type RemArgs = [PzVal]
 
 type ImplCtx = Dict
@@ -19,7 +20,7 @@ type RdyArgs = [PzVal]
 
 data StackFrameSpec
     = Block Stmts
-    | Form FuncSymb RemArgs
+    | Form FuncSymb FuncArg RemArgs
     | Invoc FuncSymb ImplCtx InvocFunc RdyArgs (Maybe RemArgs)
     deriving (Show, Eq)
 

@@ -75,7 +75,7 @@ evalVsUnevalSpec = describe "eval vs uneval" $ do
 
     it "converts lists, dictionaries and custom funcs to Forms" $ do
         property $ \(Few l) (ArbDict d) impArgs args x xs -> do
-            let isForm (Right (Form _)) = True
+            let isForm (Right (Form _ _)) = True
                 isForm _                = False
             isForm (eval undefined (uneval $ PzList l)) `shouldBe` True
             isForm (eval undefined (uneval $ PzDict d)) `shouldBe` True
@@ -116,8 +116,7 @@ evalSpec = describe "eval" $ do
 
     it "converts non-empty list to a form" $ do
         property $ \x xs -> do
-            let elems = x:xs
-            eval undefined (PzList elems) `shouldBe` Right (Form elems)
+            eval undefined (PzList $ x:xs) `shouldBe` Right (Form x xs)
 
     it "rejects dictionaries" $ do
         property $ \(ArbDict d) -> do
