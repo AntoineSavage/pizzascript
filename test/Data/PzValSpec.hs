@@ -64,15 +64,18 @@ parseValSpec = describe "parseVal" $ do
 unparseValSpec :: Spec
 unparseValSpec = describe "unparseVal" $ do
     it "rejects unit" $ do
-        evaluate (unparseVal undefined PzUnit) `shouldThrow` errorCall "Can only unparse quoted values: "
+        let v = PzUnit
+        evaluate (unparseVal undefined v) `shouldThrow` errorCall ("Can only unparse quoted values: " ++ show v)
 
     it "rejects dict" $ do
         property $ \(ArbDict d) -> do
-            evaluate (unparseVal undefined $ PzDict d) `shouldThrow` errorCall "Can only unparse quoted values: "
+            let v = PzDict d
+            evaluate (unparseVal undefined v) `shouldThrow` errorCall ("Can only unparse quoted values: " ++ show v)
 
     it "rejects func" $ do
         property $ \(ArbDict d) f -> do
-            evaluate (unparseVal undefined $ PzFunc d f) `shouldThrow` errorCall "Can only unparse quoted values: "
+            let v = PzFunc d f
+            evaluate (unparseVal undefined v) `shouldThrow` errorCall ("Can only unparse quoted values: " ++ show v)
 
     it "unparses num" $ do
         property $ \n -> do

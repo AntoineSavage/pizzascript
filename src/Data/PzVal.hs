@@ -37,7 +37,7 @@ unparseVal f = \case
     PzStr s -> unparseStr s
     PzSymb s -> unparseSymb s
     PzList xs -> unparseList pl pd f xs
-    v -> error "Can only unparse quoted values: " ++ show v
+    v -> error $ "Can only unparse quoted values: " ++ show v
 
 pl :: PzVal
 pl = PzSymb symbList

@@ -89,3 +89,7 @@ arbQuotedIdent = do Ident f ns <- arbitrary; return $ Symb Z f ns
 
 newtype QuotedIdents = QuotedIdents [Symb] deriving (Show, Eq)
 instance Arbitrary QuotedIdents where arbitrary = QuotedIdents <$> arbFew arbQuotedIdent
+
+newtype QuotedSymb = QuotedSymb Symb deriving (Show, Eq)
+instance Arbitrary QuotedSymb where arbitrary = QuotedSymb <$> arbQuotedSymb
+arbQuotedSymb = do Ident f ns <- arbitrary; n <- arbitrary; return $ Symb (S n) f ns  

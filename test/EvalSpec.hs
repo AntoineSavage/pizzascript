@@ -76,8 +76,9 @@ unevalFuncCustomSpec = describe "unevalFuncCustom" $ do
 evalImpureArgsVsUnevalImpureArgsSpec :: Spec
 evalImpureArgsVsUnevalImpureArgsSpec = describe "evalImpureArgs vs unevalImpureArgs" $ do
     it "composes evalImpureArgs and unevalImpureArgs into id" $ do
-        property $ \impArgs (Few es) -> do
-            let elems = unevalImpureArgs impArgs
+        property $ \impArgs n (Few es') -> do
+            let es = PzNum n : es'
+                elems = unevalImpureArgs impArgs
             evalImpureArgs (elems ++ es) `shouldBe` Right (impArgs, es)
             unevalImpureArgs <$> fst <$> evalImpureArgs (elems ++ es) `shouldBe` Right elems
 
