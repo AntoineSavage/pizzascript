@@ -103,16 +103,6 @@ unevalExpr = \case
             Left ident -> AstIdent ident
             Right fc -> AstList $ Lst KindForm $ unevalFuncCustom fc
 
-evalFuncCustom :: [AstExpr] -> Result FuncCustom
-evalFuncCustom es0 = do
-    (impArgs, es1) <- evalImpureArgs es0
-    (args, body) <- evalArgs es1
-    validateNoDuplicateIdents impArgs args
-    return $ FuncCustom impArgs args body
-
-unevalFuncCustom :: FuncCustom -> [AstExpr]
-unevalFuncCustom (FuncCustom impArgs args body) = unevalImpureArgs impArgs ++ unevalArgs args ++ body
-
 -- Utils
 evalIdent :: Dict -> Ident -> Result PzVal
 evalIdent ctx ident = case M.lookup (PzSymb $ symb ident) ctx of
@@ -120,22 +110,6 @@ evalIdent ctx ident = case M.lookup (PzSymb $ symb ident) ctx of
     Nothing -> Left $
         "Error: Undefined identifier: " ++ show ident
         ++ "\n context keys: " ++ show (M.keys ctx)
-
-validateNoDuplicateIdents :: FuncImpureArgs -> FuncArgs -> Result ()
-validateNoDuplicateIdents impArgs args =
-    let explCtxIdents = case impArgs of
-            Both _ i -> [i]
-            _ -> []
-       
-        argIdents = case args of
-            ArgsVaria i -> [i]
-            ArgsArity is -> is
-   
-        duplicates = getDuplicates $ explCtxIdents ++ argIdents
-    in if null duplicates
-        then return ()
-        else Left $
-            "Error: Duplicate identifiers in function definition: " ++ show duplicates
 
 -- Quote
 module Quote (quote, unquote, unparse) where

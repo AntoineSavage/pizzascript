@@ -1,6 +1,7 @@
 module Symbs where
 
-import Data.Symb ( Symb, symb )
+import Data.Nat ( Nat(Z, S) ) 
+import Data.Symb ( Symb(..), symb )
 
 -- All the following symbols correspond to quoted identifiers
 -- i.e. identifiers that were just parsed
@@ -43,20 +44,6 @@ symbDict = symb "dict"
 symbFunc :: Symb
 symbFunc = symb "func"
 
-symbEval :: Symb
-symbEval = symb "eval"
-
-symbQuote :: Symb
-symbQuote = symb "quote"
-
-symbUnquote :: Symb
-symbUnquote = symb "unquote"
-
-symbDeepQuote :: Symb
-symbDeepQuote = symb "deep_quote"
-
-symbDeepUnquote :: Symb
-symbDeepUnquote = symb "deep_unquote"
 
 -- miscellaneous
 symbCtx :: Symb
@@ -70,3 +57,21 @@ symbX = symb "x"
 
 symbY :: Symb
 symbY = symb "y"
+
+-- All the following symbols correspond to non-quoted identifiers
+-- i.e. symbols that were just parsed
+-- They also correspond to one-or-more-quoted symbols
+symbEval :: Symb
+symbEval = Symb (S Z) 'e' "val"
+
+symbQuote :: Symb
+symbQuote = Symb (S Z) 'q' "uote"
+
+symbUnquote :: Symb
+symbUnquote = Symb (S Z) 'u' "nquote"
+
+symbDeepQuote :: Symb
+symbDeepQuote = Symb (S Z) 'd' "eep_quote"
+
+symbDeepUnquote :: Symb
+symbDeepUnquote = Symb (S Z) 'd' "eep_unquote"

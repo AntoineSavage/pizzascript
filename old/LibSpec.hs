@@ -41,10 +41,7 @@ spec = do
     evalExprSpec
     unevalExprSpec
     evalFuncCustomVsUnevalFuncCustomSpec
-    evalFuncCustomSpec
-    unevalFuncCustomSpec
     evalIdentSpec
-    validateNoDuplicateIdentsSpec
 
 evalExprVsUnevalExprSpec :: Spec
 evalExprVsUnevalExprSpec = describe "evalExpr vs unevalExpr (partial)" $ do
@@ -210,30 +207,6 @@ unevalExprSpec = describe "unevalExpr" $ do
         property $ \(ArbDict implCtx) f@(FuncCustom impArgs args body) -> do
             unevalExpr (PzFunc implCtx $ Func impArgs args $ BodyCustom body) `shouldBe` (AstList $ Lst KindForm $ unevalFuncCustom f)
 
-evalFuncCustomVsUnevalFuncCustomSpec :: Spec
-evalFuncCustomVsUnevalFuncCustomSpec = describe "evalFuncCustom vs unevalFuncCustom" $ do
-    it "composes evalFuncCustom and unevalFuncCustom into id" $ do
-        property $ \func -> do
-            let elems = unevalFuncCustom func
-            evalFuncCustom elems `shouldBe` Right func
-            unevalFuncCustom <$> evalFuncCustom elems `shouldBe` Right elems
-
-evalFuncCustomSpec :: Spec
-evalFuncCustomSpec = describe "evalFuncCustom" $ do
-    it "evals custom function" $ do
-        property $ \func@(FuncCustom impArgs args body) -> do
-            let elems = unevalImpureArgs impArgs ++ unevalArgs args ++ body
-            evalFuncCustom elems `shouldBe` Right func
-
-    it "rejects empty elems" $ do
-        isLeft (evalFuncCustom []) `shouldBe` True
-
-unevalFuncCustomSpec :: Spec
-unevalFuncCustomSpec = describe "unevalFuncCustom" $ do
-    it "unevals custom function" $ do
-        property $ \func@(FuncCustom impArgs args body) -> do
-            unevalFuncCustom func `shouldBe` unevalImpureArgs impArgs ++ unevalArgs args ++ body
-
 evalIdentSpec :: Spec
 evalIdentSpec = describe "evalIdent" $ do
     it "evaluates one ident part" $ do
@@ -246,85 +219,6 @@ evalIdentSpec = describe "evalIdent" $ do
         property $ \(ArbDict c) ident -> do
             let k = PzSymb $ symb ident
             isLeft (evalIdent (M.delete k c) ident) `shouldBe` True
-
-validateNoDuplicateIdentsSpec :: Spec
-validateNoDuplicateIdentsSpec = describe "validateNoDuplicateIdents" $ do
-    it "accepts zero args" $ do
-        forM_ [none, form] $ \impArgs -> do
-            validateNoDuplicateIdents impArgs (ArgsArity []) `shouldBe` Right ()
-            validateNoDuplicateIdents impArgs (ArgsArity []) `shouldBe` Right ()
-
-    it "accepts one arg (impure args)" $ do
-        property $ \c -> do
-            let ctx = Ident c
-            validateNoDuplicateIdents (both ctx) (ArgsArity []) `shouldBe` Right ()
-
-    it "accepts one arg (varia)" $ do
-        property $ \v -> do
-            let varargs = Ident v
-            forM_ [none, form] $ \impArgs -> do
-                validateNoDuplicateIdents impArgs (ArgsVaria varargs) `shouldBe` Right ()
-
-    it "accepts one arg (arity)" $ do
-        property $ \a -> do
-            let arg = Ident a
-            forM_ [none, form] $ \impArgs -> do
-                validateNoDuplicateIdents impArgs (ArgsArity [arg]) `shouldBe` Right ()
-
-    it "accepts two args (impure+varia)" $ do
-        property $ \c' v -> do
-            let c = differentThan c' [v]
-                [ctx, varargs] = map Ident [c, v]
-            validateNoDuplicateIdents (both ctx) (ArgsVaria varargs) `shouldBe` Right ()
-
-    it "accepts two args (impure+arity)" $ do
-        property $ \c' a -> do
-            let c = differentThan c' [a]
-                [ctx, arg] = map Ident [c, a]
-            validateNoDuplicateIdents (both ctx) (ArgsArity [arg]) `shouldBe` Right ()
-
-    it "accepts two args (arity)" $ do
-        property $ \a1' a2' -> do
-            let a1 = differentThan a1' []
-                a2 = differentThan a2' [a1]
-                [arg1, arg2] = map Ident [a1, a2]
-            forM_ [none, form] $ \impArgs -> do
-                validateNoDuplicateIdents impArgs (ArgsArity [arg1, arg2]) `shouldBe` Right ()
-
-    it "accepts N+1 args (impure+arity)" $ do
-        property $ \c' (Uniques as) -> do
-            let c = differentThan c' as
-                ctx = Ident c
-                args = map Ident as
-            validateNoDuplicateIdents (both ctx) (ArgsArity args) `shouldBe` Right ()
-
-    it "rejects two args (impure+varia)" $ do
-        property $ \x -> do
-            let [ctx, varargs] = map Ident [x, x]
-            isLeft (validateNoDuplicateIdents (both ctx) (ArgsVaria varargs)) `shouldBe` True
-
-    it "rejects two args (impure+arity)" $ do
-        property $ \x -> do
-            let [ctx, arg] = map Ident [x, x]
-            isLeft (validateNoDuplicateIdents (both ctx) (ArgsArity [arg])) `shouldBe` True
-
-    it "rejects two args (arity)" $ do
-        property $ \x -> do
-            let [arg1, arg2] = map Ident [x, x]
-            forM_ [none, form] $ \impArgs -> do
-                isLeft (validateNoDuplicateIdents none (ArgsArity [arg1, arg2])) `shouldBe` True
-
-    it "rejects N+1 args (impure+arity)" $ do
-        property $ \x (Uniques as) -> do
-            let ctx = Ident x
-                args = map Ident (x:as)
-            isLeft (validateNoDuplicateIdents (both ctx) (ArgsArity args)) `shouldBe` True
-
-none = None
-form = ArgPass $ Eval
-both = Both (Eval)
-
-differentThan x xs = if any (==x) xs then '_':concat xs else x
 
 -- QuoteSpec
 module QuoteSpec where

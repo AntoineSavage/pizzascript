@@ -3,16 +3,28 @@ module Eval where
 
 import Data.Func.ArgPass
 import Data.Func.FuncArgs ( FuncArgs(..) )
+import Data.Func.FuncCustom
 import Data.Func.FuncImpureArgs
-import Data.Nat ( Nat(Z) )
+import Data.Nat ( Nat(..) )
 import Data.PzVal ( PzVal(PzSymb, PzList) )
 import Data.Symb ( Symb(..) )
-import Utils ( Result )
+import Utils ( Result, getDuplicates )
+
+evalFuncCustom :: [PzVal] -> Result FuncCustom
+evalFuncCustom es0 = do
+    (impArgs, es1) <- evalImpureArgs es0
+    (args, es2) <- evalArgs es1
+    validateNoDuplicateQuotedIdents impArgs args
+    (x, xs) <- unconsFuncBody es2
+    return $ FuncCustom impArgs args x xs
+
+unevalFuncCustom :: FuncCustom -> [PzVal]
+unevalFuncCustom (FuncCustom impArgs args x xs) = unevalImpureArgs impArgs ++ unevalArgs args ++ [x] ++ xs
 
 evalImpureArgs :: [PzVal] -> Result (FuncImpureArgs, [PzVal])
 evalImpureArgs elems = case elems of
     -- form starting with argument-passing behaviour symbol, followed by...
-    PzList ((PzSymb s@(Symb Z _ _)):as):es -> do
+    PzList ((PzSymb s@(Symb (S Z) _ _)):as):es -> do
         argPass <- case symbToArgPass s of
             Just r -> return r
             Nothing -> Left $
@@ -58,6 +70,27 @@ unevalArgs = \case
     ArgsArity ss -> [PzList $ map PzSymb ss]
 
 -- Utils
+validateNoDuplicateQuotedIdents :: FuncImpureArgs -> FuncArgs -> Result ()
+validateNoDuplicateQuotedIdents impArgs args =
+    let explCtxQuotedIdents = case impArgs of
+            Both _ s -> [s]
+            _ -> []
+       
+        argQuotedIdents = case args of
+            ArgsVaria s -> [s]
+            ArgsArity ss -> ss
+   
+        duplicates = getDuplicates $ explCtxQuotedIdents ++ argQuotedIdents
+    in if null duplicates
+        then return ()
+        else Left $
+            "Error: Duplicate identifiers in function definition: " ++ show duplicates
+
+unconsFuncBody :: [PzVal] -> Result (PzVal, [PzVal])
+unconsFuncBody = \case
+    (x:xs) -> return (x, xs)
+    _ -> Left "Error: Function body must not be empty"
+
 getQuotedIdent :: PzVal -> Result Symb
 getQuotedIdent v = case v of
     PzSymb s@(Symb Z _ _) -> return s
