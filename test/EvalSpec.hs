@@ -38,6 +38,7 @@ spec = do
     evalArgsVsUnevalArgsSpec
     evalArgsSpec
     unevalArgsSpec
+    evalQuotedIdentSpec
     validateNoDuplicateQuotedIdentsSpec
     unconsFuncBodySpec
     getQuotedIdentSpec
@@ -198,6 +199,17 @@ unevalArgsSpec = describe "unevalArgs" $ do
         property $ \(Few ss) -> do
             unevalArgs (ArgsArity ss) `shouldBe` [PzList $ map PzSymb ss]
 
+evalQuotedIdentSpec :: Spec
+evalQuotedIdentSpec = describe "evalQuotedIdent" $ do
+    it "returns defined identifier" $ do
+        property $ \(ArbDict c) s v -> do
+            let k = PzSymb s
+            evalQuotedIdent (M.insert k v c) k `shouldBe` Right v
+
+    it "rejects undefined identifier" $ do
+        property $ \(ArbDict c) s -> do
+            let k = PzSymb s
+            isLeft (evalQuotedIdent (M.delete k c) k) `shouldBe` True
 
 validateNoDuplicateQuotedIdentsSpec :: Spec
 validateNoDuplicateQuotedIdentsSpec = describe "validateNoDuplicateQuotedIdents" $ do

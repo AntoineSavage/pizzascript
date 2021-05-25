@@ -172,16 +172,3 @@ evalExprSpec = describe "evalExpr" $ do
             forM_ [Unquote, DeepUnquote] $ \eval -> do
                 evalExpr ctx (AstList $ Lst k es) eval `shouldBe`
                     (unquote (AstList $ Lst k es) >>= \e' -> evalExpr ctx e' Eval)
-
-evalIdentSpec :: Spec
-evalIdentSpec = describe "evalIdent" $ do
-    it "evaluates one ident part" $ do
-        property $ \(ArbDict c) ident v -> do
-            let k = PzSymb $ symb ident
-                ctx = flip (M.insert k) c v
-            evalIdent ctx ident `shouldBe` Right v
-
-    it "evaluates undefined ident" $ do
-        property $ \(ArbDict c) ident -> do
-            let k = PzSymb $ symb ident
-            isLeft (evalIdent (M.delete k c) ident) `shouldBe` True

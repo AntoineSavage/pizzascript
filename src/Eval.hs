@@ -3,14 +3,14 @@ module Eval where
 
 import qualified Data.Map as M
 
-import Data.Func.ArgPass ( argPassToSymb, symbToArgPass )
+import Data.Func.ArgPass ( ArgPass(..), argPassToSymb, symbToArgPass )
 import Data.Func.FuncArgs ( FuncArgs(..) )
 import Data.Func.FuncCustom ( toFuncCustom, FuncCustom(..) )
 import Data.Func.FuncImpureArgs ( FuncImpureArgs(..) )
 import Data.Nat ( Nat(..) )
-import Data.PzVal ( PzVal(..), pd, pl )
-import Data.Symb ( Symb(..), quoteSymb )
-import Utils ( Result, getDuplicates )
+import Data.PzVal ( Dict, PzVal(..), pd, pl )
+import Data.Symb ( Symb(..), quoteSymb, unparseSymb )
+import Utils ( Result, getDuplicates, unparse )
 
 uneval :: PzVal -> PzVal
 uneval = \case
@@ -84,6 +84,13 @@ unevalArgs = \case
     ArgsArity ss -> [PzList $ map PzSymb ss]
 
 -- Utils
+evalQuotedIdent :: Dict -> PzVal -> Result PzVal
+evalQuotedIdent ctx k = case M.lookup k ctx of
+    Just v -> Right v
+    Nothing -> Left $
+        "Error: Undefined identifier: " ++ unparse k
+        ++ "\n context keys: " ++ show (map unparse $ M.keys ctx)
+
 validateNoDuplicateQuotedIdents :: FuncImpureArgs -> FuncArgs -> Result ()
 validateNoDuplicateQuotedIdents impArgs args =
     let explCtxQuotedIdents = case impArgs of

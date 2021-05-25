@@ -3,9 +3,12 @@ module Utils where
 
 import qualified Data.Set as S
 
-import Data.PzVal ( Dict )
+import Data.PzVal ( Dict, PzVal, unparseVal )
 
-type Result = Either String
+unparse :: PzVal -> String
+unparse = unparseVal f where
+    f Nothing = ""
+    f (Just v) = unparseVal f v ++ " "
 
 getDuplicates :: Ord a => [a] -> [a]
 getDuplicates = go S.empty S.empty where
@@ -16,6 +19,8 @@ getDuplicates = go S.empty S.empty where
 
 invalidArityMsg :: Int -> [a] -> String
 invalidArityMsg n args = "Invalid number of arguments. Expected " ++ show n ++ ", got: " ++ show (length args)
+
+type Result = Either String
 
 f0 :: [a] -> (() -> Result b) -> Result b
 f0 args f = case args of [] -> f (); _ -> Left $ invalidArityMsg 0 args

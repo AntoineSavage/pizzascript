@@ -89,14 +89,6 @@ evalExpr ctx e eval =
         (_, DeepQuote) -> evalExpr ctx e Quote
         (_, DeepUnquote) -> evalExpr ctx e Unquote
 
--- Utils
-evalIdent :: Dict -> Ident -> Result PzVal
-evalIdent ctx ident = case M.lookup (PzSymb $ symb ident) ctx of
-    Just v -> Right v
-    Nothing -> Left $
-        "Error: Undefined identifier: " ++ show ident
-        ++ "\n context keys: " ++ show (M.keys ctx)
-
 -- Reduce
 module Reduce where
 

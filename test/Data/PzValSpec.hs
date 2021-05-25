@@ -19,6 +19,7 @@ import Symbs
 import TestUtils
 import Text.Parsec
 import Text.Parsec.String
+import Utils
 
 spec :: Spec
 spec = do
@@ -35,10 +36,11 @@ spec = do
 parseValVsUnparseValSpec :: Spec
 parseValVsUnparseValSpec = describe "parseVal vs unparseVal" $ do
     it "composes parseVal and unparseVal into id" $ do
+        let f Nothing = ""; f (Just v) = unparseVal f v ++ " "
         property $ \(UnparseValid v) -> do
-            let s = unparseVal upv v
+            let s = unparseVal f v
             parse pv "tests" s `shouldBe` Right v
-            unparseVal upv <$> parse pv "tests" s `shouldBe` Right s
+            unparseVal f <$> parse pv "tests" s `shouldBe` Right s
 
 parseValSpec :: Spec
 parseValSpec = describe "parseVal" $ do
@@ -58,8 +60,9 @@ parseValSpec = describe "parseVal" $ do
             parse (parseVal ignore undefined) "tests" (unparseSymb s) `shouldBe` Right (PzSymb s)
 
     it "parses list" $ do
+        let f Nothing = ""; f (Just v) = unparseVal f v ++ " "
         property $ \(UnparseValids xs) -> do
-            parse (parseVal ignore pv) "tests" (unparseList pl pd upv xs) `shouldBe` Right (PzList xs)
+            parse (parseVal ignore pv) "tests" (unparseList pl pd f xs) `shouldBe` Right (PzList xs)
 
 unparseValSpec :: Spec
 unparseValSpec = describe "unparseVal" $ do
@@ -90,8 +93,9 @@ unparseValSpec = describe "unparseVal" $ do
             unparseVal undefined (PzSymb s) `shouldBe` unparseSymb s
 
     it "unparses list" $ do
+        let f Nothing = ""; f (Just v) = unparseVal f v ++ " "
         property $ \(UnparseValids xs) -> do
-            unparseVal upv (PzList xs) `shouldBe` unparseList pl pd upv xs
+            unparseVal f (PzList xs) `shouldBe` unparseList pl pd f xs
 
 parseListVsUnparseListSpec :: Spec
 parseListVsUnparseListSpec = describe "parseList vs unparsesList" $ do
@@ -218,9 +222,6 @@ unparseManySpec = describe "unparseMany" $ do
             unparseMany' es `shouldBe` concatMap str es
 
 -- Utils
-upv Nothing = ""
-upv (Just v) = unparseVal upv v ++ " "
-
 pv = parseVal ignore pv
 
 ignore = spaces

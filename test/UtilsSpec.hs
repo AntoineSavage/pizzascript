@@ -4,12 +4,14 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Data.List
+import Data.PzVal
 import Data.PzValSpec
 import TestUtils
 import Utils
 
 spec :: Spec
 spec = do
+    unparseSpec
     getDuplicatesSpec
     invalidArityMsgSpec
     f0Spec
@@ -17,6 +19,13 @@ spec = do
     f2Spec
     f3Spec
     fpureSpec
+
+unparseSpec :: Spec
+unparseSpec = describe "unparseMaybeVal" $ do
+    it "unparses to itself using provided func" $ do
+        let f Nothing = ""; f (Just v) = unparseVal f v ++ " "
+        property $ \(UnparseValid v) -> do
+            unparse v `shouldBe` unparseVal f v
 
 getDuplicatesSpec :: Spec
 getDuplicatesSpec = describe "getDuplicates" $ do
