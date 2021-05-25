@@ -29,6 +29,7 @@ import TestUtils
 
 spec :: Spec
 spec = do
+    evalVsUnevalSpec
     evalSpec
     unevalSpec
     evalFuncCustomVsUnevalFuncCustomSpec
@@ -44,6 +45,41 @@ spec = do
     validateNoDuplicateQuotedIdentsSpec
     unconsFuncBodySpec
     getQuotedIdentSpec
+
+evalVsUnevalSpec :: Spec
+evalVsUnevalSpec = describe "eval vs uneval" $ do
+    it "composes eval and uneval into id (unit)" $ do
+        let v = PzUnit
+        eval undefined (uneval v) `shouldBe` Right (Evaled v)
+
+    it "composes eval and uneval into id (num)" $ do
+        property $ \n -> do
+            let v = PzNum n
+            eval undefined (uneval v) `shouldBe` Right (Evaled v)
+
+    it "composes eval and uneval into id (str)" $ do
+        property $ \s -> do
+            let v = PzStr s
+            eval undefined (uneval v) `shouldBe` Right (Evaled v)
+
+    it "composes eval and uneval into id (symb)" $ do
+        property $ \s -> do
+            let v = PzSymb s
+            eval undefined (uneval v) `shouldBe` Right (Evaled v)
+
+    it "composes eval and uneval into id (built-in func)" $ do
+        property $ \(ArbDict c) (ArbDict d) impArgs args (QuotedIdent s) -> do
+            let v = PzFunc d $ Func impArgs args $ BodyBuiltIn s
+                ctx = M.insert (PzSymb s) v c
+            eval ctx (uneval v) `shouldBe` Right (Evaled v)
+
+    it "converts lists, dictionaries and custom funcs to Forms" $ do
+        property $ \(Few l) (ArbDict d) impArgs args x xs -> do
+            let isForm (Right (Form _)) = True
+                isForm _                = False
+            isForm (eval undefined (uneval $ PzList l)) `shouldBe` True
+            isForm (eval undefined (uneval $ PzDict d)) `shouldBe` True
+            isForm (eval undefined (uneval $ PzFunc d $ Func impArgs args $ BodyCustom x xs)) `shouldBe` True
 
 evalSpec :: Spec
 evalSpec = describe "eval" $ do
