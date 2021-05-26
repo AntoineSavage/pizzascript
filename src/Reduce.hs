@@ -1,7 +1,6 @@
 module Reduce where
 
 import Types.PzVal ( PzVal )
-import Types.Symb ( Symb(..) )
 import Types.StackFrame ( StackFrame )
 import Utils ( Result )
 

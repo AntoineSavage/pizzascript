@@ -13,14 +13,12 @@ import Ops.NumbSpec
 import Ops.Str
 import Ops.StrSpec
 import Ops.Symb
-import Ops.SymbSpec
 import Ops.PzVal
 import Symbs
 import TestUtils
 import Text.Parsec
 import Text.Parsec.String
 import Types.PzVal
-import Utils
 
 spec :: Spec
 spec = do

@@ -8,10 +8,7 @@ import qualified Data.Map as M
 import BuiltIns.Values
 import Control.Monad
 import Ops.Boolish
-import Ops.Numb
-import Ops.PzVal
 import Ops.PzValSpec
-import Ops.Str
 import TestUtils
 import Types.Boolish
 import Types.PzVal

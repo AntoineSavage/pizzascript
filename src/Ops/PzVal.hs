@@ -10,11 +10,7 @@ import Ops.Symb ( parseSymb, unparseSymb )
 import Symbs ( symbDict, symbList )
 import Text.Parsec ( char, choice, optionMaybe, (<?>), (<|>) )
 import Text.Parsec.String ( Parser )
-import Types.Func ( Func )
-import Types.Numb ( Numb  )
 import Types.PzVal ( PzVal(..) )
-import Types.Str ( Str  )
-import Types.Symb ( Symb  )
 
 parseVal :: Parser () -> Parser PzVal -> Parser PzVal
 parseVal ign p =

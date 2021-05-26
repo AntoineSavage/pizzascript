@@ -6,9 +6,6 @@ import Test.QuickCheck
 import qualified Data.Map as M
 
 import BuiltIns.Values
-import Ops.Func
-import Ops.Func.ArgPass
-import Ops.PzVal
 import Symbs
 import Types.Func
 import Types.Func.ArgPass

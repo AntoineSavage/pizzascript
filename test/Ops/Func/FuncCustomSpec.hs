@@ -3,13 +3,8 @@ module Ops.Func.FuncCustomSpec where
 import Test.Hspec
 import Test.QuickCheck
 
-import qualified Data.Map as M
-
 import Control.Monad
 import Data.List
-import Ops.Func
-import Ops.Func.FuncArgsSpec
-import Ops.Func.FuncImpureArgsSpec
 import Ops.Func.FuncCustom
 import Ops.PzValSpec
 import TestUtils

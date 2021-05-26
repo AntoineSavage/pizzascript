@@ -10,16 +10,10 @@ import Control.Monad
 import Data.Either
 import Data.List
 import Eval
-import Ops.Func
 import Ops.Func.ArgPass
-import Ops.Func.ArgPassSpec
-import Ops.Func.FuncCustom
 import Ops.Func.FuncCustomSpec
-import Ops.Nat
-import Ops.Numb
 import Ops.PzVal
 import Ops.PzValSpec
-import Ops.Str
 import Ops.Symb
 import Ops.SymbSpec
 import TestUtils

@@ -1,7 +1,6 @@
 module Symbs where
 
 import Ops.Symb ( quoteSymb, symb )
-import Types.Nat ( Nat(..) ) 
 import Types.Symb ( Symb(..) )
 
 -- All the following symbols correspond to quoted identifiers

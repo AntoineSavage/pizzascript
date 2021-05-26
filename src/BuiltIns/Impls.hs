@@ -2,9 +2,8 @@ module BuiltIns.Impls where
 
 import BuiltIns.Values ( pzFalse, pzTrue )
 import Ops.Boolish ( boolish )
-import Types.PzVal ( Dict, PzVal )
+import Types.PzVal ( PzVal )
 import Types.Boolish ( Boolish(..) )
-import Utils ( Result )
 
 -- numbers
 -- TODO

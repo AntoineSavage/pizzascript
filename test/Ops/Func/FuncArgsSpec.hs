@@ -3,7 +3,6 @@ module Ops.Func.FuncArgsSpec where
 import Test.Hspec
 import Test.QuickCheck
 
-import Control.Monad
 import Ops.SymbSpec
 import TestUtils
 import Types.Func.FuncArgs

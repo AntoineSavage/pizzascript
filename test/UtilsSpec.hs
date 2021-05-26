@@ -7,7 +7,6 @@ import Data.List
 import Ops.PzVal
 import Ops.PzValSpec
 import TestUtils
-import Types.PzVal
 import Utils
 
 spec :: Spec

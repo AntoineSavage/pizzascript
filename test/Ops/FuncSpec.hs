@@ -5,7 +5,6 @@ import Test.QuickCheck
 
 import Control.Monad
 import Ops.Func
-import Ops.Func.ArgPass
 import Ops.Func.FuncArgsSpec
 import Ops.Func.FuncBodySpec
 import Ops.Func.FuncImpureArgsSpec
