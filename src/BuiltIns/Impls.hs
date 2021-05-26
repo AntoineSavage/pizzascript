@@ -1,7 +1,7 @@
 module BuiltIns.Impls where
 
-import BuiltIns.Values ( pzFalse, pzTrue )
 import Ops.Boolish ( boolish )
+import Symbs ( pzSymbFalse, pzSymbTrue )
 import Types.PzVal ( PzVal )
 import Types.Boolish ( Boolish(..) )
 
@@ -17,10 +17,10 @@ import Types.Boolish ( Boolish(..) )
 -- booleans
 _not :: PzVal -> PzVal
 _not x = case boolish x of
-    FalseReal -> pzTrue
-    Falsish -> pzTrue
-    Truish -> pzFalse
-    TrueReal -> pzFalse
+    FalseReal -> pzSymbTrue
+    Falsish -> pzSymbTrue
+    Truish -> pzSymbFalse
+    TrueReal -> pzSymbFalse
 
 _or :: PzVal -> PzVal -> PzVal
 _or x y = case (boolish x, boolish y) of

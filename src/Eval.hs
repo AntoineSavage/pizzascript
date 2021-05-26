@@ -5,8 +5,8 @@ import qualified Data.Map as M
 
 import Ops.Func.ArgPass ( argPassToSymb, symbToArgPass )
 import Ops.Func.FuncCustom ( toFuncCustom )
-import Ops.PzVal ( pd, pl )
 import Ops.Symb ( quoteSymb, unquoteSymb )
+import Symbs ( pzSymbDict, pzSymbList )
 import Types.Func.FuncArgs ( FuncArgs(..) )
 import Types.Func.FuncCustom ( FuncCustom(..) )
 import Types.Func.FuncImpureArgs ( FuncImpureArgs(..) )
@@ -38,8 +38,8 @@ uneval v = case v of
     PzNum _ -> v
     PzStr _ -> v
     PzSymb s -> PzSymb $ quoteSymb s
-    PzList l -> PzList $ (pl:) $ map uneval l
-    PzDict m -> PzList $ (pd:) $ flip map (M.assocs m) $ \(k, v) -> PzList [uneval k, uneval v]
+    PzList l -> PzList $ (pzSymbList:) $ map uneval l
+    PzDict m -> PzList $ (pzSymbDict:) $ flip map (M.assocs m) $ \(k, v) -> PzList [uneval k, uneval v]
     PzFunc _ f -> case toFuncCustom f of
         Left s -> PzSymb s
         Right fc -> PzList $ unevalFuncCustom fc

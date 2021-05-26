@@ -61,7 +61,7 @@ parseValSpec = describe "parseVal" $ do
     it "parses list" $ do
         let f Nothing = ""; f (Just v) = unparseVal f v ++ " "
         property $ \(UnparseValids xs) -> do
-            parse (parseVal ignore pv) "tests" (unparseList pl pd f xs) `shouldBe` Right (PzList xs)
+            parse (parseVal ignore pv) "tests" (unparseList pzSymbList pzSymbDict f xs) `shouldBe` Right (PzList xs)
 
 unparseValSpec :: Spec
 unparseValSpec = describe "unparseVal" $ do
@@ -94,7 +94,7 @@ unparseValSpec = describe "unparseVal" $ do
     it "unparses list" $ do
         let f Nothing = ""; f (Just v) = unparseVal f v ++ " "
         property $ \(UnparseValids xs) -> do
-            unparseVal f (PzList xs) `shouldBe` unparseList pl pd f xs
+            unparseVal f (PzList xs) `shouldBe` unparseList pzSymbList pzSymbDict f xs
 
 parseListVsUnparseListSpec :: Spec
 parseListVsUnparseListSpec = describe "parseList vs unparsesList" $ do

@@ -20,12 +20,6 @@ import Types.PzVal ( PzVal(..) )
 -- TODO
 
 -- booleans
-pzFalse :: PzVal
-pzFalse = PzSymb symbFalse
-
-pzTrue :: PzVal
-pzTrue = PzSymb symbTrue
-
 pzNot :: PzVal
 pzNot = PzFunc M.empty $ Func None
     (ArgsArity [symbX])

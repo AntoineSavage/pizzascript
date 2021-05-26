@@ -17,7 +17,6 @@ spec = do
 builtInCtxSpec :: Spec
 builtInCtxSpec = describe "builtInCtx" $ do
     it "contains the required keys" $ do
-        let keySymbs = [symbFalse, symbTrue, symbNot, symbOr, symbAnd, symbFunc]
-            keys = map PzSymb keySymbs
-            values = [pzFalse, pzTrue, pzNot, pzOr, pzAnd, pzFunc]
+        let keys = [pzSymbFalse, pzSymbTrue, pzSymbNot, pzSymbOr, pzSymbAnd, pzSymbFunc]
+            values = [pzSymbFalse, pzSymbTrue, pzNot, pzOr, pzAnd, pzFunc]
         builtInCtx `shouldBe` M.fromList (zip keys values)

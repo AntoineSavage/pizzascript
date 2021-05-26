@@ -2,9 +2,9 @@ module BuiltIns.Ctx where
 
 import qualified Data.Map as M
 
-import BuiltIns.Values ( pzFalse, pzTrue, pzNot, pzOr, pzAnd, pzFunc )
+import BuiltIns.Values ( pzNot, pzOr, pzAnd, pzFunc )
 import Types.PzVal ( Dict, PzVal(..) )
-import Symbs ( symbAnd, symbFunc, symbNot, symbOr )
+import Symbs ( symbFunc, pzSymbFalse, pzSymbTrue, pzSymbNot, pzSymbOr, pzSymbAnd )
 
 builtInCtx :: Dict
 builtInCtx = M.fromList
@@ -19,11 +19,11 @@ builtInCtx = M.fromList
     -- TODO
 
     -- booleans
-      (pzFalse, pzFalse)
-    , (pzTrue, pzTrue)
-    , (PzSymb symbNot, pzNot)
-    , (PzSymb symbOr, pzOr)
-    , (PzSymb symbAnd, pzAnd)
+      (pzSymbFalse, pzSymbFalse)
+    , (pzSymbTrue, pzSymbTrue)
+    , (pzSymbNot, pzNot)
+    , (pzSymbOr, pzOr)
+    , (pzSymbAnd, pzAnd)
 
     -- lists
     -- TODO

@@ -31,15 +31,15 @@ There are seven data types:
 - dictionary
 - function
 
-The `typeof` function can be used to obtain the type of a value:
+The `type_of` function can be used to obtain the type of a value:
 ```
-(typeof ())         # -> ()
-(typeof any_num)    # -> 'num
-(typeof any_str)    # -> 'str
-(typeof any_symb)   # -> 'symb
-(typeof any_list)   # -> 'list
-(typeof any_dict)   # -> 'dict
-(typeof any_func)   # -> 'func
+(type_of ())         # -> ()
+(type_of any_num)    # -> 'num
+(type_of any_str)    # -> 'str
+(type_of any_symb)   # -> 'symb
+(type_of any_list)   # -> 'list
+(type_of any_dict)   # -> 'dict
+(type_of any_func)   # -> 'func
 ```
 
 # The unit type `()`

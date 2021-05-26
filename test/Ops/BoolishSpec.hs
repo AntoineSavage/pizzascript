@@ -9,6 +9,7 @@ import BuiltIns.Values
 import Control.Monad
 import Ops.Boolish
 import Ops.PzValSpec
+import Symbs
 import TestUtils
 import Types.Boolish
 import Types.PzVal
@@ -22,8 +23,8 @@ spec = do
 boolishSpec :: Spec
 boolishSpec = describe "boolish" $ do
     it "converts false and true" $ do
-        boolish pzFalse `shouldBe` FalseReal
-        boolish pzTrue `shouldBe` TrueReal
+        boolish pzSymbFalse `shouldBe` FalseReal
+        boolish pzSymbTrue `shouldBe` TrueReal
 
     it "converts falsish values" $ do
         boolish (PzUnit) `shouldBe` Falsish

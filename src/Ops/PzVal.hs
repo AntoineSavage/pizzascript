@@ -1,5 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
-module Ops.PzVal ( pd, pl, parseList, parseMany, parseVal, unparseList, unparseMany, unparseVal ) where
+module Ops.PzVal ( parseList, parseMany, parseVal, unparseList, unparseMany, unparseVal ) where
 
 import qualified Data.Map as M
 
@@ -7,7 +7,7 @@ import Control.Monad ( void )
 import Ops.Numb ( parseNumb, unparseNumb )
 import Ops.Str ( parseStr, unparseStr )
 import Ops.Symb ( parseSymb, unparseSymb )
-import Symbs ( symbDict, symbList )
+import Symbs ( pzSymbDict, pzSymbList )
 import Text.Parsec ( char, choice, optionMaybe, (<?>), (<|>) )
 import Text.Parsec.String ( Parser )
 import Types.PzVal ( PzVal(..) )
@@ -17,21 +17,15 @@ parseVal ign p =
         PzNum <$> (parseNumb <?> "number")
     <|> PzStr <$> (parseStr <?> "string")
     <|> PzSymb <$> (parseSymb <?> "symbol (or identifier)")
-    <|> PzList <$> (parseList pl pd ign p <?> "list (or dictionary or function)")
+    <|> PzList <$> (parseList pzSymbList pzSymbDict ign p <?> "list (or dictionary or function)")
 
 unparseVal :: (Maybe PzVal -> String) -> PzVal -> String
 unparseVal f = \case
     PzNum n -> unparseNumb n
     PzStr s -> unparseStr s
     PzSymb s -> unparseSymb s
-    PzList xs -> unparseList pl pd f xs
+    PzList xs -> unparseList pzSymbList pzSymbDict f xs
     v -> error $ "Can only unparse quoted values: " ++ show v
-
-pl :: PzVal
-pl = PzSymb symbList
-
-pd :: PzVal
-pd = PzSymb symbDict
 
 parseList :: Eq a => a -> a -> Parser () -> Parser a -> Parser [a]
 parseList pl pd ign p =

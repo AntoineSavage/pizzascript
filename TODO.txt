@@ -5,14 +5,7 @@ not/or/and must return value with invoc position
 enforce at compile time not empty: ident, func body
 test/rename reduce (aka Acc stuff)
 
-built-ins:
-    - typeof, eq, lt
-    - num, add, sub, mult, div, exp, log, floor, ceil, trunc
-    - str, size, split, join
-    - symb, nbr_quotes
-    - cons, head, tail
-    - contains, keys, get, put, del
-    - get_impl_ctx, set_impl_ctx, get_expl_ctx, get_arg_pass, get_args, get_body
+implement built-in functions (see Symbs)
 
 error handling context field handling
 I/O context field handling

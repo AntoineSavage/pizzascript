@@ -16,6 +16,7 @@ import Ops.PzVal
 import Ops.PzValSpec
 import Ops.Symb
 import Ops.SymbSpec
+import Symbs
 import TestUtils
 import Types.Func
 import Types.Func.ArgPass
@@ -149,11 +150,11 @@ unevalSpec = describe "uneval" $ do
 
     it "converts list to itself, unevaled recursively, prepended with list symbol" $ do
         property $ \(Few l) -> do
-            uneval (PzList l) `shouldBe` (PzList $ (pl:) $ map uneval l)
+            uneval (PzList l) `shouldBe` (PzList $ (pzSymbList:) $ map uneval l)
 
     it "converts dict to list, unevaled recursively, prepended with dict symbol" $ do
         property $ \(ArbDict d) -> do
-            uneval (PzDict d) `shouldBe` (PzList $ (pd:) $ flip map (M.assocs d) $
+            uneval (PzDict d) `shouldBe` (PzList $ (pzSymbDict:) $ flip map (M.assocs d) $
                 \(k, v) -> PzList $ [uneval k, uneval v])
 
     it "converts built-in function to quoted identifier" $ do

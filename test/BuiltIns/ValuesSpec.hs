@@ -22,8 +22,6 @@ spec = do
 constantsSpec :: Spec
 constantsSpec = describe "constants" $ do
     it "declares boolean constants" $ do
-        pzFalse `shouldBe` (PzSymb symbFalse)
-        pzTrue `shouldBe` (PzSymb symbTrue)
         pzNot `shouldBe` (PzFunc M.empty $ Func None (ArgsArity [symbX]) (BodyBuiltIn symbNot))
         pzOr `shouldBe` (PzFunc M.empty $ Func None (ArgsArity [symbX, symbY]) (BodyBuiltIn symbOr))
         pzAnd `shouldBe` (PzFunc M.empty $ Func None (ArgsArity [symbX, symbY]) (BodyBuiltIn symbAnd))
