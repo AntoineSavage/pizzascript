@@ -5,8 +5,9 @@ import Test.QuickCheck
 
 import BuiltIns.Impls
 import BuiltIns.Values
-import Data.Boolish
-import Data.BoolishSpec
+import Ops.Boolish
+import Ops.BoolishSpec
+import Types.Boolish
 
 spec :: Spec
 spec = do

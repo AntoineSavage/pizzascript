@@ -3,13 +3,17 @@ module Eval where
 
 import qualified Data.Map as M
 
-import Data.Func.ArgPass ( ArgPass(..), argPassToSymb, symbToArgPass )
-import Data.Func.FuncArgs ( FuncArgs(..) )
-import Data.Func.FuncCustom ( toFuncCustom, FuncCustom(..) )
-import Data.Func.FuncImpureArgs ( FuncImpureArgs(..) )
-import Data.Nat ( Nat(..) )
-import Data.PzVal ( Dict, PzVal(..), pd, pl )
-import Data.Symb ( Symb(..), quoteSymb, unquoteSymb )
+import Ops.Func.ArgPass ( argPassToSymb, symbToArgPass )
+import Ops.Func.FuncCustom ( toFuncCustom )
+import Ops.PzVal ( pd, pl )
+import Ops.Symb ( quoteSymb, unquoteSymb )
+import Types.Func.ArgPass ( ArgPass(..) )
+import Types.Func.FuncArgs ( FuncArgs(..) )
+import Types.Func.FuncCustom ( FuncCustom(..) )
+import Types.Func.FuncImpureArgs ( FuncImpureArgs(..) )
+import Types.Nat ( Nat(..) )
+import Types.PzVal ( Dict, PzVal(..) )
+import Types.Symb ( Symb(..) )
 import Utils ( Result, getDuplicates, unparse )
 
 data EvalResult

@@ -3,7 +3,7 @@ module BuiltIns.Ctx where
 import qualified Data.Map as M
 
 import BuiltIns.Values ( pzFalse, pzTrue, pzNot, pzOr, pzAnd, pzFunc )
-import Data.PzVal ( Dict, PzVal(PzSymb) )
+import Types.PzVal ( Dict, PzVal(PzSymb) )
 import Symbs ( symbAnd, symbFunc, symbNot, symbOr )
 
 builtInCtx :: Dict

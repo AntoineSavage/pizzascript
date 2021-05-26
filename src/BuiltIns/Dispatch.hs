@@ -2,8 +2,8 @@ module BuiltIns.Dispatch where
 
 import qualified BuiltIns.Impls as Impls
 
-import Data.PzVal ( Dict, PzVal )
-import Data.Symb ( Symb(..) )
+import Types.PzVal ( Dict, PzVal )
+import Types.Symb ( Symb(..) )
 import Utils ( f1, f2, fpure, Result )
 
 type FuncResult = Result (Dict, PzVal)

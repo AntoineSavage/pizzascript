@@ -1,11 +1,9 @@
 module Reduce where
 
-import BuiltIns.Impls
-import Data.PzVal ( Dict, PzVal )
-import Data.Symb ( Symb(..) )
-import Data.Nat
-import Data.StackFrame
-import Utils
+import Types.PzVal ( PzVal )
+import Types.Symb ( Symb(..) )
+import Types.StackFrame ( StackFrame )
+import Utils ( Result )
 
 type AccResult = Result Acc
 type ReturnValue = Maybe PzVal

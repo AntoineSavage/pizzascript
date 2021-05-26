@@ -3,7 +3,8 @@ module Utils where
 
 import qualified Data.Set as S
 
-import Data.PzVal ( Dict, PzVal, unparseVal )
+import Ops.PzVal ( unparseVal )
+import Types.PzVal ( Dict, PzVal )
 
 unparse :: PzVal -> String
 unparse = unparseVal f where

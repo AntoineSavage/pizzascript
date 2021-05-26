@@ -8,24 +8,32 @@ import qualified Data.Map as M
 import Control.Exception
 import Control.Monad
 import Data.Either
-import Data.Func
-import Data.Func.ArgPass
-import Data.Func.ArgPassSpec
-import Data.Func.FuncArgs
-import Data.Func.FuncBody
-import Data.Func.FuncCustom
-import Data.Func.FuncCustomSpec
-import Data.Func.FuncImpureArgs
 import Data.List
-import Data.Nat
-import Data.Numb
-import Data.PzVal
-import Data.PzValSpec
-import Data.Str
-import Data.Symb
-import Data.SymbSpec
 import Eval
+import Ops.Func
+import Ops.Func.ArgPass
+import Ops.Func.ArgPassSpec
+import Ops.Func.FuncCustom
+import Ops.Func.FuncCustomSpec
+import Ops.Nat
+import Ops.Numb
+import Ops.PzVal
+import Ops.PzValSpec
+import Ops.Str
+import Ops.Symb
+import Ops.SymbSpec
 import TestUtils
+import Types.Func
+import Types.Func.ArgPass
+import Types.Func.FuncArgs
+import Types.Func.FuncBody
+import Types.Func.FuncCustom
+import Types.Func.FuncImpureArgs
+import Types.Nat
+import Types.Numb
+import Types.PzVal
+import Types.Str
+import Types.Symb
 
 spec :: Spec
 spec = do

@@ -7,8 +7,8 @@ import qualified Data.Map as M
 
 import BuiltIns.Ctx
 import BuiltIns.Values
-import Data.PzVal
 import Symbs
+import Types.PzVal
 
 spec :: Spec
 spec = do

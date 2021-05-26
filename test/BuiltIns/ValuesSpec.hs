@@ -6,13 +6,16 @@ import Test.QuickCheck
 import qualified Data.Map as M
 
 import BuiltIns.Values
-import Data.Func
-import Data.Func.ArgPass
-import Data.Func.FuncArgs
-import Data.Func.FuncBody
-import Data.Func.FuncImpureArgs
-import Data.PzVal
+import Ops.Func
+import Ops.Func.ArgPass
+import Ops.PzVal
 import Symbs
+import Types.Func
+import Types.Func.ArgPass
+import Types.Func.FuncArgs
+import Types.Func.FuncBody
+import Types.Func.FuncImpureArgs
+import Types.PzVal
 
 spec :: Spec
 spec = do

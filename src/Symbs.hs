@@ -1,7 +1,8 @@
 module Symbs where
 
-import Data.Nat ( Nat(..) ) 
-import Data.Symb ( Symb(..), quoteSymb, symb )
+import Ops.Symb ( quoteSymb, symb )
+import Types.Nat ( Nat(..) ) 
+import Types.Symb ( Symb(..) )
 
 -- All the following symbols correspond to quoted identifiers
 -- i.e. identifiers that were just parsed

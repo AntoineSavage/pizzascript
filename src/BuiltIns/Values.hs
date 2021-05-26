@@ -2,13 +2,13 @@ module BuiltIns.Values where
 
 import qualified Data.Map as M
 
-import Data.Func ( Func(..) )
-import Data.Func.ArgPass ( ArgPass(..) )
-import Data.Func.FuncArgs ( FuncArgs(..) )
-import Data.Func.FuncBody ( FuncBody(..) )
-import Data.Func.FuncImpureArgs ( FuncImpureArgs(..) )
-import Data.PzVal ( PzVal(..) )
 import Symbs ( symbAnd, symbArgs,  symbCtx, symbFalse, symbFunc, symbNot, symbOr, symbTrue, symbX, symbY )
+import Types.Func ( Func(..) )
+import Types.Func.ArgPass ( ArgPass(..) )
+import Types.Func.FuncArgs ( FuncArgs(..) )
+import Types.Func.FuncBody ( FuncBody(..) )
+import Types.Func.FuncImpureArgs ( FuncImpureArgs(..) )
+import Types.PzVal ( PzVal(..) )
 
 -- numbers
 -- TODO

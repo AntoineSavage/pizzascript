@@ -4,9 +4,10 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Data.List
-import Data.PzVal
-import Data.PzValSpec
+import Ops.PzVal
+import Ops.PzValSpec
 import TestUtils
+import Types.PzVal
 import Utils
 
 spec :: Spec
