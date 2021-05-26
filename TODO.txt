@@ -2,7 +2,7 @@ replace AstExpr with quoted PzVal (eval becomes unquote, quote becomes id, unquo
 add back enough pos stuff to have stack traces and debug info
 
 test/rename reduce (aka Acc stuff)
-implement built-in functions (see Symbs)
+implement built-in functions
 
 error handling context field handling
 I/O context field handling

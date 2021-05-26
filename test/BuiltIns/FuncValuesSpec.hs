@@ -1,11 +1,11 @@
-module BuiltIns.ValuesSpec where
+module BuiltIns.FuncValuesSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
 import qualified Data.Map as M
 
-import BuiltIns.Values
+import BuiltIns.FuncValues
 import Symbs
 import Types.Func
 import Types.Func.ArgPass

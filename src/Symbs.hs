@@ -50,6 +50,9 @@ symbExp = symb "exp";       pzSymbExp = PzSymb symbExp
 symbLog :: Symb;            pzSymbLog :: PzVal
 symbLog = symb "log";       pzSymbLog = PzSymb symbLog
 
+symbRound :: Symb;          pzSymbRound :: PzVal
+symbRound = symb "round";   pzSymbRound = PzSymb symbRound
+
 symbFloor :: Symb;          pzSymbFloor :: PzVal
 symbFloor = symb "floor";   pzSymbFloor = PzSymb symbFloor
 

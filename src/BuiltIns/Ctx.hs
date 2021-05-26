@@ -2,38 +2,71 @@ module BuiltIns.Ctx where
 
 import qualified Data.Map as M
 
-import BuiltIns.Values ( pzNot, pzOr, pzAnd, pzFunc )
+import BuiltIns.FuncValues
 import Types.PzVal ( Dict, PzVal(..) )
-import Symbs ( symbFunc, pzSymbFalse, pzSymbTrue, pzSymbNot, pzSymbOr, pzSymbAnd )
+import Symbs
 
 builtInCtx :: Dict
 builtInCtx = M.fromList
     [
+    -- generic
+      (pzSymbTypeOf, pzTypeOf)
+    , (pzSymbEq, pzEq)
+    , (pzSymbLt, pzLt)
+
+    -- semi-generic
+    , (pzSymbIsEmpty, pzIsEmpty)
+    , (pzSymbSize, pzSize)
+
     -- numbers
-    -- TODO
+    , (pzSymbNum, pzNum)
+    , (pzSymbAdd, pzAdd)
+    , (pzSymbSub, pzSub)
+    , (pzSymbMult, pzMult)
+    , (pzSymbDiv, pzDiv)
+    , (pzSymbRem, pzRem)
+    , (pzSymbExp, pzExp)
+    , (pzSymbLog, pzLog)
+    , (pzSymbRound, pzRound)
+    , (pzSymbFloor, pzFloor)
+    , (pzSymbCeil, pzCeil)
+    , (pzSymbTrunc, pzTrunc)
 
     -- strings
-    -- TODO
+    , (pzSymbStr, pzStr)
+    , (pzSymbSplit, pzSplit)
+    , (pzSymbJoin, pzJoin)
 
     -- symbols
-    -- TODO
+    , (pzSymbSymb, pzSymb)
+    , (pzSymbNbrQuotes, pzNbrQuotes)
 
     -- booleans
-      (pzSymbFalse, pzSymbFalse)
+    , (pzSymbFalse, pzSymbFalse)
     , (pzSymbTrue, pzSymbTrue)
     , (pzSymbNot, pzNot)
     , (pzSymbOr, pzOr)
     , (pzSymbAnd, pzAnd)
 
     -- lists
-    -- TODO
+    , (pzSymbCons, pzCons)
+    , (pzSymbHead, pzHead)
+    , (pzSymbTail, pzTail)
 
     -- dictionaries
-    -- TODO
+    , (pzSymbKeys, pzKeys)
+    , (pzSymbAssocs, pzAssocs)
+    , (pzSymbContains, pzContains)
+    , (pzSymbGet, pzGet)
+    , (pzSymbPut, pzPut)
+    , (pzSymbDel, pzDel)
 
     -- functions
-    , (PzSymb symbFunc, pzFunc)
-
-    -- miscellaneous
-    -- TODO
+    , (pzSymbFunc, pzFunc)
+    , (pzSymbGetImplCtx, pzGetImplCtx)
+    , (pzSymbSetImplCtx, pzSetImplCtx)
+    , (pzSymbGetExplCtx, pzGetExplCtx)
+    , (pzSymbGetArgPass, pzGetArgPass)
+    , (pzSymbGetArgs, pzGetArgs)
+    , (pzSymbGetBody, pzGetBody)
     ]

@@ -6,7 +6,7 @@ import Test.QuickCheck
 import qualified Data.Map as M
 
 import BuiltIns.Ctx
-import BuiltIns.Values
+import BuiltIns.FuncValues
 import Symbs
 import Types.PzVal
 

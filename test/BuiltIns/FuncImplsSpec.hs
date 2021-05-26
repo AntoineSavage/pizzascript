@@ -1,10 +1,10 @@
-module BuiltIns.ImplsSpec where
+module BuiltIns.FuncImplsSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
-import BuiltIns.Impls
-import BuiltIns.Values
+import BuiltIns.FuncImpls
+import BuiltIns.FuncValues
 import Ops.BoolishSpec
 import Symbs
 

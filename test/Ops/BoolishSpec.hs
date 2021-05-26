@@ -5,7 +5,7 @@ import Test.QuickCheck
 
 import qualified Data.Map as M
 
-import BuiltIns.Values
+import BuiltIns.FuncValues
 import Control.Monad
 import Ops.Boolish
 import Ops.PzValSpec
