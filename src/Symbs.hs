@@ -1,6 +1,6 @@
 module Symbs where
 
-import Data.Nat ( Nat(Z, S) ) 
+import Data.Nat ( Nat(..) ) 
 import Data.Symb ( Symb(..), quoteSymb, symb )
 
 -- All the following symbols correspond to quoted identifiers
