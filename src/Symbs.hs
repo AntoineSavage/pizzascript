@@ -9,14 +9,21 @@ import Types.Symb ( Symb(..) )
 -- They also correspond to single-quoted symbols
 
 -- generic
-symbTypeOf :: Symb;         pzSymbTypeOf :: PzVal; 
-symbTypeOf = symb "type_of"; pzSymbTypeOf = PzSymb symbTypeOf
+symbTypeOf :: Symb;             pzSymbTypeOf :: PzVal;
+symbTypeOf = symb "type_of";    pzSymbTypeOf = PzSymb symbTypeOf
 
 symbEq :: Symb;             pzSymbEq :: PzVal
 symbEq = symb "eq";         pzSymbEq = PzSymb symbEq
 
 symbLt :: Symb;             pzSymbLt :: PzVal
 symbLt = symb "lt";         pzSymbLt = PzSymb symbLt
+
+-- semi-generic
+symbIsEmpty :: Symb;            pzSymbIsEmpty :: PzVal
+symbIsEmpty = symb "is_empty";  pzSymbIsEmpty = PzSymb symbIsEmpty
+
+symbSize :: Symb;           pzSymbSize :: PzVal
+symbSize = symb "size";     pzSymbSize = PzSymb symbSize
 
 -- numbers
 symbNum :: Symb;            pzSymbNum :: PzVal
@@ -102,11 +109,14 @@ symbTail = symb "tail";     pzSymbTail = PzSymb symbTail
 symbDict :: Symb;           pzSymbDict :: PzVal
 symbDict = symb "dict";     pzSymbDict = PzSymb symbDict
 
-symbContains :: Symb;           pzSymbContains :: PzVal
-symbContains = symb "contains"; pzSymbContains = PzSymb symbContains
-
 symbKeys :: Symb;           pzSymbKeys :: PzVal
 symbKeys = symb "keys";     pzSymbKeys = PzSymb symbKeys
+
+symbAssocs :: Symb;         pzSymbAssocs :: PzVal
+symbAssocs = symb "assocs"; pzSymbAssocs = PzSymb symbAssocs
+
+symbContains :: Symb;           pzSymbContains :: PzVal
+symbContains = symb "contains"; pzSymbContains = PzSymb symbContains
 
 symbGet :: Symb;           pzSymbGet :: PzVal
 symbGet = symb "get";      pzSymbGet = PzSymb symbGet
@@ -151,6 +161,9 @@ symbX = symb "x"
 
 symbY :: Symb
 symbY = symb "y"
+
+symbZ :: Symb
+symbZ = symb "z"
 
 -- All the following symbols correspond to non-quoted identifiers
 -- i.e. symbols that were just parsed

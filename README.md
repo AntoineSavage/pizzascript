@@ -78,9 +78,12 @@ The following functions work on numbers:
 (sub x y)
 (mult x y)
 (div x y)
-(mod x y)
+(rem x y)
 (exp x y)
 (log x y)
+(floor x)
+(ceil x)
+(trunc x)
 ```
 
 # Strings
@@ -150,12 +153,6 @@ The number of quotes of a symbol can be obtained like this:
 (nbr_quotes 'foo)           # -> 1
 (nbr_quotes ''bar)          # -> 2
 (nbr_quotes '''foo.bar.baz) # -> 3
-```
-
-Booleans and other enum-like values are implemented using symbols like this:
-```
-(def false 'false)
-(def true 'true)
 ```
 
 ## Symbols and identifiers

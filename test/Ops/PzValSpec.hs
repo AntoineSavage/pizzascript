@@ -150,17 +150,17 @@ unparseListSpec :: Spec
 unparseListSpec = describe "unparseList" $ do
     it "unparses empty list into empty form" $ do
         unparseList' [] `shouldBe` "()"
-    
+   
     it "unparses list" $ do
         property $ \(Few es) -> do
             let elems = ple : es
             unparseList' elems `shouldBe` "[" ++ concatMap str es ++ "]"
-    
+   
     it "unparses di dict" $ do
         property $ \(Few es) -> do
             let elems = pde : es
             unparseList' elems `shouldBe` "{" ++ concatMap str es ++ "}"
-    
+   
     it "unparses form" $ do
         property $ \(Few es) -> do
             unparseList' es `shouldBe` "(" ++ concatMap str es ++ ")"

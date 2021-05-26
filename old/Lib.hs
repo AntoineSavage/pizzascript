@@ -79,7 +79,7 @@ evalBlock rval ctx es frames =
         [] ->
             -- block finished: pop frame
             return $ Acc rval frames
-       
+      
         e:es ->
             -- evaluate next block expression
             evalExpr ctx e Eval >>= toAcc ctx e (Block ctx es : frames)
@@ -93,11 +93,11 @@ evalForm rval ctx mfi elems frames =
                 [] ->
                     -- empty form -> return unit type (and pop frame)
                     return $ Acc (Just PzUnit) frames
-       
+      
                 e:es ->
                     -- evaluate first form element (should be a function)
                     evalExpr ctx e Eval >>= toAcc ctx e (Form ctx mfi es : frames)
-       
+      
         Just f ->
             -- process return value (first form elem, should be a function)
             case f of
@@ -180,7 +180,7 @@ invokeFuncCustom explCtx as implCtx impArgs args es frames =
         explCtxPairs = case impArgs of
             Both _ i -> [ (toExpr i, PzDict explCtx) ]
             _ -> []
-       
+      
         actLen = length as
         (expLen, argPairs) = case args of
             ArgsVaria i -> (actLen, [ (toExpr i, PzList as) ])

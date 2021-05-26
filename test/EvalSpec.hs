@@ -361,19 +361,19 @@ unconsFuncBodySpec :: Spec
 unconsFuncBodySpec = describe "unconsFuncBody" $ do
     it "rejects empty body" $ do
         isLeft (unconsFuncBody []) `shouldBe` True
-    
+   
     it "uncons one element" $ do
         property $ \v -> do
             unconsFuncBody [v] `shouldBe` Right (v, [])
-    
+   
     it "uncons two elements" $ do
         property $ \v1 v2 -> do
             unconsFuncBody [v1, v2] `shouldBe` Right (v1, [v2])
-    
+   
     it "uncons three elements" $ do
         property $ \v1 v2 v3 -> do
             unconsFuncBody [v1, v2, v3] `shouldBe` Right (v1, [v2, v3])
-    
+   
     it "uncons N+1 elements" $ do
         property $ \v vs -> do
             unconsFuncBody (v:vs) `shouldBe` Right (v, vs)
@@ -410,7 +410,7 @@ instance Arbitrary UniqueQuotedIdents2 where
     arbitrary = do
         QuotedIdent x <- arbitrary
         QuotedIdent y <- arbitrary
-        if [x, y] /= nub [x, y] then arbitrary else 
+        if [x, y] /= nub [x, y] then arbitrary else
             return $ UniqueQuotedIdents2 x y
 
 data UniqueQuotedIdentsNP1 = UniqueQuotedIdentsNP1 Symb [Symb] deriving (Show, Eq)
@@ -418,5 +418,5 @@ instance Arbitrary UniqueQuotedIdentsNP1 where
     arbitrary = do
         QuotedIdent x <- arbitrary
         xs <- arbFew $ do QuotedIdent x' <- arbitrary; return x'
-        if x:xs /= nub (x:xs) then arbitrary else 
+        if x:xs /= nub (x:xs) then arbitrary else
             return $ UniqueQuotedIdentsNP1 x xs
