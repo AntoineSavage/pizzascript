@@ -7,6 +7,7 @@ import Data.List
 import Ops.PzVal
 import Ops.PzValSpec
 import TestUtils
+import Types.PzVal
 import Utils
 
 spec :: Spec
@@ -26,6 +27,7 @@ unparseSpec = describe "unparseMaybeVal" $ do
         let f Nothing = ""; f (Just v) = unparseVal f v ++ " "
         property $ \(UnparseValid v) -> do
             unparse v `shouldBe` unparseVal f v
+            unparse (PzList []) `shouldBe` unparseVal f (PzList [])
 
 getDuplicatesSpec :: Spec
 getDuplicatesSpec = describe "getDuplicates" $ do
@@ -123,7 +125,7 @@ fpureSpec = describe "fpure" $ do
 type R = Utils.Result -- conflict with QuickCheck
 
 undefinedOrResult0 :: R Int -> () -> R Int
-undefinedOrResult0 r _ = r
+undefinedOrResult0 r () = r
 
 undefinedOrResult1 :: Int -> R Int -> Int -> R Int
 undefinedOrResult1 v r x = if [x] /= [v] then undefined else r

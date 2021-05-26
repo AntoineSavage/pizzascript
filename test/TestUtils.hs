@@ -15,6 +15,10 @@ accentChars = "àâäĉèéêëĝĥîïĵôöŝùûüŵŷÿ"
 escapees = "\"\\\b\f\n\r\t"
 underscore = '_'
 
+leftAsStr :: (Show a, Show b) => Either a b -> String
+leftAsStr (Left x)  = show x
+leftAsStr x         = "Expected Left, but was: " ++ show x
+
 -- Arbitrary constraints
 newtype Few a = Few [a] deriving (Show, Eq)
 instance Arbitrary a => Arbitrary (Few a) where arbitrary = Few <$> arbFew arbitrary

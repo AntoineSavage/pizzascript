@@ -44,7 +44,8 @@ parseValVsUnparseValSpec = describe "parseVal vs unparseVal" $ do
 parseValSpec :: Spec
 parseValSpec = describe "parseVal" $ do
     it "rejects empty string" $ do
-        isLeft (parse (parseVal ignore undefined) "tests" "") `shouldBe` True
+        leftAsStr (parse (parseVal ignore undefined) "tests" "") `shouldContain`
+            "expecting number, string, symbol (or identifier) or list (or dictionary or function)"
 
     it "parses num" $ do
         property $ \n -> do

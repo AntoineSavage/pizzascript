@@ -29,9 +29,11 @@ import Types.Numb
 import Types.PzVal
 import Types.Str
 import Types.Symb
+import Utils
 
 spec :: Spec
 spec = do
+    evalResultShowSpec
     evalVsUnevalSpec
     evalSpec
     unevalSpec
@@ -48,6 +50,14 @@ spec = do
     validateNoDuplicateQuotedIdentsSpec
     unconsFuncBodySpec
     getQuotedIdentSpec
+
+evalResultShowSpec :: Spec
+evalResultShowSpec = describe "EvalResult (Show instance" $ do
+    it "shows Evaled" $ do
+        show (Evaled PzUnit) `shouldBe` "Evaled PzUnit"
+
+    it "shows Form" $ do
+        show (Form PzUnit []) `shouldBe` "Form PzUnit []"
 
 evalVsUnevalSpec :: Spec
 evalVsUnevalSpec = describe "eval vs uneval" $ do
@@ -106,7 +116,11 @@ evalSpec = describe "eval" $ do
     it "undefined quoted identifier" $ do
         property $ \(ArbDict c) (Ident f ns) -> do
             let k = PzSymb $ Symb Z f ns
-            isLeft (eval (M.delete k c) k) `shouldBe` True
+                ctx = M.delete k c
+            leftAsStr (eval ctx k) `shouldContain`
+                (show $ "Error: Undefined identifier: " ++ unparseSymb (Symb Z f ns)
+                    ++ "\n context keys: " ++ show (M.keys ctx)
+                )
 
     it "converts symbol to itself, unquoted" $ do
         property $ \n (Ident f ns) -> do
@@ -181,7 +195,11 @@ evalFuncCustomSpec = describe "evalFuncCustom" $ do
             evalFuncCustom elems `shouldBe` Right func
 
     it "rejects empty elems" $ do
-        isLeft (evalFuncCustom []) `shouldBe` True
+        leftAsStr (evalFuncCustom []) `shouldContain`
+            (show $ "Error: Function argument definition must be either:\n"
+            ++ " - a single varargs identifier\n"
+            ++ " - an form of arity identifiers\n"
+            ++ " was: []")
 
 unevalFuncCustomSpec :: Spec
 unevalFuncCustomSpec = describe "unevalFuncCustom" $ do
@@ -225,14 +243,20 @@ evalImpureArgsSpec = describe "evalImpureArgs" $ do
 
     it "rejects invalid arg-pass symbol" $ do
         property $ \s (Few es) -> do
-            let elems = PzList [PzSymb $ Symb (S Z) '_' s] : es
-            isLeft (evalImpureArgs elems) `shouldBe` True
+            let sym = Symb (S Z) '_' s
+                elems = PzList [PzSymb $ sym] : es
+            leftAsStr (evalImpureArgs elems) `shouldContain`
+                (show $ "Error: Invalid argument-passing behaviour symbol: " ++ show sym)
 
     it "rejects size-3 (or more) form" $ do
         property $ \ap (QuotedIdent ec) a (Few as) (Few es) -> do
             let elems = (PzList $ [ PzSymb $ argPassToSymb ap, PzSymb ec] ++ [a] ++ as) : es
-            isLeft (evalImpureArgs elems) `shouldBe` True
-
+            leftAsStr (evalImpureArgs elems) `shouldContain`
+                (show $ "Error: Impure function argument definition must be either:\n"
+                    ++ " - a valid argument-passsing behaviour symbol only\n"
+                    ++ " - a valid argument-passsing behaviour symbol, followed by an identifier\n"
+                    ++ " was: " ++ show elems
+                )
 
 unevalImpureArgsSpec :: Spec
 unevalImpureArgsSpec = describe "unevalImpureArgs" $ do
@@ -268,14 +292,22 @@ evalArgsSpec = describe "evalArgs" $ do
             evalArgs elems `shouldBe` Right (ArgsArity ss, es)
 
     it "rejects empty list" $ do
-        isLeft (evalArgs []) `shouldBe` True
+        leftAsStr (evalArgs []) `shouldContain`
+            (show $ "Error: Function argument definition must be either:\n"
+                ++ " - a single varargs identifier\n"
+                ++ " - an form of arity identifiers\n"
+                ++ " was: []"
+            )
 
     it "rejects non-ident and non-form list" $ do
-        property $ \(Few es) n -> do
-            forM_   [ PzNum $ Numb 0, PzStr $ Str ""
-                    , PzSymb $ Symb (S n) '_' ""
-                    ] $ \e ->
-                isLeft (evalArgs $ e:es) `shouldBe` True
+        property $ \(Few es) -> do
+            forM_ [ PzNum $ Numb 0, PzStr $ Str "" ] $ \e ->
+                leftAsStr (evalArgs $ e:es) `shouldContain`
+                    (show $ "Error: Function argument definition must be either:\n"
+                        ++ " - a single varargs identifier\n"
+                        ++ " - an form of arity identifiers\n"
+                        ++ " was: " ++ show (e:es)
+                    )
 
 unevalArgsSpec :: Spec
 unevalArgsSpec = describe "unevalArgs" $ do
@@ -297,7 +329,9 @@ evalQuotedIdentSpec = describe "evalQuotedIdent" $ do
     it "rejects undefined identifier" $ do
         property $ \(ArbDict c) s -> do
             let k = PzSymb s
-            isLeft (evalQuotedIdent (M.delete k c) k) `shouldBe` True
+                ctx = M.delete k c
+            leftAsStr (evalQuotedIdent ctx k) `shouldContain`
+                    (show $ "Error: Undefined identifier: " ++ unparseSymb s ++ "\n context keys: " ++ show (M.keys ctx))
 
 validateNoDuplicateQuotedIdentsSpec :: Spec
 validateNoDuplicateQuotedIdentsSpec = describe "validateNoDuplicateQuotedIdents" $ do
@@ -340,27 +374,32 @@ validateNoDuplicateQuotedIdentsSpec = describe "validateNoDuplicateQuotedIdents"
     it "rejects two args (impure+varia)" $ do
         property $ \(QuotedIdent x) -> do
             let (ctx, varargs) = (x, x)
-            isLeft (validateNoDuplicateQuotedIdents (both ctx) (ArgsVaria varargs)) `shouldBe` True
+            leftAsStr (validateNoDuplicateQuotedIdents (both ctx) (ArgsVaria varargs)) `shouldContain`
+                    (show $ "Error: Duplicate identifiers in function definition: " ++ concatMap unparseSymb [x])
 
     it "rejects two args (impure+arity)" $ do
         property $ \(QuotedIdent x) -> do
             let (ctx, arg) = (x, x)
-            isLeft (validateNoDuplicateQuotedIdents (both ctx) (ArgsArity [arg])) `shouldBe` True
+            leftAsStr (validateNoDuplicateQuotedIdents (both ctx) (ArgsArity [arg])) `shouldContain`
+                    (show $ "Error: Duplicate identifiers in function definition: " ++ concatMap unparseSymb [x])
 
     it "rejects two args (arity)" $ do
         property $ \(QuotedIdent x) -> do
             let (arg1, arg2) = (x, x)
             forM_ [none, form] $ \impArgs -> do
-                isLeft (validateNoDuplicateQuotedIdents none (ArgsArity [arg1, arg2])) `shouldBe` True
+                leftAsStr (validateNoDuplicateQuotedIdents none (ArgsArity [arg1, arg2])) `shouldContain`
+                    (show $ "Error: Duplicate identifiers in function definition: " ++ concatMap unparseSymb [x])
 
     it "rejects N+1 args (impure+arity)" $ do
         property $ \(UniqueQuotedIdentsNP1 ctx args) -> do
-            isLeft (validateNoDuplicateQuotedIdents (both ctx) (ArgsArity $ ctx:args)) `shouldBe` True
+            leftAsStr (validateNoDuplicateQuotedIdents (both ctx) (ArgsArity $ ctx:args)) `shouldContain`
+                (show $ "Error: Duplicate identifiers in function definition: " ++ concatMap unparseSymb [ctx])
 
 unconsFuncBodySpec :: Spec
 unconsFuncBodySpec = describe "unconsFuncBody" $ do
     it "rejects empty body" $ do
-        isLeft (unconsFuncBody []) `shouldBe` True
+        leftAsStr (unconsFuncBody []) `shouldContain`
+            (show $ "Error: Function body must not be empty")
    
     it "uncons one element" $ do
         property $ \v -> do
@@ -386,19 +425,23 @@ getQuotedIdentSpec = describe "getQuotedIdent" $ do
 
     it "rejects number" $ do
         property $ \n ->
-            isLeft (getQuotedIdent (PzNum n)) `shouldBe` True
+            leftAsStr (getQuotedIdent (PzNum n)) `shouldContain`
+                (show $ "Expected identifier\n was: " ++ show (PzNum n))
 
     it "rejects string" $ do
         property $ \s ->
-            isLeft (getQuotedIdent (PzStr s)) `shouldBe` True
+            leftAsStr (getQuotedIdent (PzStr s)) `shouldContain`
+                (show $ "Expected identifier\n was: " ++ show (PzStr s))
 
     it "rejects symbol" $ do
         property $ \s ->
-            isLeft (getQuotedIdent (PzSymb s)) `shouldBe` True
+            leftAsStr (getQuotedIdent (PzSymb s)) `shouldContain`
+                (show $ "Expected identifier\n was: " ++ show (PzSymb s))
 
     it "rejects list" $ do
         property $ \l ->
-            isLeft (getQuotedIdent (PzList l)) `shouldBe` True
+            leftAsStr (getQuotedIdent (PzList l)) `shouldContain`
+                (show $ "Expected identifier\n was: " ++ show (PzList l))
 
 -- Utils
 none = None

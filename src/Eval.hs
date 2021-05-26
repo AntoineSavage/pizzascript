@@ -5,7 +5,7 @@ import qualified Data.Map as M
 
 import Ops.Func.ArgPass ( argPassToSymb, symbToArgPass )
 import Ops.Func.FuncCustom ( toFuncCustom )
-import Ops.Symb ( quoteSymb, unquoteSymb )
+import Ops.Symb ( quoteSymb, unparseSymb, unquoteSymb )
 import Symbs ( pzSymbDict, pzSymbList )
 import Types.Func.FuncArgs ( FuncArgs(..) )
 import Types.Func.FuncCustom ( FuncCustom(..) )
@@ -109,7 +109,7 @@ evalQuotedIdent ctx k = case M.lookup k ctx of
     Just v -> Right v
     Nothing -> Left $
         "Error: Undefined identifier: " ++ unparse k
-        ++ "\n context keys: " ++ show (map unparse $ M.keys ctx)
+            ++ "\n context keys: " ++ show (M.keys ctx)
 
 validateNoDuplicateQuotedIdents :: FuncImpureArgs -> FuncArgs -> Result ()
 validateNoDuplicateQuotedIdents impArgs args =
@@ -125,7 +125,8 @@ validateNoDuplicateQuotedIdents impArgs args =
     in if null duplicates
         then return ()
         else Left $
-            "Error: Duplicate identifiers in function definition: " ++ show duplicates
+            "Error: Duplicate identifiers in function definition: "
+                ++ concatMap unparseSymb duplicates
 
 unconsFuncBody :: [PzVal] -> Result (PzVal, [PzVal])
 unconsFuncBody = \case
@@ -136,4 +137,4 @@ getQuotedIdent :: PzVal -> Result Symb
 getQuotedIdent v = case v of
     PzSymb s@(Symb Z _ _) -> return s
     _ -> Left $ "Expected identifier"
-        ++ "\n was: " ++ show v -- TODO pretty
+        ++ "\n was: " ++ show v

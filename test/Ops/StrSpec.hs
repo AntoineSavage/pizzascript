@@ -33,15 +33,17 @@ parseStrVsUnparseStrSpec = describe "parseStr' vs unparseStr" $ do
 parseStrSpec :: Spec
 parseStrSpec = describe "parseStr" $ do
     it "rejects empty string" $ do
-        isLeft (parse parseStr' "tests" "") `shouldBe` True
+        leftAsStr (parse parseStr' "tests" "") `shouldContain` "unexpected end of input"
 
     it "rejects non-printable, non-backslash char in string" $ do
         forM_ [noEscapeChars ++ [c] | c <- "\b\f\n\t\b\0\31\127"] $ \s -> do
-            isLeft (parse parseStr' "tests" ("\"" ++ s ++ "\"")) `shouldBe` True
+            leftAsStr (parse parseStr' "tests" ("\"" ++ s ++ "\"")) `shouldContain`
+                ("Unprintable characters must be escaped: " ++ let c:_ = reverse s in unparseChar c)
 
     it "rejects unsupported escape sequence" $ do
         forM_ [noEscapeChars ++ ['\\', c] | c <- "acdeghijklmopqsvwxyz"] $ \s -> do
-            isLeft (parse parseStr' "tests" ("\"" ++ s ++ "\"")) `shouldBe` True
+            leftAsStr (parse parseStr' "tests" ("\"" ++ s ++ "\"")) `shouldContain`
+                ("Unsupported escape sequence: \\" ++ let c:_ = reverse s in unparseChar c)
 
     it "parses string without escaping (ascii)" $ do
         let s = noEscapeChars
@@ -162,12 +164,12 @@ parseCharVsUnparseCharSpec = describe "parseChar vs unparseChar" $ do
 parseCharSpec :: Spec
 parseCharSpec = describe "parseChar" $ do
     it "rejects non-printable, non-backslash char" $ do
-        forM_ [[c] | c <- "\b\f\n\t\b\0\31\127"] $ \s -> do
-            isLeft (parse parseChar "tests" s) `shouldBe` True
+        forM_ [[c] | c <- "\b\f\n\t\b\0\31\127"] $ \s@[c] -> do
+            leftAsStr (parse parseChar "tests" s) `shouldContain` ("Unprintable characters must be escaped: " ++ unparseChar c)
 
     it "rejects char with unsupported escape sequence" $ do
         forM_ ['\\':[c] | c <- "acdeghijklmopqsvwxyz"] $ \s -> do
-            isLeft (parse parseChar "tests" s) `shouldBe` True
+            leftAsStr (parse parseChar "tests" s) `shouldContain` ("Unsupported escape sequence: " ++ s)
 
     it "parses char without escaping (ascii)" $ do
         forM_ noEscapeChars $ \c -> do
@@ -226,8 +228,8 @@ parseCharSpec = describe "parseChar" $ do
         parse parseChar "tests" "\\u{10FFFF}" `shouldBe` Right '\1114111'
 
     it "rejects out-of-bounds" $ do
-        isLeft (parse parseChar "tests" "\\u{110000}") `shouldBe` True
-        isLeft (parse parseChar "tests" "\\u{110001}") `shouldBe` True
+        leftAsStr (parse parseChar "tests" "\\u{110000}") `shouldContain` "Hex codepoint out of range: 110000"
+        leftAsStr (parse parseChar "tests" "\\u{110001}") `shouldContain` "Hex codepoint out of range: 110001"
 
 unparseCharSpec :: Spec
 unparseCharSpec = describe "unparseChar" $ do
@@ -331,13 +333,13 @@ parseHexCodepointSpec = describe "parseHexCodepoint" $ do
                 parse (parseHexCodepoint $ return $ f s) "tests" "" `shouldBe` Right (f s)
 
         it "rejects out-of-bounds" $ do
-            isLeft (parse (parseHexCodepoint $ return "110000") "tests" "") `shouldBe` True
-            isLeft (parse (parseHexCodepoint $ return "110001") "tests" "") `shouldBe` True
+            leftAsStr (parse (parseHexCodepoint $ return "110000") "tests" "") `shouldContain` "Hex codepoint out of range: 110000"
+            leftAsStr (parse (parseHexCodepoint $ return "110001") "tests" "") `shouldContain` "Hex codepoint out of range: 110001"
 
         it "rejects out-of-bounds (prop)" $ do
             property $ \(InvalidCodepoint i) -> do
                 let s = showHex i ""
-                isLeft (parse (parseHexCodepoint $ return $ f s) "tests" "") `shouldBe` True
+                leftAsStr (parse (parseHexCodepoint $ return $ f s) "tests" "") `shouldContain` ("Hex codepoint out of range: " ++ f s)
 
 -- Utils
 noEscapeChars = digits ++ lettersUpper ++ lettersLower ++ symbols
