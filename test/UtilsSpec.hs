@@ -43,23 +43,23 @@ getDuplicatesSpec = describe "getDuplicates" $ do
     it "finds one duplicate" $ do
         property $ \x (Uniques xs) -> do
             getDuplicates (x:xs ++ [x]) `shouldBe` ([x] :: [Int])
-  
+ 
     it "finds two duplicates" $ do
         property $ \x y (Uniques xs) -> nub [x, y] == [x, y] ==> do
             getDuplicates (x:y:xs ++ [x, y]) `shouldBe` (sort [x, y] :: [Int])
-  
+ 
     it "finds three duplicates" $ do
         property $ \x y z (Uniques xs) -> nub [x, y, z] == [x, y, z] ==> do
             getDuplicates (x:y:z:xs ++ [x, y, z]) `shouldBe` (sort [x, y, z] :: [Int])
-  
+ 
     it "finds N duplicates" $ do
         property $ \(Uniques ds) (Uniques xs) -> do
             getDuplicates (ds ++ xs ++ ds) `shouldBe` (sort ds :: [Int])
-  
+ 
     it "finds only duplicates" $ do
         property $ \(Uniques xs) -> do
             getDuplicates (xs ++ xs) `shouldBe` (sort xs :: [Int])
-  
+ 
 invalidArityMsgSpec :: Spec
 invalidArityMsgSpec = describe "invalidArityMsg" $ do
     it "returns the appropriate message" $ do

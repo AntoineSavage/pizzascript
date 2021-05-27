@@ -400,19 +400,19 @@ unconsFuncBodySpec = describe "unconsFuncBody" $ do
     it "rejects empty body" $ do
         leftAsStr (unconsFuncBody []) `shouldContain`
             (show $ "Error: Function body must not be empty")
-   
+  
     it "uncons one element" $ do
         property $ \v -> do
             unconsFuncBody [v] `shouldBe` Right (v, [])
-   
+  
     it "uncons two elements" $ do
         property $ \v1 v2 -> do
             unconsFuncBody [v1, v2] `shouldBe` Right (v1, [v2])
-   
+  
     it "uncons three elements" $ do
         property $ \v1 v2 v3 -> do
             unconsFuncBody [v1, v2, v3] `shouldBe` Right (v1, [v2, v3])
-   
+  
     it "uncons N+1 elements" $ do
         property $ \v vs -> do
             unconsFuncBody (v:vs) `shouldBe` Right (v, vs)

@@ -10,6 +10,12 @@ import Ops.PzValSpec
 
 spec :: Spec
 spec = describe "dispatch" $ do
+    it "dispatches to generic functions" $ do
+        property $ \v1 v2 -> do
+            dispatch undefined [v1] "type_of" `shouldBe` Right (Impls._typeOf v1)
+            dispatch undefined [v1, v2] "eq" `shouldBe` Right (Impls._eq v1 v2)
+            dispatch undefined [v1, v2] "lt" `shouldBe` Right (Impls._lt v1 v2)
+
     it "dispatches to boolean functions" $ do
         property $ \v1 v2 -> do
             dispatch undefined [v1] "not" `shouldBe` Right (Impls._not v1)

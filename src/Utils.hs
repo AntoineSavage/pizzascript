@@ -1,4 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
 module Utils where
 
 import qualified Data.Set as S

@@ -26,7 +26,7 @@ pzIsEmpty :: PzVal
 pzIsEmpty = func1 symbIsEmpty
 
 pzSize :: PzVal
-pzSize = func1 symbSize 
+pzSize = func1 symbSize
 
 -- numbers
 pzNum :: PzVal
@@ -39,7 +39,7 @@ pzSub :: PzVal
 pzSub = func2 symbSub
 
 pzMult :: PzVal
-pzMult = func2 symbMult 
+pzMult = func2 symbMult
 
 pzDiv :: PzVal
 pzDiv = func2 symbDiv
@@ -94,7 +94,7 @@ pzAnd = func2 symbAnd
 
 -- lists
 pzCons :: PzVal
-pzCons = func2 symbCons 
+pzCons = func2 symbCons
 
 pzHead :: PzVal
 pzHead = func1 symbHead
@@ -104,13 +104,13 @@ pzTail = func1 symbTail
 
 -- dictionaries
 pzKeys :: PzVal
-pzKeys = func1 symbKeys 
+pzKeys = func1 symbKeys
 
 pzAssocs :: PzVal
 pzAssocs = func1 symbAssocs
 
 pzContains :: PzVal
-pzContains = func2 symbContains 
+pzContains = func2 symbContains
 
 pzGet :: PzVal
 pzGet = func2 symbGet
@@ -129,10 +129,10 @@ pzGetImplCtx :: PzVal
 pzGetImplCtx = func1 symbGetImplCtx
 
 pzSetImplCtx :: PzVal
-pzSetImplCtx = func2 symbSetImplCtx 
+pzSetImplCtx = func2 symbSetImplCtx
 
 pzGetExplCtx :: PzVal
-pzGetExplCtx = func1 symbGetExplCtx 
+pzGetExplCtx = func1 symbGetExplCtx
 
 pzGetArgPass :: PzVal
 pzGetArgPass = func1 symbGetArgPass

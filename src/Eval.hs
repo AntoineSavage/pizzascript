@@ -116,11 +116,11 @@ validateNoDuplicateQuotedIdents impArgs args =
     let explCtxQuotedIdents = case impArgs of
             Both _ s -> [s]
             _ -> []
-      
+     
         argQuotedIdents = case args of
             ArgsVaria s -> [s]
             ArgsArity ss -> ss
-  
+ 
         duplicates = getDuplicates $ explCtxQuotedIdents ++ argQuotedIdents
     in if null duplicates
         then return ()
