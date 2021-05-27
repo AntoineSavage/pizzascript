@@ -6,7 +6,7 @@ import Test.QuickCheck
 import Types.Numb
 
 spec :: Spec
-spec = describe "Nat" $ do
+spec = describe "Numb" $ do
     it "implements Show" $ do
         property $ \(Positive x) -> do
             show (Numb x) `shouldBe` "Numb " ++ show x

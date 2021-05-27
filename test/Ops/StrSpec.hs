@@ -11,6 +11,7 @@ import Ops.Str
 import TestUtils
 import Text.Parsec
 import Types.Str
+import Types.StrSpec
 
 spec :: Spec
 spec = do
@@ -349,8 +350,6 @@ solidusChar = '/'
 
 unparseStr' = unparseStr . Str
 parseStr' = do Str s <- parseStr; return s
-
-instance Arbitrary Str where arbitrary = Str <$> arbitrary
 
 newtype ValidCodepoint = ValidCodepoint Int deriving (Show, Eq)
 instance Arbitrary ValidCodepoint where arbitrary = ValidCodepoint <$> chooseInt (0, 0x10FFFF)
