@@ -13,6 +13,7 @@ import TestUtils
 import Text.Parsec
 import Types.Nat
 import Types.Symb
+import Types.SymbSpec
 
 spec :: Spec
 spec = do
@@ -98,22 +99,6 @@ unquoteSymbSpec = describe "quoteSymb vs unquoteSymb" $ do
             unquoteSymb (Symb (S n) f ns) `shouldBe` Symb n f ns
 
 -- Utils
-validFirsts = underscore : lettersUpper ++ lettersLower ++ accentChars
-validNexts = underscore : digits ++ lettersUpper ++ lettersLower ++ accentChars
-
-instance Arbitrary Symb where
-    arbitrary = do
-        n <- arbitrary
-        Ident f ns <- arbitrary
-        return $ Symb n f ns
-
-data Ident = Ident Char String deriving (Show, Eq)
-instance Arbitrary Ident where
-    arbitrary = do
-        first <- elements validFirsts
-        nexts <- chooseInt (0, 10) >>= flip vectorOf (elements validNexts)
-        return $ Ident first nexts
-
 newtype QuotedIdent = QuotedIdent Symb deriving (Show, Eq)
 instance Arbitrary QuotedIdent where arbitrary = QuotedIdent <$> arbQuotedIdent
 arbQuotedIdent = do Ident f ns <- arbitrary; return $ Symb Z f ns

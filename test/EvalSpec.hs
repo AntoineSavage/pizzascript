@@ -29,6 +29,7 @@ import Types.Numb
 import Types.PzVal
 import Types.Str
 import Types.Symb
+import Types.SymbSpec
 import Utils
 
 spec :: Spec
