@@ -8,6 +8,7 @@ import Ops.Symb
 import Symbs
 import TestUtils
 import Types.Func.ArgPass
+import Types.Func.ArgPassSpec
 
 spec :: Spec
 spec = do
@@ -47,9 +48,3 @@ symbToArgPassSpec = describe "symbToArgPass" $ do
     it "rejects unknown symbols (prop)" $ do
         property $ \s ->
             symbToArgPass (symb $ "_" ++ s) `shouldBe` Nothing
-
--- Utils
-argPasses = [ Eval, Quote, Unquote, DeepQuote, DeepUnquote ]
-
-instance Arbitrary ArgPass where arbitrary = elements argPasses
-instance ArbWithDepth ArgPass where arbWithDepth _ = arbitrary
