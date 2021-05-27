@@ -19,7 +19,7 @@ parseVal ign p =
     <|> PzSymb <$> (parseSymb <?> "symbol (or identifier)")
     <|> PzList <$> (parseList pzSymbList pzSymbDict ign p <?> "list (or dictionary or function)")
 
-unparseVal :: (Maybe PzVal -> String) -> PzVal -> String
+unparseVal :: (PzVal -> Bool -> String) -> PzVal -> String
 unparseVal f = \case
     PzNum n -> unparseNumb n
     PzStr s -> unparseStr s
@@ -36,7 +36,7 @@ parseList pl pd ign p =
         , go '(' ')'
         ]
 
-unparseList :: Eq a => a -> a -> (Maybe a -> String) -> [a] -> String
+unparseList :: Eq a => a -> a -> (a -> Bool -> String) -> [a] -> String
 unparseList pl pd f elems =
     let go start end ys = [start] ++ unparseMany f ys ++ [end]
     in case elems of
@@ -51,7 +51,8 @@ parseMany ign elem end = go [] where
         Just _ -> return $ reverse acc
         Nothing -> elem >>= go . (:acc)
 
-unparseMany :: (Maybe a -> String) -> [a] -> String
+unparseMany :: (a -> Bool -> String) -> [a] -> String
 unparseMany f = \case
-    []     -> f Nothing
-    (x:xs) -> f (Just x) ++ unparseMany f xs
+    []           -> ""
+    [x]          -> f x True
+    (x:xs@(y:_)) -> f x False ++ unparseMany f xs

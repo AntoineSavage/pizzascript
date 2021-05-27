@@ -35,7 +35,7 @@ spec = do
 parseValVsUnparseValSpec :: Spec
 parseValVsUnparseValSpec = describe "parseVal vs unparseVal" $ do
     it "composes parseVal and unparseVal into id" $ do
-        let f Nothing = ""; f (Just v) = unparseVal f v ++ " "
+        let f v last  = unparseVal f v ++ if last then "" else " "
         property $ \(UnparseValid v) -> do
             let s = unparseVal f v
             parse pv "tests" s `shouldBe` Right v
@@ -60,7 +60,7 @@ parseValSpec = describe "parseVal" $ do
             parse (parseVal ignore undefined) "tests" (unparseSymb s) `shouldBe` Right (PzSymb s)
 
     it "parses list" $ do
-        let f Nothing = ""; f (Just v) = unparseVal f v ++ " "
+        let f v last  = unparseVal f v ++ if last then "" else " "
         property $ \(UnparseValids xs) -> do
             parse (parseVal ignore pv) "tests" (unparseList pzSymbList pzSymbDict f xs) `shouldBe` Right (PzList xs)
 
@@ -93,7 +93,7 @@ unparseValSpec = describe "unparseVal" $ do
             unparseVal undefined (PzSymb s) `shouldBe` unparseSymb s
 
     it "unparses list" $ do
-        let f Nothing = ""; f (Just v) = unparseVal f v ++ " "
+        let f v last  = unparseVal f v ++ if last then "" else " "
         property $ \(UnparseValids xs) -> do
             unparseVal f (PzList xs) `shouldBe` unparseList pzSymbList pzSymbDict f xs
 
@@ -155,16 +155,16 @@ unparseListSpec = describe "unparseList" $ do
     it "unparses list" $ do
         property $ \(Few es) -> do
             let elems = ple : es
-            unparseList' elems `shouldBe` "[" ++ concatMap str es ++ "]"
+            unparseList' elems `shouldBe` "[" ++ untrail (concatMap str es) ++ "]"
    
     it "unparses di dict" $ do
         property $ \(Few es) -> do
             let elems = pde : es
-            unparseList' elems `shouldBe` "{" ++ concatMap str es ++ "}"
+            unparseList' elems `shouldBe` "{" ++ untrail (concatMap str es) ++ "}"
    
     it "unparses form" $ do
         property $ \(Few es) -> do
-            unparseList' es `shouldBe` "(" ++ concatMap str es ++ ")"
+            unparseList' es `shouldBe` "(" ++ untrail (concatMap str es) ++ ")"
 
 parseManyVsUnparseManySpec :: Spec
 parseManyVsUnparseManySpec = describe "parseMany vs unparseMany" $ do
@@ -203,29 +203,32 @@ unparseManySpec :: Spec
 unparseManySpec = describe "unparseMany" $ do
     it "unparses empty list" $ do
         unparseMany' [] `shouldBe` ""
-        unparseMany' [] `shouldBe` unparseElem Nothing
 
     it "unparses one elem" $ do
         property $ \e -> do
-            unparseMany' [e] `shouldBe` str e
+            unparseMany' [e] `shouldBe` str' e
 
     it "unparses two elems" $ do
         property $ \e1 e2 -> do
-            unparseMany' [e1, e2] `shouldBe` str e1 ++ str e2
+            unparseMany' [e1, e2] `shouldBe` str e1 ++ str' e2
 
     it "unparses three elems" $ do
         property $ \e1 e2 e3 -> do
-            unparseMany' [e1, e2, e3] `shouldBe` str e1 ++ str e2 ++ str e3
+            unparseMany' [e1, e2, e3] `shouldBe` str e1 ++ str e2 ++ str' e3
 
     it "unparses n elems" $ do
         property $ \(Few es) -> do
-            unparseMany' es `shouldBe` concatMap str es
+            unparseMany' es `shouldBe` untrail (concatMap str es)
 
 -- Utils
 pv = parseVal ignore pv
 
 ignore = spaces
-str = unparseElem.Just
+str x = unparseElem x False
+str' x = unparseElem x True
+untrail s = case reverse s of
+    (' ':s') -> reverse s'
+    _ -> s
 
 parseList' = parse (parseList ple pde ignore parseElem) "tests"
 unparseList' = unparseList ple pde unparseElem
@@ -266,10 +269,8 @@ pde = Elem $ -2
 parseElem :: Parser Elem
 parseElem = Elem . read <$> many1 digit
 
-unparseElem :: Maybe Elem -> String
-unparseElem = \case
-    Nothing -> ""
-    Just (Elem x) -> show x ++ " "
+unparseElem :: Elem -> Bool -> String
+unparseElem (Elem x) last = show x ++ if last then "" else " "
 
 newtype UnparseValid = UnparseValid PzVal deriving (Show, Eq)
 instance Arbitrary UnparseValid where arbitrary = arbDepth

@@ -8,8 +8,7 @@ import Types.PzVal ( Dict, PzVal )
 
 unparse :: PzVal -> String
 unparse = unparseVal f where
-    f Nothing = ""
-    f (Just v) = unparseVal f v ++ " "
+    f v last  = unparseVal f v ++ if last then "" else " "
 
 getDuplicates :: Ord a => [a] -> [a]
 getDuplicates = go S.empty S.empty where

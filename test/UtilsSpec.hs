@@ -22,11 +22,14 @@ spec = do
 
 unparseSpec :: Spec
 unparseSpec = describe "unparseMaybeVal" $ do
+    it "unparses list evaluates provided function" $ do
+        unparse (PzList []) `shouldBe` "()"
+        unparse (PzList [PzList []]) `shouldBe` "(())"
+
     it "unparses to itself using provided func" $ do
-        let f Nothing = ""; f (Just v) = unparseVal f v ++ " "
+        let f v last  = unparseVal f v ++ if last then "" else " "
         property $ \(UnparseValid v) -> do
             unparse v `shouldBe` unparseVal f v
-            unparse (PzList []) `shouldBe` unparseVal f (PzList [])
 
 getDuplicatesSpec :: Spec
 getDuplicatesSpec = describe "getDuplicates" $ do
