@@ -103,7 +103,7 @@ _ltSpec = describe "_lt" $ do
             property $ \x -> do
                 _lt (PzStr x) (PzStr x) `shouldBe` pzSymbFalse
 
-        it "compares against other numbers" $ do
+        it "compares against other strings" $ do
             property $ \x y -> x /= y ==> do
                 let left = min x y
                     right = max x y
@@ -130,7 +130,7 @@ _ltSpec = describe "_lt" $ do
             property $ \x -> do
                 _lt (PzSymb x) (PzSymb x) `shouldBe` pzSymbFalse
 
-        it "compares against other numbers" $ do
+        it "compares against other symbols" $ do
             property $ \x y -> x /= y ==> do
                 let left = min x y
                     right = max x y
@@ -157,7 +157,7 @@ _ltSpec = describe "_lt" $ do
             property $ \(Few x) -> do
                 _lt (PzList x) (PzList x) `shouldBe` pzSymbFalse
 
-        it "compares against other numbers" $ do
+        it "compares against other lists" $ do
             property $ \(Few x) y -> x /= y ==> do
                 let left = min x y
                     right = max x y
@@ -184,7 +184,7 @@ _ltSpec = describe "_lt" $ do
             property $ \(ArbDict x) -> do
                 _lt (PzDict x) (PzDict x) `shouldBe` pzSymbFalse
 
-        it "compares against other numbers" $ do
+        it "compares against other dictionaries" $ do
             property $ \(ArbDict x) (ArbDict y) -> x /= y ==> do
                 let left = min x y
                     right = max x y
@@ -211,7 +211,7 @@ _ltSpec = describe "_lt" $ do
             property $ \x -> do
                 _lt (PzFunc u x) (PzFunc u x) `shouldBe` pzSymbFalse
 
-        it "compares against other numbers" $ do
+        it "compares against other functions" $ do
             property $ \x y -> x /= y ==> do
                 let left = min x y
                     right = max x y

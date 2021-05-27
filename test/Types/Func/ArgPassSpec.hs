@@ -7,11 +7,7 @@ import TestUtils
 import Types.Func.ArgPass
 
 spec :: Spec
-spec = do
-    argPassSpec
-
-argPassSpec :: Spec
-argPassSpec = describe "ArgPass" $ do
+spec = describe "ArgPass" $ do
     it "implements Show" $ do
         show Eval `shouldBe` "Eval"
         show Quote `shouldBe` "Quote"
