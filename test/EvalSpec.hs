@@ -439,7 +439,7 @@ getQuotedIdentSpec = describe "getQuotedIdent" $ do
                 (show $ "Expected identifier\n was: " ++ show (PzSymb s))
 
     it "rejects list" $ do
-        property $ \l ->
+        property $ \(Few l) ->
             leftAsStr (getQuotedIdent (PzList l)) `shouldContain`
                 (show $ "Expected identifier\n was: " ++ show (PzList l))
 
