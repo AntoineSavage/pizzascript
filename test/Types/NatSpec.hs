@@ -32,7 +32,6 @@ spec = describe "Nat" $ do
             x <= S x `shouldBe` True
             S x <= x `shouldBe` False
 
-
 -- Utils
 instance Arbitrary Nat where
     arbitrary = oneof

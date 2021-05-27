@@ -7,6 +7,7 @@ import Data.Either
 import Ops.Numb
 import Text.Parsec
 import Types.Numb
+import Types.NumbSpec
 
 spec :: Spec
 spec = do
@@ -58,6 +59,3 @@ unparseNumbSpec = describe "unparseNumb" $ do
     it "returns show<double> for any non-integer" $ do
         property $ \d -> do
             unparseNumb (Numb $ d + 0.1) `shouldBe` show (d + 0.1)
-
--- Utils
-instance Arbitrary Numb where arbitrary = Numb <$> arbitrary

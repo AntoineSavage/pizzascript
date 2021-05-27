@@ -8,7 +8,6 @@ data ArgPass
     | DeepUnquote
     deriving (Show, Eq)
 
--- Automatic Ord instance not picked up by coverage tool
 instance Ord ArgPass where
     Quote       <= Eval      = False
     Unquote     <= Eval      = False
