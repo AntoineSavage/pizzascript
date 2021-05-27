@@ -19,7 +19,6 @@ spec = do
     f1Spec
     f2Spec
     f3Spec
-    fpureSpec
 
 unparseSpec :: Spec
 unparseSpec = describe "unparseMaybeVal" $ do
@@ -114,12 +113,6 @@ f3Spec = describe "f3" $ do
             f3 [v1] undef3 `shouldBe` Left (invalidArityMsg 3 [v1])
             f3 [v1,v2] undef3 `shouldBe` Left (invalidArityMsg 3 [v1,v2])
             f3 xs undef3 `shouldBe` Left (invalidArityMsg 3 xs)
-
-fpureSpec :: Spec
-fpureSpec = describe "fpure" $ do
-    it "wraps in a Right tuple" $ do
-        property $ \(ArbDict ctx) r -> do
-            fpure ctx r `shouldBe` Right (ctx, (r :: Int))
 
 -- Utils
 type R = Utils.Result -- conflict with QuickCheck

@@ -123,10 +123,7 @@ pzDel = func2 symbDel
 
 -- functions
 pzFunc :: PzVal
-pzFunc = PzFunc M.empty func
-
-func :: Func a
-func = Func (Both Quote symbCtx) (ArgsVaria symbArgs) $ BodyBuiltIn symbFunc
+pzFunc = PzFunc M.empty $ Func (Both Quote symbCtx) (ArgsVaria symbArgs) $ BodyBuiltIn symbFunc
 
 pzGetImplCtx :: PzVal
 pzGetImplCtx = func1 symbGetImplCtx

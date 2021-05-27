@@ -4,68 +4,70 @@ import qualified BuiltIns.FuncImpls as Impls
 
 import Types.PzVal ( Dict, PzVal )
 import Types.Symb ( Symb(..) )
-import Utils ( f1, f2, f3, fpure, Result )
+import Utils ( f1, f2, f3, Result )
 
-type FuncResult = Result (Dict, PzVal)
-
-dispatch :: Dict -> [PzVal] -> String -> FuncResult
+dispatch :: Dict -> [PzVal] -> String -> Result PzVal
 dispatch ctx args funcName = case funcName of
     -- generic
-    "type_of" -> f1 args $ \x -> fpure ctx $ Impls._typeOf x
-    "eq" -> f2 args $ \x y -> fpure ctx $ Impls._eq x x
-    "lt" -> f2 args $ \x y -> fpure ctx $ Impls._lt x x
+    "type_of" -> f1 args $ Right . Impls._typeOf
+    "eq" -> f2 args $ Right .* Impls._eq
+    "lt" -> f2 args $ Right .* Impls._lt
 
     -- semi-generic
-    "is_empty" -> f1 args $ \x -> fpure ctx $ Impls._isEmpty x
-    "size" -> f1 args $ \x -> fpure ctx $ Impls._size x
+    "is_empty" -> f1 args Impls._isEmpty
+    "size" -> f1 args Impls._size
 
     -- numbers
-    "num" -> f1 args $ \x -> fpure ctx $ Impls._num x
-    "add" -> f2 args $ \x y -> fpure ctx $ Impls._add x y
-    "sub" -> f2 args $ \x y -> fpure ctx $ Impls._sub x y
-    "mult" -> f2 args $ \x y -> fpure ctx $ Impls._mult x y
-    "div" -> f2 args $ \x y -> fpure ctx $ Impls._div x y
-    "rem" -> f2 args $ \x y -> fpure ctx $ Impls._rem x y
-    "exp" -> f2 args $ \x y -> fpure ctx $ Impls._exp x y
-    "log" -> f2 args $ \x y -> fpure ctx $ Impls._log x y
-    "round" -> f1 args $ \x -> fpure ctx $ Impls._round x
-    "floor" -> f1 args $ \x -> fpure ctx $ Impls._floor x
-    "ceil" -> f1 args $ \x -> fpure ctx $ Impls._ceil x
-    "trunc" -> f1 args $ \x -> fpure ctx $ Impls._trunc x
+    "num" -> f1 args Impls._num
+    "add" -> f2 args Impls._add
+    "sub" -> f2 args Impls._sub
+    "mult" -> f2 args Impls._mult
+    "div" -> f2 args Impls._div
+    "rem" -> f2 args Impls._rem
+    "exp" -> f2 args Impls._exp
+    "log" -> f2 args Impls._log
+    "round" -> f1 args Impls._round
+    "floor" -> f1 args Impls._floor
+    "ceil" -> f1 args Impls._ceil
+    "trunc" -> f1 args Impls._trunc
 
     -- strings
-    "str" -> fpure ctx $ Impls._str args
-    "split" -> f2 args $ \x y -> fpure ctx $ Impls._split x y
-    "join" -> fpure ctx $ Impls._join args
+    "str" -> Right $ Impls._str args
+    "split" -> f2 args Impls._split
+    "join" -> Impls._join args
 
     -- symbols
-    "symb" -> f1 args $ \x -> fpure ctx $ Impls._symb x
-    "nbr_quotes" -> f1 args $ \x -> fpure ctx $ Impls._nbrQuotes x
+    "symb" -> f1 args Impls._symb
+    "nbr_quotes" -> f1 args Impls._nbrQuotes
 
     -- booleans
-    "not" -> f1 args $ \x -> fpure ctx $ Impls._not x
-    "or" -> f2 args $ \x y -> fpure ctx $ Impls._or x y
-    "and" -> f2 args $ \x y -> fpure ctx $ Impls._and x y
+    "not" -> f1 args $ Right . Impls._not
+    "or" -> f2 args $ Right .* Impls._or
+    "and" -> f2 args $ Right .* Impls._and
 
     -- lists
-    "cons" -> f2 args $ \x y -> fpure ctx $ Impls._cons x y
-    "head" -> f1 args $ \x -> fpure ctx $ Impls._head x
-    "tail" -> f1 args $ \x -> fpure ctx $ Impls._tail x
+    "cons" -> f2 args Impls._cons
+    "head" -> f1 args Impls._head
+    "tail" -> f1 args Impls._tail
 
     -- dictionaries
-    "keys" -> f1 args $ \x -> fpure ctx $ Impls._keys x
-    "assocs" -> f1 args $ \x -> fpure ctx $ Impls._assocs x
-    "contains" -> f2 args $ \x y -> fpure ctx $ Impls._contains x y
-    "get" -> f2 args $ \x y -> fpure ctx $ Impls._get x y
-    "put" -> f3 args $ \x y z -> fpure ctx $ Impls._put x y z
-    "del" -> f2 args $ \x y -> fpure ctx $ Impls._del x y
+    "keys" -> f1 args Impls._keys
+    "assocs" -> f1 args Impls._assocs
+    "contains" -> f2 args Impls._contains
+    "get" -> f2 args Impls._get
+    "put" -> f3 args Impls._put
+    "del" -> f2 args Impls._del
 
     -- functions
-    "get_impl_ctx" -> f1 args $ \x -> fpure ctx $ Impls._getImplCtx x
-    "set_impl_ctx" -> f2 args $ \x y -> fpure ctx $ Impls._setImplCtx x y
-    "get_expl_ctx" -> f1 args $ \x -> fpure ctx $ Impls._getExplCtx x
-    "get_arg_pass" -> f1 args $ \x -> fpure ctx $ Impls._getArgPass x
-    "get_args" -> f1 args $ \x -> fpure ctx $ Impls._getArgs x
-    "get_body" -> f1 args $ \x -> fpure ctx $ Impls._getBody x
+    "func" -> Impls._func ctx args
+    "get_impl_ctx" -> f1 args Impls._getImplCtx
+    "set_impl_ctx" -> f2 args Impls._setImplCtx
+    "get_expl_ctx" -> f1 args Impls._getExplCtx
+    "get_arg_pass" -> f1 args Impls._getArgPass
+    "get_args" -> f1 args Impls._getArgs
+    "get_body" -> f1 args Impls._getBody
 
     _ -> error $ "Built-in function '" ++ funcName ++ "' not supported"
+
+(.*) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
+(.*) f g x y = f $ g x y

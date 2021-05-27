@@ -1,9 +1,12 @@
 module BuiltIns.FuncImpls where
 
+import Eval ( evalFuncCustom )
 import Ops.Boolish ( boolish )
+import Ops.Func.FuncCustom ( fromFuncCustom )
 import Symbs ( pzSymbFalse, pzSymbTrue )
-import Types.PzVal ( PzVal )
+import Types.PzVal ( Dict, PzVal(..) )
 import Types.Boolish ( Boolish(..) )
+import Utils ( Result )
 
 -- generic
 _typeOf :: PzVal -> PzVal
@@ -16,64 +19,64 @@ _lt :: PzVal -> PzVal -> PzVal
 _lt = undefined
 
 -- semi-generic
-_isEmpty :: PzVal -> PzVal
+_isEmpty :: PzVal -> Result PzVal
 _isEmpty = undefined
 
-_size :: PzVal -> PzVal
+_size :: PzVal -> Result PzVal
 _size = undefined
 
 -- numbers
-_num :: PzVal -> PzVal
+_num :: PzVal -> Result PzVal
 _num = undefined
 
-_add :: PzVal -> PzVal -> PzVal
+_add :: PzVal -> PzVal -> Result PzVal
 _add = undefined
 
-_sub :: PzVal -> PzVal -> PzVal
+_sub :: PzVal -> PzVal -> Result PzVal
 _sub = undefined
 
-_mult :: PzVal -> PzVal -> PzVal
+_mult :: PzVal -> PzVal -> Result PzVal
 _mult = undefined
 
-_div :: PzVal -> PzVal -> PzVal
+_div :: PzVal -> PzVal -> Result PzVal
 _div = undefined
 
-_rem :: PzVal -> PzVal -> PzVal
+_rem :: PzVal -> PzVal -> Result PzVal
 _rem = undefined
 
-_exp :: PzVal -> PzVal -> PzVal
+_exp :: PzVal -> PzVal -> Result PzVal
 _exp = undefined
 
-_log :: PzVal -> PzVal -> PzVal
+_log :: PzVal -> PzVal -> Result PzVal
 _log = undefined
 
-_round :: PzVal -> PzVal
+_round :: PzVal -> Result PzVal
 _round = undefined
 
-_floor :: PzVal -> PzVal
+_floor :: PzVal -> Result PzVal
 _floor = undefined
 
-_ceil :: PzVal -> PzVal
+_ceil :: PzVal -> Result PzVal
 _ceil = undefined
 
-_trunc :: PzVal -> PzVal
+_trunc :: PzVal -> Result PzVal
 _trunc = undefined
 
 -- strings
 _str :: [PzVal] -> PzVal
 _str = undefined
 
-_split :: PzVal -> PzVal -> PzVal
+_split :: PzVal -> PzVal -> Result PzVal
 _split = undefined
 
-_join :: [PzVal] -> PzVal
+_join :: [PzVal] -> Result PzVal
 _join = undefined
 
 -- symbols
-_symb :: PzVal -> PzVal
+_symb :: PzVal -> Result PzVal
 _symb = undefined
 
-_nbrQuotes :: PzVal -> PzVal
+_nbrQuotes :: PzVal -> Result PzVal
 _nbrQuotes = undefined
 
 -- booleans
@@ -103,49 +106,55 @@ _and x y = case (boolish x, boolish y) of
     (TrueReal , _)            -> y
 
 -- lists
-_cons :: PzVal -> PzVal -> PzVal
+_cons :: PzVal -> PzVal -> Result PzVal
 _cons = undefined
 
-_head :: PzVal -> PzVal
+_head :: PzVal -> Result PzVal
 _head = undefined
 
-_tail :: PzVal -> PzVal
+_tail :: PzVal -> Result PzVal
 _tail = undefined
 
 -- dictionaries
-_keys :: PzVal -> PzVal
+_keys :: PzVal -> Result PzVal
 _keys = undefined
 
-_assocs :: PzVal -> PzVal
+_assocs :: PzVal -> Result PzVal
 _assocs = undefined
 
-_contains :: PzVal -> PzVal -> PzVal
+_contains :: PzVal -> PzVal -> Result PzVal
 _contains = undefined
 
-_get :: PzVal -> PzVal -> PzVal
+_get :: PzVal -> PzVal -> Result PzVal
 _get = undefined
 
-_put :: PzVal -> PzVal -> PzVal -> PzVal
+_put :: PzVal -> PzVal -> PzVal -> Result PzVal
 _put = undefined
 
-_del :: PzVal -> PzVal -> PzVal
+_del :: PzVal -> PzVal -> Result PzVal
 _del = undefined
 
 -- functions
-_getImplCtx :: PzVal -> PzVal
+_func :: Dict -> [PzVal] -> Result PzVal
+_func ctx elems = do
+    fc <- evalFuncCustom elems
+    let f = fromFuncCustom fc
+    return $ PzList [PzDict ctx, PzFunc ctx f]
+
+_getImplCtx :: PzVal -> Result PzVal
 _getImplCtx = undefined
 
-_setImplCtx :: PzVal -> PzVal -> PzVal
+_setImplCtx :: PzVal -> PzVal -> Result PzVal
 _setImplCtx = undefined
 
-_getExplCtx :: PzVal -> PzVal
+_getExplCtx :: PzVal -> Result PzVal
 _getExplCtx = undefined
 
-_getArgPass :: PzVal -> PzVal
+_getArgPass :: PzVal -> Result PzVal
 _getArgPass = undefined
 
-_getArgs :: PzVal -> PzVal
+_getArgs :: PzVal -> Result PzVal
 _getArgs = undefined
 
-_getBody :: PzVal -> PzVal
+_getBody :: PzVal -> Result PzVal
 _getBody = undefined
