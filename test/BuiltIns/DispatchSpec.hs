@@ -5,10 +5,17 @@ import Test.QuickCheck
 
 import BuiltIns.Dispatch
 import BuiltIns.FuncImpls as Impls
+import Control.Exception
 import Ops.PzValSpec
 
 spec :: Spec
 spec = describe "dispatch" $ do
+    it "rejects unsupported built-in function" $ do
+        property $ \nameSuffix -> do
+            let funcName = "$" ++ nameSuffix
+            evaluate (dispatch undefined [] funcName) `shouldThrow`
+                errorCall ("Built-in function '" ++ funcName ++ "' not supported")
+
     it "dispatches to boolean functions" $ do
         property $ \v1 v2 -> do
             dispatch undefined [v1] "not" `shouldBe` Right (Impls._not v1)
