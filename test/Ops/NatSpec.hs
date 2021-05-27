@@ -5,6 +5,7 @@ import Test.QuickCheck
 
 import Ops.Nat
 import Types.Nat
+import Types.NatSpec
 
 spec :: Spec
 spec = do
@@ -59,9 +60,3 @@ toInt :: Nat -> Int
 toInt k = case k of
     Z -> 0
     S n -> 1 + toInt n
-
-instance Arbitrary Nat where
-    arbitrary = do
-        Positive n <- arbitrary
-        let go k = if k <= 0 then Z else S $ go $ k-1
-        return $ go (n :: Int)

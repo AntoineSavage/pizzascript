@@ -8,7 +8,7 @@ import TestUtils
 import Types.Func.FuncArgs
 
 spec :: Spec
-spec = describe "ArgPass" $ do
+spec = describe "FuncArgs" $ do
     it "implements Show" $ do
         property $ \x (Few xs) -> do
             show (ArgsVaria x) `shouldBe` "ArgsVaria (" ++ show x ++ ")"

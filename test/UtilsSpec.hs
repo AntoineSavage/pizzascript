@@ -25,6 +25,12 @@ unparseSpec = describe "unparseMaybeVal" $ do
     it "unparses list evaluates provided function" $ do
         unparse (PzList []) `shouldBe` "()"
         unparse (PzList [PzList []]) `shouldBe` "(())"
+        unparse (PzList [PzList [],PzList []]) `shouldBe` "(() ())"
+        unparse (PzList [PzList [],PzList [],PzList []]) `shouldBe` "(() () ())"
+        unparse (PzList [PzList [PzList []]]) `shouldBe` "((()))"
+        unparse (PzList [PzList [PzList [],PzList []]]) `shouldBe` "((() ()))"
+        unparse (PzList [PzList [PzList [],PzList [],PzList []]]) `shouldBe` "((() () ()))"
+        unparse (PzList [PzList [PzList [],PzList [],PzList []], PzList [PzList [],PzList [],PzList []]]) `shouldBe` "((() () ()) (() () ()))"
 
     it "unparses to itself using provided func" $ do
         let f v last  = unparseVal f v ++ if last then "" else " "
