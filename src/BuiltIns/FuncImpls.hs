@@ -5,8 +5,10 @@ import qualified Data.Map as M
 
 import Eval ( evalFuncCustom )
 import Ops.Boolish ( boolish )
+import Ops.Numb
 import Ops.Func.FuncCustom ( fromFuncCustom )
 import Symbs
+import Text.Parsec ( parse )
 import Types.Boolish ( Boolish(..) )
 import Types.Numb ( Numb(..) )
 import Types.PzVal ( Dict, DictKey(..), PzVal(..) )
@@ -51,7 +53,14 @@ _size v = toInt <$> case v of
 
 -- numbers
 _num :: PzVal -> Result PzVal
-_num = undefined
+_num v = case v of
+    PzNum _ -> return v
+    PzStr (Str s) -> case parse parseNumb "Call to function 'num" s of
+        Right n -> return $ PzNum n
+        Left err -> Left $ show err
+    _             -> Left $
+        "Function 'num only supports numbers and strings"
+            ++ "\n was: " ++ show v
 
 _add :: PzVal -> PzVal -> Result PzVal
 _add = undefined

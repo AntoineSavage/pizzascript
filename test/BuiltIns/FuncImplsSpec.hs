@@ -187,7 +187,38 @@ _sizeSpec = describe "_isEmpty" $ do
 
 _numSpec :: Spec
 _numSpec = describe "_num" $ do
-    it "moos" $ pending
+    it "handles numbers" $ do
+        property $ \n -> do
+            _num (PzNum n) `shouldBe` Right (PzNum n)
+
+    it "handles strings" $ do
+        property $ \d s -> do
+            _num (PzStr $ Str $ show d) `shouldBe` Right (PzNum $ Numb d)
+            leftAsStr (_num (PzStr $ Str $ '_':s)) `shouldContain` "Call to function 'num"
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _num v `shouldBe` Left ("Function 'num only supports numbers and strings\n was: " ++ show v)
+
+    it "rejects symbols" $ do
+        property $ \s -> do
+            let v = PzSymb s
+            _num v `shouldBe` Left ("Function 'num only supports numbers and strings\n was: " ++ show v)
+
+    it "rejects lists" $ do
+        property $ \(Few xs) -> do
+            let v = PzList xs
+            _num v `shouldBe` Left ("Function 'num only supports numbers and strings\n was: " ++ show v)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) -> do
+            let v = PzDict d
+            _num v `shouldBe` Left ("Function 'num only supports numbers and strings\n was: " ++ show v)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f -> do
+            let v = PzFunc d f
+            _num v `shouldBe` Left ("Function 'num only supports numbers and strings\n was: " ++ show v)
 
 _addSpec :: Spec
 _addSpec = describe "_add" $ do
