@@ -7,7 +7,7 @@ import Ops.Func.FuncCustom ( fromFuncCustom )
 import Symbs
 import Types.Boolish ( Boolish(..) )
 import Types.Numb ( Numb(..) )
-import Types.PzVal ( Dict, PzVal(..) )
+import Types.PzVal ( Dict, DictKey(..), PzVal(..) )
 import Types.Str ( Str(..) )
 import Utils ( Result )
 
@@ -23,28 +23,10 @@ _typeOf = \case
     PzFunc _ _ -> pzSymbFunc
 
 _eq :: PzVal -> PzVal -> PzVal
-_eq x y = if x == y then pzSymbTrue else pzSymbFalse
+_eq x y = if DictKey x == DictKey y then pzSymbTrue else pzSymbFalse
 
 _lt :: PzVal -> PzVal -> PzVal
-_lt x y =
-    let sub a b = if a < b then pzSymbTrue else pzSymbFalse
-        typeIdx = \case
-            PzUnit -> 0
-            PzNum _ -> 1
-            PzStr _ -> 2
-            PzSymb _ -> 3
-            PzList _ -> 4
-            PzDict _ -> 5
-            PzFunc _ _ -> 6
-    in case (x, y) of
-    (PzUnit, PzUnit) -> pzSymbFalse
-    (PzNum n1, PzNum n2) -> sub n1 n2
-    (PzStr s1, PzStr s2) -> sub s1 s2
-    (PzSymb s1, PzSymb s2) -> sub s1 s2
-    (PzList l1, PzList l2) -> sub l1 l2
-    (PzDict d1, PzDict d2) -> sub d1 d2
-    (PzFunc _ f1, PzFunc _ f2) -> sub f1 f2
-    _ -> sub (typeIdx x) (typeIdx y)
+_lt x y = if DictKey x < DictKey y then pzSymbTrue else pzSymbFalse
 
 -- semi-generic
 _isEmpty :: PzVal -> Result PzVal

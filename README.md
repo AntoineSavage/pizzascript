@@ -754,6 +754,8 @@ A function's implicit context can be accessed like this:
 
 Keep in mind that manipulating the implicit context can cause the resulting function to misbehave, for example if a key of the implicit context is removed or is replaced with an incompatible value
 
+Also, note that a function's implicit context is ignored when comparing functions for equality or ordering (i.e. using functions `eq` and `lt`)
+
 ### Recursion and the implicit context
 
 In order for recusrion to work, a function's implicit context needs to contain itself. For this reason, defining functions using `def` will not allow recursion, since `def` does not modify the defined values whatsoever. Therefore, recursive functions must be defined using `defun`, which only works on functions but will add the function's own name to its own implicit context, thus allowing simple recursion to work
