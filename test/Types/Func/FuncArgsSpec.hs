@@ -18,18 +18,19 @@ spec = describe "FuncArgs" $ do
         property $ \x y (Few xs) (Few ys) -> x /= y && xs /= ys ==> do
             ArgsVaria x == ArgsVaria x `shouldBe` True
             ArgsVaria x == ArgsVaria y `shouldBe` False
-
             ArgsVaria undefined == ArgsArity undefined `shouldBe` False
 
+            ArgsArity undefined == ArgsVaria undefined `shouldBe` False
+            ArgsArity xs == ArgsArity xs `shouldBe` True
             ArgsArity xs == ArgsArity ys `shouldBe` False
 
     it "implements Ord" $ do
         property $ \x y (Few xs) (Few ys) -> x /= y && xs /= ys ==> do
             ArgsVaria x <= ArgsVaria x `shouldBe` True
             ArgsVaria x <= ArgsVaria y `shouldBe` x <= y
-
             ArgsVaria undefined <= ArgsArity undefined `shouldBe` True
 
+            ArgsArity undefined <= ArgsVaria undefined `shouldBe` False
             ArgsArity xs <= ArgsArity xs `shouldBe` True
             ArgsArity xs <= ArgsArity ys `shouldBe` xs <= ys
 
