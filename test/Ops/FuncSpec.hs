@@ -7,6 +7,7 @@ import Control.Monad
 import Ops.Func
 import TestUtils
 import Types.Func
+import Types.FuncSpec
 import Types.Func.ArgPass
 import Types.Func.FuncArgsSpec
 import Types.Func.FuncBodySpec
@@ -30,8 +31,3 @@ getArgPassSpec = describe "getArgPass" $ do
     it "converts Both" $ do
         property $ \ap explCtx args body ->
             getArgPass (Func (Both ap explCtx) args body :: Func Int) `shouldBe` ap
-
--- Utils
-instance ArbWithDepth a => Arbitrary (Func a) where arbitrary = arbDepth
-instance ArbWithDepth a => ArbWithDepth (Func a) where
-    arbWithDepth depth = liftM3 Func arbitrary arbitrary $ arbWithDepth depth

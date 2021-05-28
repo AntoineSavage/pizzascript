@@ -16,14 +16,14 @@ spec = describe "Symb" $ do
             show (Symb (S n) f ns) `shouldBe` "Symb (" ++ show (S n) ++ ") " ++ show f ++ " " ++ show ns
 
     it "implements Eq" $ do
-        property $ \nx ny fx fy nsx nsy  -> do
+        property $ \nx ny fx fy nsx nsy -> do
             Symb nx fx nsx == Symb nx fx nsx `shouldBe` True
             Symb nx fx nsx == Symb ny fx nsx `shouldBe` nx == ny
             Symb nx fx nsx == Symb nx fy nsx `shouldBe` fx == fy
             Symb nx fx nsx == Symb nx fx nsy `shouldBe` nsx == nsy
 
     it "implements Ord" $ do
-        property $ \nx ny fx fy nsx nsy  -> do
+        property $ \nx ny fx fy nsx nsy -> do
             Symb nx fx nsx <= Symb nx fx nsx `shouldBe` True
             Symb nx fx nsx <= Symb ny fx nsx `shouldBe` nx <= ny
             Symb nx fx nsx <= Symb nx fy nsx `shouldBe` fx <= fy

@@ -13,6 +13,7 @@ spec = describe "Nat" $ do
             show Z `shouldBe` "Z"
             show (S Z) `shouldBe` "S Z"
             show (S (S Z)) `shouldBe` "S (S Z)"
+
             let x' = S x
             show (S x') `shouldBe` "S (" ++ show x' ++ ")"
 
@@ -26,6 +27,7 @@ spec = describe "Nat" $ do
     it "implements Ord" $ do
         property $ \x -> do
             Z <= x `shouldBe` True
+
             let x' = S x
             x' <= Z `shouldBe` False
 

@@ -18,24 +18,24 @@ spec = describe "FuncImpureArgs" $ do
             show (Both ap ec) `shouldBe` "Both " ++ show ap ++ " (" ++ show ec ++ ")"
 
     it "implements Eq" $ do
-        property $ \apx apy ecx ecy -> apx /= apy && ecx /= ecy ==> do
+        property $ \apx apy ecx ecy -> do
             None == None `shouldBe` True
             None == ArgPass undefined `shouldBe` False
             None == Both undefined undefined `shouldBe` False
             
             ArgPass undefined == None `shouldBe` False
             ArgPass apx == ArgPass apx `shouldBe` True
-            ArgPass apx == ArgPass apy `shouldBe` False
+            ArgPass apx == ArgPass apy `shouldBe` apx == apy
             ArgPass undefined == Both undefined undefined `shouldBe` False
             
             Both undefined undefined == None `shouldBe` False
             Both undefined undefined == ArgPass undefined `shouldBe` False
             Both apx ecx == Both apx ecx `shouldBe` True
-            Both apx ecx == Both apy ecx `shouldBe` False
-            Both apx ecx == Both apx ecy `shouldBe` False
+            Both apx ecx == Both apy ecx `shouldBe` apx == apy
+            Both apx ecx == Both apx ecy `shouldBe` ecx == ecy
 
     it "implements Ord" $ do
-        property $ \apx apy ecx ecy -> apx /= apy && ecx /= ecy ==> do
+        property $ \apx apy ecx ecy -> do
             None <= None `shouldBe` True
             None <= ArgPass undefined `shouldBe` True
             None <= Both undefined undefined `shouldBe` True

@@ -18,15 +18,15 @@ spec = describe "FuncBody" $ do
             show (BodyCustom (-x) xs :: FuncBody Int) `shouldBe` "BodyCustom (-" ++ show x ++ ") " ++ show xs
 
     it "implements Eq" $ do
-        property $ \sx sy x y (Few xs) (Few ys) -> sx /= sy && x /= y && xs /= ys ==> do
+        property $ \sx sy x y (Few xs) (Few ys) -> do
             (BodyBuiltIn sx :: FuncBody Int) == BodyBuiltIn sx `shouldBe` True
-            (BodyBuiltIn sx :: FuncBody Int) == BodyBuiltIn sy `shouldBe` False
+            (BodyBuiltIn sx :: FuncBody Int) == BodyBuiltIn sy `shouldBe` sx == sy
             (BodyBuiltIn undefined :: FuncBody Int) == BodyCustom undefined undefined `shouldBe` False
 
             (BodyCustom undefined undefined :: FuncBody Int) == BodyBuiltIn undefined `shouldBe` False
             (BodyCustom x xs :: FuncBody Int) == BodyCustom x xs `shouldBe` True
-            (BodyCustom x xs :: FuncBody Int) == BodyCustom y xs `shouldBe` False
-            (BodyCustom x xs :: FuncBody Int) == BodyCustom x ys `shouldBe` False
+            (BodyCustom x xs :: FuncBody Int) == BodyCustom y xs `shouldBe` x == y
+            (BodyCustom x xs :: FuncBody Int) == BodyCustom x ys `shouldBe` xs == ys
 
     it "implements Ord" $ do
         property $ \sx sy x y (Few xs) (Few ys) -> sx /= sy && x /= y && xs /= ys ==> do
