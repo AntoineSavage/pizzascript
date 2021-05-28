@@ -3,11 +3,12 @@ module BuiltIns.Ctx where
 import qualified Data.Map as M
 
 import BuiltIns.FuncValues
-import Types.PzVal ( Dict, PzVal(..) )
+import Types.PzVal ( Dict, DictKey(..), PzVal(..) )
 import Symbs
+import Data.Bifunctor ( Bifunctor(first) )
 
 builtInCtx :: Dict
-builtInCtx = M.fromList
+builtInCtx = M.fromList $ map (Data.Bifunctor.first DictKey)
     [
     -- generic
       (pzSymbTypeOf, pzTypeOf)

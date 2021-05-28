@@ -85,7 +85,7 @@ evalVsUnevalSpec = describe "eval vs uneval" $ do
     it "composes eval and uneval into id (built-in func)" $ do
         property $ \(ArbDict c) (ArbDict d) impArgs args (QuotedIdent s) -> do
             let v = PzFunc d $ Func impArgs args $ BodyBuiltIn s
-                ctx = M.insert (PzSymb s) v c
+                ctx = M.insert (DictKey $ PzSymb s) v c
             eval ctx (uneval v) `shouldBe` Right (Evaled v)
 
     it "converts lists, dictionaries and custom funcs to Forms" $ do
@@ -113,12 +113,12 @@ evalSpec = describe "eval" $ do
     it "returns value associated to quoted identifier" $ do
         property $ \(ArbDict c) (Ident f ns) v -> do
             let k = PzSymb $ Symb Z f ns
-            eval (M.insert k v c) k `shouldBe` Right (Evaled v)
+            eval (M.insert (DictKey k) v c) k `shouldBe` Right (Evaled v)
 
     it "undefined quoted identifier" $ do
         property $ \(ArbDict c) (Ident f ns) -> do
             let k = PzSymb $ Symb Z f ns
-                ctx = M.delete k c
+                ctx = M.delete (DictKey k) c
             leftAsStr (eval ctx k) `shouldContain`
                 (show $ "Error: Undefined identifier: " ++ unparseSymb (Symb Z f ns)
                     ++ "\n context keys: " ++ show (M.keys ctx)
@@ -171,7 +171,7 @@ unevalSpec = describe "uneval" $ do
     it "converts dict to list, unevaled recursively, prepended with dict symbol" $ do
         property $ \(ArbDict d) -> do
             uneval (PzDict d) `shouldBe` (PzList $ (pzSymbDict:) $ flip map (M.assocs d) $
-                \(k, v) -> PzList $ [uneval k, uneval v])
+                \(DictKey k, v) -> PzList $ [uneval k, uneval v])
 
     it "converts built-in function to quoted identifier" $ do
         property $ \(ArbDict implCtx) impArgs args s -> do
@@ -326,12 +326,12 @@ evalQuotedIdentSpec = describe "evalQuotedIdent" $ do
     it "returns defined identifier" $ do
         property $ \(ArbDict c) s v -> do
             let k = PzSymb s
-            evalQuotedIdent (M.insert k v c) k `shouldBe` Right v
+            evalQuotedIdent (M.insert (DictKey k) v c) k `shouldBe` Right v
 
     it "rejects undefined identifier" $ do
         property $ \(ArbDict c) s -> do
             let k = PzSymb s
-                ctx = M.delete k c
+                ctx = M.delete (DictKey k) c
             leftAsStr (evalQuotedIdent ctx k) `shouldContain`
                     (show $ "Error: Undefined identifier: " ++ unparseSymb s ++ "\n context keys: " ++ show (M.keys ctx))
 

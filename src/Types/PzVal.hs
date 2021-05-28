@@ -7,7 +7,21 @@ import Types.Numb ( Numb )
 import Types.Str ( Str )
 import Types.Symb ( Symb )
 
-type Dict = M.Map PzVal PzVal
+type Dict = M.Map DictKey PzVal
+
+-- Ignore PzFunc impl ctx when in dict key
+newtype DictKey = DictKey PzVal
+instance Show DictKey where
+    show (DictKey (PzFunc _ f)) = "PzFunc <implCtx> (" ++ show f ++ ")"
+    show (DictKey v)            = show v
+
+instance Eq DictKey where
+    DictKey (PzFunc _ x) == DictKey (PzFunc _ y) = x == y
+    DictKey x            == DictKey y            = x == y
+
+instance Ord DictKey where
+    DictKey (PzFunc _ x) <= DictKey (PzFunc _ y) = x <= y
+    DictKey x            <= DictKey y            = x <= y
 
 data PzVal
     = PzUnit

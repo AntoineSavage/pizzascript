@@ -11,7 +11,7 @@ import Types.Func.FuncArgs ( FuncArgs(..) )
 import Types.Func.FuncCustom ( FuncCustom(..) )
 import Types.Func.FuncImpureArgs ( FuncImpureArgs(..) )
 import Types.Nat ( Nat(..) )
-import Types.PzVal ( Dict, PzVal(..) )
+import Types.PzVal ( Dict, DictKey(..), PzVal(..) )
 import Types.Symb ( Symb(..) )
 import Utils ( Result, getDuplicates, unparse )
 
@@ -39,7 +39,7 @@ uneval v = case v of
     PzStr _ -> v
     PzSymb s -> PzSymb $ quoteSymb s
     PzList l -> PzList $ (pzSymbList:) $ map uneval l
-    PzDict m -> PzList $ (pzSymbDict:) $ flip map (M.assocs m) $ \(k, v) -> PzList [uneval k, uneval v]
+    PzDict m -> PzList $ (pzSymbDict:) $ flip map (M.assocs m) $ \(DictKey k, v) -> PzList [uneval k, uneval v]
     PzFunc _ f -> case toFuncCustom f of
         Left s -> PzSymb s
         Right fc -> PzList $ unevalFuncCustom fc
@@ -105,7 +105,7 @@ unevalArgs = \case
 
 -- Utils
 evalQuotedIdent :: Dict -> PzVal -> Result PzVal
-evalQuotedIdent ctx k = case M.lookup k ctx of
+evalQuotedIdent ctx k = case M.lookup (DictKey k) ctx of
     Just v -> Right v
     Nothing -> Left $
         "Error: Undefined identifier: " ++ unparse k

@@ -44,7 +44,7 @@ boolishSpec = describe "boolish" $ do
             boolish (PzNum $ Numb 1) `shouldBe` Truish
             boolish (PzStr $ Str "0") `shouldBe` Truish
             boolish (PzList [u]) `shouldBe` Truish
-            boolish (PzDict $ M.fromList [(u, u)]) `shouldBe` Truish
+            boolish (PzDict $ M.fromList [(DictKey u, u)]) `shouldBe` Truish
             boolish (PzFunc ctx f) `shouldBe` Truish
  
     it "converts truish values (prop)" $ do
