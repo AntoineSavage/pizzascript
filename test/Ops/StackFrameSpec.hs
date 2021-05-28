@@ -9,6 +9,7 @@ import Ops.StackFrame
 import TestUtils
 import Types.PzValSpec
 import Types.StackFrame
+import Types.StackFrameSpec
 
 spec :: Spec
 spec = do
@@ -31,21 +32,3 @@ setCtxSpec = describe "setCtx" $ do
         property $ \(ArbDict ctx) mfs f (Few as) (Few es) (Few fs) -> do
             setCtx ctx (StackFrame undefined (Invoc mfs ctx f as $ Just es) :fs) `shouldBe` StackFrame ctx (Invoc mfs ctx f as $ Just es) :fs
             setCtx ctx (StackFrame undefined (Invoc mfs ctx f as Nothing) :fs) `shouldBe` StackFrame ctx (Invoc mfs ctx f as Nothing) :fs
-
--- Utils
-instance Arbitrary StackFrame where arbitrary = arbDepth
-instance ArbWithDepth StackFrame where arbWithDepth depth = liftM2 StackFrame arbDepth arbDepth
-
-instance Arbitrary StackFrameSpec where arbitrary = arbDepth
-instance ArbWithDepth StackFrameSpec where
-    arbWithDepth depth = oneof
-        [ fmap Block arbDepth
-        , liftM3 Form arbitrary arbDepth arbDepth
-        , do
-            a <- arbitrary
-            b <- arbDepth
-            c <- arbDepth
-            d <- arbDepth
-            e <- arbDepth
-            return $ Invoc a b c d e
-        ]
