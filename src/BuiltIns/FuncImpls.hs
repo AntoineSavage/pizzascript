@@ -63,37 +63,88 @@ _num v = case v of
             ++ "\n was: " ++ show v
 
 _add :: PzVal -> PzVal -> Result PzVal
-_add = undefined
+_add a b = case (a, b) of
+    (PzNum (Numb x), PzNum (Numb y)) -> return $ PzNum $ Numb $ x + y
+    _             -> Left $
+        "Function 'add only supports numbers"
+            ++ "\n was: " ++ show a
+            ++ "\n and: " ++ show b
 
 _sub :: PzVal -> PzVal -> Result PzVal
-_sub = undefined
+_sub a b = case (a, b) of
+    (PzNum (Numb x), PzNum (Numb y)) -> return $ PzNum $ Numb $ x - y
+    _             -> Left $
+        "Function 'sub only supports numbers"
+            ++ "\n was: " ++ show a
+            ++ "\n and: " ++ show b
 
 _mult :: PzVal -> PzVal -> Result PzVal
-_mult = undefined
+_mult a b = case (a, b) of
+    (PzNum (Numb x), PzNum (Numb y)) -> return $ PzNum $ Numb $ x * y
+    _             -> Left $
+        "Function 'mult only supports numbers"
+            ++ "\n was: " ++ show a
+            ++ "\n and: " ++ show b
 
 _div :: PzVal -> PzVal -> Result PzVal
-_div = undefined
+_div a b = case (a, b) of
+    (PzNum (Numb x), PzNum (Numb y)) -> return $ PzNum $ Numb $ x / y
+    _             -> Left $
+        "Function 'div only supports numbers"
+            ++ "\n was: " ++ show a
+            ++ "\n and: " ++ show b
 
 _rem :: PzVal -> PzVal -> Result PzVal
-_rem = undefined
+_rem a b = case (a, b) of
+    (PzNum (Numb x), PzNum (Numb y)) -> return $ PzNum $ Numb $ fromIntegral $ truncate x `rem` truncate y
+    _             -> Left $
+        "Function 'rem only supports numbers"
+            ++ "\n was: " ++ show a
+            ++ "\n and: " ++ show b
 
 _exp :: PzVal -> PzVal -> Result PzVal
-_exp = undefined
+_exp a b = case (a, b) of
+    (PzNum (Numb x), PzNum (Numb y)) -> return $ PzNum $ Numb $ x ** y
+    _             -> Left $
+        "Function 'exp only supports numbers"
+            ++ "\n was: " ++ show a
+            ++ "\n and: " ++ show b
 
 _log :: PzVal -> PzVal -> Result PzVal
-_log = undefined
+_log a b = case (a, b) of
+    (PzNum (Numb x), PzNum (Numb y)) -> return $ PzNum $ Numb $ logBase x y
+    _             -> Left $
+        "Function 'log only supports numbers"
+            ++ "\n was: " ++ show a
+            ++ "\n and: " ++ show b
 
 _round :: PzVal -> Result PzVal
-_round = undefined
+_round v = case v of
+    PzNum (Numb x) -> return $ PzNum $ Numb $ fromIntegral $ round x
+    _              -> Left $
+        "Function 'round only supports numbers"
+            ++ "\n was: " ++ show v
 
 _floor :: PzVal -> Result PzVal
-_floor = undefined
+_floor v = case v of
+    PzNum (Numb x) -> return $ PzNum $ Numb $ fromIntegral $ floor x
+    _              -> Left $
+        "Function 'floor only supports numbers"
+            ++ "\n was: " ++ show v
 
 _ceil :: PzVal -> Result PzVal
-_ceil = undefined
+_ceil v = case v of
+    PzNum (Numb x) -> return $ PzNum $ Numb $ fromIntegral $ ceiling x
+    _              -> Left $
+        "Function 'ceil only supports numbers"
+            ++ "\n was: " ++ show v
 
 _trunc :: PzVal -> Result PzVal
-_trunc = undefined
+_trunc v = case v of
+    PzNum (Numb x) -> return $ PzNum $ Numb $ fromIntegral $ truncate x
+    _              -> Left $
+        "Function 'trunc only supports numbers"
+            ++ "\n was: " ++ show v
 
 -- strings
 _str :: [PzVal] -> PzVal

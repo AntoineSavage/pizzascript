@@ -1,3 +1,4 @@
+
 module BuiltIns.FuncImplsSpec where
 
 import Test.Hspec
@@ -31,6 +32,7 @@ spec = do
     -- numbers
     _numSpec
     _addSpec
+    _subSpec
     _multSpec
     _divSpec
     _remSpec
@@ -222,47 +224,437 @@ _numSpec = describe "_num" $ do
 
 _addSpec :: Spec
 _addSpec = describe "_add" $ do
-    it "moos" $ pending
+    it "handles numbers" $ do
+        property $ \(SmallInt d1) (SmallInt d2) -> do
+            _add (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ d1 + d2)
+
+    it "rejects the unit type" $ do
+        property $ \y -> do
+            let x = PzUnit
+            _add x y `shouldBe` Left ("Function 'add only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _add y x `shouldBe` Left ("Function 'add only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects strings" $ do
+        property $ \s y -> do
+            let x = PzStr s
+            _add x y `shouldBe` Left ("Function 'add only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _add y x `shouldBe` Left ("Function 'add only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects symbols" $ do
+        property $ \s y -> do
+            let x = PzSymb s
+            _add x y `shouldBe` Left ("Function 'add only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _add y x `shouldBe` Left ("Function 'add only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects lists" $ do
+        property $ \(Few xs) y -> do
+            let x = PzList xs
+            _add x y `shouldBe` Left ("Function 'add only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _add y x `shouldBe` Left ("Function 'add only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) y -> do
+            let x = PzDict d
+            _add x y `shouldBe` Left ("Function 'add only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _add y x `shouldBe` Left ("Function 'add only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f y -> do
+            let x = PzFunc d f
+            _add x y `shouldBe` Left ("Function 'add only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _add y x `shouldBe` Left ("Function 'add only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
 
 _subSpec :: Spec
 _subSpec = describe "_sub" $ do
-    it "moos" $ pending
+    it "handles numbers" $ do
+        property $ \(SmallInt d1) (SmallInt d2) -> do
+            _sub (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ d1 - d2)
+
+    it "rejects the unit type" $ do
+        property $ \y -> do
+            let x = PzUnit
+            _sub x y `shouldBe` Left ("Function 'sub only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _sub y x `shouldBe` Left ("Function 'sub only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects strings" $ do
+        property $ \s y -> do
+            let x = PzStr s
+            _sub x y `shouldBe` Left ("Function 'sub only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _sub y x `shouldBe` Left ("Function 'sub only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects symbols" $ do
+        property $ \s y -> do
+            let x = PzSymb s
+            _sub x y `shouldBe` Left ("Function 'sub only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _sub y x `shouldBe` Left ("Function 'sub only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects lists" $ do
+        property $ \(Few xs) y -> do
+            let x = PzList xs
+            _sub x y `shouldBe` Left ("Function 'sub only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _sub y x `shouldBe` Left ("Function 'sub only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) y -> do
+            let x = PzDict d
+            _sub x y `shouldBe` Left ("Function 'sub only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _sub y x `shouldBe` Left ("Function 'sub only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f y -> do
+            let x = PzFunc d f
+            _sub x y `shouldBe` Left ("Function 'sub only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _sub y x `shouldBe` Left ("Function 'sub only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
 
 _multSpec :: Spec
 _multSpec = describe "_mult" $ do
-    it "moos" $ pending
+    it "handles numbers" $ do
+        property $ \(SmallInt d1) (SmallInt d2) -> do
+            _mult (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ d1 * d2)
+
+    it "rejects the unit type" $ do
+        property $ \y -> do
+            let x = PzUnit
+            _mult x y `shouldBe` Left ("Function 'mult only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _mult y x `shouldBe` Left ("Function 'mult only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects strings" $ do
+        property $ \s y -> do
+            let x = PzStr s
+            _mult x y `shouldBe` Left ("Function 'mult only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _mult y x `shouldBe` Left ("Function 'mult only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects symbols" $ do
+        property $ \s y -> do
+            let x = PzSymb s
+            _mult x y `shouldBe` Left ("Function 'mult only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _mult y x `shouldBe` Left ("Function 'mult only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects lists" $ do
+        property $ \(Few xs) y -> do
+            let x = PzList xs
+            _mult x y `shouldBe` Left ("Function 'mult only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _mult y x `shouldBe` Left ("Function 'mult only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) y -> do
+            let x = PzDict d
+            _mult x y `shouldBe` Left ("Function 'mult only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _mult y x `shouldBe` Left ("Function 'mult only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f y -> do
+            let x = PzFunc d f
+            _mult x y `shouldBe` Left ("Function 'mult only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _mult y x `shouldBe` Left ("Function 'mult only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
 
 _divSpec :: Spec
 _divSpec = describe "_div" $ do
-    it "moos" $ pending
+    it "handles numbers" $ do
+        property $ \(SmallInt d1) (SmallInt d2) -> do
+            _div (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ d1 / d2)
+
+    it "rejects the unit type" $ do
+        property $ \y -> do
+            let x = PzUnit
+            _div x y `shouldBe` Left ("Function 'div only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _div y x `shouldBe` Left ("Function 'div only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects strings" $ do
+        property $ \s y -> do
+            let x = PzStr s
+            _div x y `shouldBe` Left ("Function 'div only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _div y x `shouldBe` Left ("Function 'div only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects symbols" $ do
+        property $ \s y -> do
+            let x = PzSymb s
+            _div x y `shouldBe` Left ("Function 'div only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _div y x `shouldBe` Left ("Function 'div only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects lists" $ do
+        property $ \(Few xs) y -> do
+            let x = PzList xs
+            _div x y `shouldBe` Left ("Function 'div only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _div y x `shouldBe` Left ("Function 'div only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) y -> do
+            let x = PzDict d
+            _div x y `shouldBe` Left ("Function 'div only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _div y x `shouldBe` Left ("Function 'div only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f y -> do
+            let x = PzFunc d f
+            _div x y `shouldBe` Left ("Function 'div only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _div y x `shouldBe` Left ("Function 'div only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
 
 _remSpec :: Spec
 _remSpec = describe "_rem" $ do
-    it "moos" $ pending
+    it "handles numbers" $ do
+        property $ \(SmallInt d1) (SmallInt d2) -> do
+            _rem (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ fromIntegral $ truncate d1 `rem` truncate d2)
+
+    it "rejects the unit type" $ do
+        property $ \y -> do
+            let x = PzUnit
+            _rem x y `shouldBe` Left ("Function 'rem only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _rem y x `shouldBe` Left ("Function 'rem only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects strings" $ do
+        property $ \s y -> do
+            let x = PzStr s
+            _rem x y `shouldBe` Left ("Function 'rem only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _rem y x `shouldBe` Left ("Function 'rem only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects symbols" $ do
+        property $ \s y -> do
+            let x = PzSymb s
+            _rem x y `shouldBe` Left ("Function 'rem only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _rem y x `shouldBe` Left ("Function 'rem only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects lists" $ do
+        property $ \(Few xs) y -> do
+            let x = PzList xs
+            _rem x y `shouldBe` Left ("Function 'rem only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _rem y x `shouldBe` Left ("Function 'rem only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) y -> do
+            let x = PzDict d
+            _rem x y `shouldBe` Left ("Function 'rem only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _rem y x `shouldBe` Left ("Function 'rem only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f y -> do
+            let x = PzFunc d f
+            _rem x y `shouldBe` Left ("Function 'rem only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _rem y x `shouldBe` Left ("Function 'rem only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
 
 _expSpec :: Spec
 _expSpec = describe "_exp" $ do
-    it "moos" $ pending
+    it "handles numbers" $ do
+        property $ \(SmallInt d1) (SmallInt d2) -> do
+            _exp (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ d1 ** d2)
+
+    it "rejects the unit type" $ do
+        property $ \y -> do
+            let x = PzUnit
+            _exp x y `shouldBe` Left ("Function 'exp only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _exp y x `shouldBe` Left ("Function 'exp only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects strings" $ do
+        property $ \s y -> do
+            let x = PzStr s
+            _exp x y `shouldBe` Left ("Function 'exp only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _exp y x `shouldBe` Left ("Function 'exp only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects symbols" $ do
+        property $ \s y -> do
+            let x = PzSymb s
+            _exp x y `shouldBe` Left ("Function 'exp only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _exp y x `shouldBe` Left ("Function 'exp only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects lists" $ do
+        property $ \(Few xs) y -> do
+            let x = PzList xs
+            _exp x y `shouldBe` Left ("Function 'exp only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _exp y x `shouldBe` Left ("Function 'exp only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) y -> do
+            let x = PzDict d
+            _exp x y `shouldBe` Left ("Function 'exp only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _exp y x `shouldBe` Left ("Function 'exp only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f y -> do
+            let x = PzFunc d f
+            _exp x y `shouldBe` Left ("Function 'exp only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _exp y x `shouldBe` Left ("Function 'exp only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
 
 _logSpec :: Spec
 _logSpec = describe "_log" $ do
-    it "moos" $ pending
+    it "handles numbers" $ do
+        property $ \(SmallInt d1) (SmallInt d2) -> do
+            _log (PzNum $ Numb $ d1 + 1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ logBase (d1 + 1) d2)
+
+    it "rejects the unit type" $ do
+        property $ \y -> do
+            let x = PzUnit
+            _log x y `shouldBe` Left ("Function 'log only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _log y x `shouldBe` Left ("Function 'log only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects strings" $ do
+        property $ \s y -> do
+            let x = PzStr s
+            _log x y `shouldBe` Left ("Function 'log only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _log y x `shouldBe` Left ("Function 'log only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects symbols" $ do
+        property $ \s y -> do
+            let x = PzSymb s
+            _log x y `shouldBe` Left ("Function 'log only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _log y x `shouldBe` Left ("Function 'log only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects lists" $ do
+        property $ \(Few xs) y -> do
+            let x = PzList xs
+            _log x y `shouldBe` Left ("Function 'log only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _log y x `shouldBe` Left ("Function 'log only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) y -> do
+            let x = PzDict d
+            _log x y `shouldBe` Left ("Function 'log only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _log y x `shouldBe` Left ("Function 'log only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f y -> do
+            let x = PzFunc d f
+            _log x y `shouldBe` Left ("Function 'log only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
+            _log y x `shouldBe` Left ("Function 'log only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
 
 _roundSpec :: Spec
 _roundSpec = describe "_round" $ do
-    it "moos" $ pending
+    it "handles numbers" $ do
+        property $ \d -> do
+            _round (PzNum $ Numb d) `shouldBe` Right (PzNum $ Numb $ fromIntegral $ round $ d)
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _round v `shouldBe` Left ("Function 'round only supports numbers\n was: " ++ show v)
+
+    it "rejects strings" $ do
+        property $ \s -> do
+            let v = PzStr s
+            _round v `shouldBe` Left ("Function 'round only supports numbers\n was: " ++ show v)
+
+    it "rejects symbols" $ do
+        property $ \s -> do
+            let v = PzSymb s
+            _round v `shouldBe` Left ("Function 'round only supports numbers\n was: " ++ show v)
+
+    it "rejects lists" $ do
+        property $ \(Few vs) -> do
+            let v = PzList vs
+            _round v `shouldBe` Left ("Function 'round only supports numbers\n was: " ++ show v)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) -> do
+            let v = PzDict d
+            _round v `shouldBe` Left ("Function 'round only supports numbers\n was: " ++ show v)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f -> do
+            let v = PzFunc d f
+            _round v `shouldBe` Left ("Function 'round only supports numbers\n was: " ++ show v)
 
 _floorSpec :: Spec
 _floorSpec = describe "_floor" $ do
-    it "moos" $ pending
+    it "handles numbers" $ do
+        property $ \d -> do
+            _floor (PzNum $ Numb d) `shouldBe` Right (PzNum $ Numb $ fromIntegral $ floor $ d)
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _floor v `shouldBe` Left ("Function 'floor only supports numbers\n was: " ++ show v)
+
+    it "rejects strings" $ do
+        property $ \s -> do
+            let v = PzStr s
+            _floor v `shouldBe` Left ("Function 'floor only supports numbers\n was: " ++ show v)
+
+    it "rejects symbols" $ do
+        property $ \s -> do
+            let v = PzSymb s
+            _floor v `shouldBe` Left ("Function 'floor only supports numbers\n was: " ++ show v)
+
+    it "rejects lists" $ do
+        property $ \(Few vs) -> do
+            let v = PzList vs
+            _floor v `shouldBe` Left ("Function 'floor only supports numbers\n was: " ++ show v)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) -> do
+            let v = PzDict d
+            _floor v `shouldBe` Left ("Function 'floor only supports numbers\n was: " ++ show v)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f -> do
+            let v = PzFunc d f
+            _floor v `shouldBe` Left ("Function 'floor only supports numbers\n was: " ++ show v)
 
 _ceilSpec :: Spec
 _ceilSpec = describe "_ceil" $ do
-    it "moos" $ pending
+    it "handles numbers" $ do
+        property $ \d -> do
+            _ceil (PzNum $ Numb d) `shouldBe` Right (PzNum $ Numb $ fromIntegral $ ceiling $ d)
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _ceil v `shouldBe` Left ("Function 'ceil only supports numbers\n was: " ++ show v)
+
+    it "rejects strings" $ do
+        property $ \s -> do
+            let v = PzStr s
+            _ceil v `shouldBe` Left ("Function 'ceil only supports numbers\n was: " ++ show v)
+
+    it "rejects symbols" $ do
+        property $ \s -> do
+            let v = PzSymb s
+            _ceil v `shouldBe` Left ("Function 'ceil only supports numbers\n was: " ++ show v)
+
+    it "rejects lists" $ do
+        property $ \(Few vs) -> do
+            let v = PzList vs
+            _ceil v `shouldBe` Left ("Function 'ceil only supports numbers\n was: " ++ show v)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) -> do
+            let v = PzDict d
+            _ceil v `shouldBe` Left ("Function 'ceil only supports numbers\n was: " ++ show v)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f -> do
+            let v = PzFunc d f
+            _ceil v `shouldBe` Left ("Function 'ceil only supports numbers\n was: " ++ show v)
 
 _truncSpec :: Spec
 _truncSpec = describe "_trunc" $ do
-    it "moos" $ pending
+    it "handles numbers" $ do
+        property $ \d -> do
+            _trunc (PzNum $ Numb d) `shouldBe` Right (PzNum $ Numb $ fromIntegral $ truncate $ d)
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _trunc v `shouldBe` Left ("Function 'trunc only supports numbers\n was: " ++ show v)
+
+    it "rejects strings" $ do
+        property $ \s -> do
+            let v = PzStr s
+            _trunc v `shouldBe` Left ("Function 'trunc only supports numbers\n was: " ++ show v)
+
+    it "rejects symbols" $ do
+        property $ \s -> do
+            let v = PzSymb s
+            _trunc v `shouldBe` Left ("Function 'trunc only supports numbers\n was: " ++ show v)
+
+    it "rejects lists" $ do
+        property $ \(Few vs) -> do
+            let v = PzList vs
+            _trunc v `shouldBe` Left ("Function 'trunc only supports numbers\n was: " ++ show v)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) -> do
+            let v = PzDict d
+            _trunc v `shouldBe` Left ("Function 'trunc only supports numbers\n was: " ++ show v)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f -> do
+            let v = PzFunc d f
+            _trunc v `shouldBe` Left ("Function 'trunc only supports numbers\n was: " ++ show v)
 
 _strSpec :: Spec
 _strSpec = describe "_str" $ do
@@ -445,3 +837,7 @@ _getArgsSpec = describe "_getArgs" $ do
 _getBodySpec :: Spec
 _getBodySpec = describe "_getBody" $ do
     it "moos" $ pending
+
+-- Utils
+newtype SmallInt = SmallInt Double deriving (Show, Eq)
+instance Arbitrary SmallInt where arbitrary = SmallInt . fromIntegral <$> chooseInt (1, 5)
