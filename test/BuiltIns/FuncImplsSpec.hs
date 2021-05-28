@@ -19,15 +19,64 @@ import Types.Str
 
 spec :: Spec
 spec = do
+    -- generic
     _typeOfSpec
     _eqSpec
     _ltSpec
+
+    -- semi-generic
     _isEmptySpec
     _sizeSpec
+
+    -- numbers
+    _numSpec
+    _addSpec
+    _multSpec
+    _divSpec
+    _remSpec
+    _expSpec
+    _logSpec
+    _roundSpec
+    _floorSpec
+    _ceilSpec
+    _truncSpec
+
+    -- strings
+    _strSpec
+    _splitSpec
+    _joinSpec
+
+    -- symbols
+    _symbSpec
+    _nbrQuotesSpec
+
+    -- booleans
     ifThenElseSpec
     _notSpec
     _orSpec
     _andSpec
+
+    -- lists
+    _consSpec
+    _headSpec
+    _tailSpec
+
+    -- dictionaries
+    _keysSpec
+    _assocsSpec
+    _containsSpec
+    _getSpec
+    _putSpec
+    _delSpec
+
+    -- functions
+    _funcSpec
+    _getImplCtxSpec
+    _setImplCtxSpec
+    _getExplCtxSpec
+    _getArgPassSpec
+    _getArgsSpec
+    _getBodySpec
 
 _typeOfSpec :: Spec
 _typeOfSpec = describe "_typeOf" $ do
@@ -136,6 +185,74 @@ _sizeSpec = describe "_isEmpty" $ do
             let v = PzFunc d f
             _size v `shouldBe` Left ("Function 'size only supports strings, lists and dictionaries\n was: " ++ show v)
 
+_numSpec :: Spec
+_numSpec = describe "_num" $ do
+    it "moos" $ pending
+
+_addSpec :: Spec
+_addSpec = describe "_add" $ do
+    it "moos" $ pending
+
+_subSpec :: Spec
+_subSpec = describe "_sub" $ do
+    it "moos" $ pending
+
+_multSpec :: Spec
+_multSpec = describe "_mult" $ do
+    it "moos" $ pending
+
+_divSpec :: Spec
+_divSpec = describe "_div" $ do
+    it "moos" $ pending
+
+_remSpec :: Spec
+_remSpec = describe "_rem" $ do
+    it "moos" $ pending
+
+_expSpec :: Spec
+_expSpec = describe "_exp" $ do
+    it "moos" $ pending
+
+_logSpec :: Spec
+_logSpec = describe "_log" $ do
+    it "moos" $ pending
+
+_roundSpec :: Spec
+_roundSpec = describe "_round" $ do
+    it "moos" $ pending
+
+_floorSpec :: Spec
+_floorSpec = describe "_floor" $ do
+    it "moos" $ pending
+
+_ceilSpec :: Spec
+_ceilSpec = describe "_ceil" $ do
+    it "moos" $ pending
+
+_truncSpec :: Spec
+_truncSpec = describe "_trunc" $ do
+    it "moos" $ pending
+
+_strSpec :: Spec
+_strSpec = describe "_str" $ do
+    it "moos" $ pending
+
+_splitSpec :: Spec
+_splitSpec = describe "_split" $ do
+    it "moos" $ pending
+
+_joinSpec :: Spec
+_joinSpec = describe "_join" $ do
+    it "moos" $ pending
+
+_symbSpec :: Spec
+_symbSpec = describe "_symb" $ do
+    it "moos" $ pending
+
+_nbrQuotesSpec :: Spec
+_nbrQuotesSpec = describe "_nbrQuotes" $ do
+    it "moos" $ pending
+
 ifThenElseSpec :: Spec
 ifThenElseSpec = describe "simulate if-then-else with not-or-and" $ do
     let ifThenElse p_ t f = let p = _not $ _not p_ in _or (_and p t) (_and (_not p) f)
@@ -233,3 +350,67 @@ _andSpec = describe "_and (falsest wins)" $ do
     it "returns y for x=true, y=*" $ do
         property $ \(PzTruish x) y -> do
             _and x y `shouldBe` y
+
+_consSpec :: Spec
+_consSpec = describe "_cons" $ do
+    it "moos" $ pending
+
+_headSpec :: Spec
+_headSpec = describe "_head" $ do
+    it "moos" $ pending
+
+_tailSpec :: Spec
+_tailSpec = describe "_tail" $ do
+    it "moos" $ pending
+
+_keysSpec :: Spec
+_keysSpec = describe "_keys" $ do
+    it "moos" $ pending
+
+_assocsSpec :: Spec
+_assocsSpec = describe "_assocs" $ do
+    it "moos" $ pending
+
+_containsSpec :: Spec
+_containsSpec = describe "_contains" $ do
+    it "moos" $ pending
+
+_getSpec :: Spec
+_getSpec = describe "_get" $ do
+    it "moos" $ pending
+
+_putSpec :: Spec
+_putSpec = describe "_put" $ do
+    it "moos" $ pending
+
+_delSpec :: Spec
+_delSpec = describe "_del" $ do
+    it "moos" $ pending
+
+_funcSpec :: Spec
+_funcSpec = describe "_func" $ do
+    it "moos" $ pending
+
+_getImplCtxSpec :: Spec
+_getImplCtxSpec = describe "_getImplCtx" $ do
+    it "moos" $ pending
+
+_setImplCtxSpec :: Spec
+_setImplCtxSpec = describe "_setImplCtx" $ do
+    it "moos" $ pending
+
+_getExplCtxSpec :: Spec
+_getExplCtxSpec = describe "_getExplCtx" $ do
+    it "moos" $ pending
+
+_getArgPassSpec :: Spec
+_getArgPassSpec = describe "_getArgPass" $ do
+    it "moos" $ pending
+
+_getArgsSpec :: Spec
+_getArgsSpec = describe "_getArgs" $ do
+    it "moos" $ pending
+
+_getBodySpec :: Spec
+_getBodySpec = describe "_getBody" $ do
+    it "moos" $ pending
