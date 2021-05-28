@@ -12,6 +12,7 @@ import Types.Func
 import Types.Func.FuncArgs
 import Types.Func.FuncBody
 import Types.Func.FuncCustom
+import Types.Func.FuncCustomSpec
 import Types.Func.FuncImpureArgs
 
 spec :: Spec
@@ -47,20 +48,3 @@ fromFuncCustomSpec = describe "fromFuncCustom" $ do
     it "converts to function (prop)" $ do
         property $ \impArgs args e (Few es) -> do
             fromFuncCustom (FuncCustom impArgs args e es) `shouldBe` Func impArgs args (BodyCustom e es)
-
--- Utils
-instance Arbitrary FuncCustom where arbitrary = arbDepth
-instance ArbWithDepth FuncCustom where
-    arbWithDepth depth = do
-        let getImpArgsIdents (Both _ s) = [s]
-            getImpArgsIdents _          = []
-
-            getArgsIdents (ArgsVaria s)  = [s]
-            getArgsIdents (ArgsArity ss) = ss
-
-        impArgs <- arbitrary
-        args <- arbitrary
-        let ss = getImpArgsIdents impArgs ++ getArgsIdents args
-        if ss == nub ss
-            then liftM2 (FuncCustom impArgs args) (arbWithDepth depth) $ arbWithDepth depth
-            else arbWithDepth depth
