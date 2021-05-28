@@ -6,7 +6,8 @@ import Control.Monad
 import Data.List
 import Test.QuickCheck
 
--- Utils
+u = undefined
+
 digits = ['0'..'9']
 lettersUpper = ['A'..'Z']
 lettersLower = ['a'..'z']

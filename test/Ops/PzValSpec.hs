@@ -18,6 +18,7 @@ import TestUtils
 import Text.Parsec
 import Text.Parsec.String
 import Types.PzVal
+import Types.PzValSpec
 
 spec :: Spec
 spec = do
@@ -234,26 +235,6 @@ unparseList' = unparseList ple pde unparseElem
 
 parseMany' = parse (parseMany spaces parseElem $ void $ char '$') "tests"
 unparseMany' es = unparseMany unparseElem es
-
--- Arbitrary instances
-instance Arbitrary PzVal where arbitrary = arbDepth
-instance ArbWithDepth PzVal where
-    arbWithDepth depth = oneof $
-        [ return PzUnit
-        , PzNum <$> arbitrary
-        , PzStr <$> arbitrary
-        , PzSymb <$> arbitrary
-        ] ++
-        (if depth <= 0 then [] else
-            [ fmap PzList $ arbWithDepth depth
-            , fmap PzDict $ arbWithDepth depth
-            , liftM2 PzFunc (arbWithDepth depth) $ arbWithDepth depth
-            ]
-        )
-
-newtype ArbDict = ArbDict Dict deriving (Show, Eq)
-instance Arbitrary ArbDict where arbitrary = arbDepth
-instance ArbWithDepth ArbDict where arbWithDepth depth = ArbDict <$> arbWithDepth depth
 
 -- Test-only types
 newtype Elem = Elem Int deriving (Show, Eq)

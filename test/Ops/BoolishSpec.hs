@@ -13,6 +13,7 @@ import Symbs
 import TestUtils
 import Types.Boolish
 import Types.PzVal
+import Types.PzValSpec
 import Types.Str
 import Types.Numb
 

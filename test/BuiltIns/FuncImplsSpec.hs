@@ -12,6 +12,7 @@ import Symbs
 import TestUtils
 import Types.Numb
 import Types.PzVal
+import Types.PzValSpec
 import Types.Str
 
 spec :: Spec
@@ -315,6 +316,3 @@ _andSpec = describe "_and (falsest wins)" $ do
     it "returns y for x=true, y=*" $ do
         property $ \(PzTruish x) y -> do
             _and x y `shouldBe` y
-
--- Utils
-u = undefined

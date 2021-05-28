@@ -27,6 +27,7 @@ import Types.Func.FuncImpureArgs
 import Types.Nat
 import Types.Numb
 import Types.PzVal
+import Types.PzValSpec
 import Types.Str
 import Types.Symb
 import Types.SymbSpec

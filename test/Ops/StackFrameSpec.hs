@@ -7,6 +7,7 @@ import Control.Monad
 import Ops.PzValSpec
 import Ops.StackFrame
 import TestUtils
+import Types.PzValSpec
 import Types.StackFrame
 
 spec :: Spec
