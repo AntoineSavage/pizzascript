@@ -6,12 +6,12 @@ import Test.QuickCheck
 import Control.Monad
 import Ops.Func
 import Ops.Func.FuncBodySpec
-import Ops.Func.FuncImpureArgsSpec
 import TestUtils
 import Types.Func
 import Types.Func.ArgPass
 import Types.Func.FuncArgsSpec
 import Types.Func.FuncImpureArgs
+import Types.Func.FuncImpureArgsSpec
 
 spec :: Spec
 spec = do
