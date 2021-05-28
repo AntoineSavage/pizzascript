@@ -1,6 +1,8 @@
 {-# LANGUAGE LambdaCase #-}
 module BuiltIns.FuncImpls where
 
+import qualified Data.Map as M
+
 import Eval ( evalFuncCustom )
 import Ops.Boolish ( boolish )
 import Ops.Func.FuncCustom ( fromFuncCustom )
@@ -23,17 +25,29 @@ _typeOf = \case
     PzFunc _ _ -> pzSymbFunc
 
 _eq :: PzVal -> PzVal -> PzVal
-_eq x y = if DictKey x == DictKey y then pzSymbTrue else pzSymbFalse
+_eq x y = toBool $ DictKey x == DictKey y
 
 _lt :: PzVal -> PzVal -> PzVal
-_lt x y = if DictKey x < DictKey y then pzSymbTrue else pzSymbFalse
+_lt x y = toBool $ DictKey x < DictKey y
 
 -- semi-generic
 _isEmpty :: PzVal -> Result PzVal
-_isEmpty = undefined
+_isEmpty v = toBool <$> case v of
+    PzStr (Str s) -> return $ null s
+    PzList l      -> return $ null l
+    PzDict d      -> return $ M.null d
+    _             -> Left $
+        "Function 'is_empty only supports strings, lists and dictionaries"
+            ++ "\n was: " ++ show v
 
 _size :: PzVal -> Result PzVal
-_size = undefined
+_size v = toInt <$> case v of
+    PzStr (Str s) -> return $ length s
+    PzList l      -> return $ length l
+    PzDict d      -> return $ M.size d
+    _             -> Left $
+        "Function 'size only supports strings, lists and dictionaries"
+            ++ "\n was: " ++ show v
 
 -- numbers
 _num :: PzVal -> Result PzVal
@@ -168,3 +182,10 @@ _getArgs = undefined
 
 _getBody :: PzVal -> Result PzVal
 _getBody = undefined
+
+-- Utils
+toBool :: Bool -> PzVal
+toBool p = if p then pzSymbTrue else pzSymbFalse
+
+toInt :: Int -> PzVal
+toInt = PzNum . Numb . fromIntegral

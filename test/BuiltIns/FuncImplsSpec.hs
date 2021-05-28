@@ -3,6 +3,8 @@ module BuiltIns.FuncImplsSpec where
 import Test.Hspec
 import Test.QuickCheck
 
+import qualified Data.Map as M
+
 import BuiltIns.FuncImpls
 import BuiltIns.FuncValues
 import Control.Monad
@@ -20,6 +22,8 @@ spec = do
     _typeOfSpec
     _eqSpec
     _ltSpec
+    _isEmptySpec
+    _sizeSpec
     ifThenElseSpec
     _notSpec
     _orSpec
@@ -53,6 +57,84 @@ _ltSpec = describe "_lt" $ do
         property $ \x y -> DictKey x /= DictKey y ==> do
             _lt x x `shouldBe` pzSymbFalse
             _lt x y `shouldBe` if DictKey x < DictKey y then pzSymbTrue else pzSymbFalse
+
+_isEmptySpec :: Spec
+_isEmptySpec = describe "_isEmpty" $ do
+    it "handles strings" $ do
+        property $ \s -> do
+            _isEmpty (PzStr $ Str "") `shouldBe` Right pzSymbTrue
+            _isEmpty (PzStr $ Str "abc") `shouldBe` Right pzSymbFalse
+            _isEmpty (PzStr $ Str s) `shouldBe` Right (if null s then pzSymbTrue else pzSymbFalse)
+
+    it "handles lists" $ do
+        property $ \(Few xs) -> do
+            _isEmpty (PzList []) `shouldBe` Right pzSymbTrue
+            _isEmpty (PzList [PzUnit]) `shouldBe` Right pzSymbFalse
+            _isEmpty (PzList xs) `shouldBe` Right (if null xs then pzSymbTrue else pzSymbFalse)
+
+    it "handles dictionaries" $ do
+        property $ \(ArbDict d) -> do
+            _isEmpty (PzDict M.empty) `shouldBe` Right pzSymbTrue
+            _isEmpty (PzDict $ M.fromList [(DictKey PzUnit, PzUnit)]) `shouldBe` Right pzSymbFalse
+            _isEmpty (PzDict d) `shouldBe` Right (if M.null d then pzSymbTrue else pzSymbFalse)
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _isEmpty v `shouldBe` Left ("Function 'is_empty only supports strings, lists and dictionaries\n was: " ++ show v)
+
+    it "rejects numbers" $ do
+        property $ \n -> do
+            let v = PzNum n
+            _isEmpty v `shouldBe` Left ("Function 'is_empty only supports strings, lists and dictionaries\n was: " ++ show v)
+
+    it "rejects symbols" $ do
+        property $ \s -> do
+            let v = PzSymb s
+            _isEmpty v `shouldBe` Left ("Function 'is_empty only supports strings, lists and dictionaries\n was: " ++ show v)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f -> do
+            let v = PzFunc d f
+            _isEmpty v `shouldBe` Left ("Function 'is_empty only supports strings, lists and dictionaries\n was: " ++ show v)
+
+_sizeSpec :: Spec
+_sizeSpec = describe "_isEmpty" $ do
+    it "handles strings" $ do
+        property $ \s -> do
+            _size (PzStr $ Str "") `shouldBe` Right (PzNum $ Numb 0)
+            _size (PzStr $ Str "abc") `shouldBe` Right (PzNum $ Numb 3)
+            _size (PzStr $ Str s) `shouldBe` Right (PzNum $ Numb $ fromIntegral $ length s)
+
+    it "handles lists" $ do
+        property $ \(Few xs) -> do
+            _size (PzList []) `shouldBe` Right (PzNum $ Numb 0)
+            _size (PzList [PzUnit]) `shouldBe` Right (PzNum $ Numb 1)
+            _size (PzList xs) `shouldBe` Right (PzNum $ Numb $ fromIntegral $ length xs)
+
+    it "handles dictionaries" $ do
+        property $ \(ArbDict d) -> do
+            _size (PzDict M.empty) `shouldBe` Right (PzNum $ Numb 0)
+            _size (PzDict $ M.fromList [(DictKey PzUnit, PzUnit)]) `shouldBe` Right (PzNum $ Numb 1)
+            _size (PzDict d) `shouldBe` Right (PzNum $ Numb $ fromIntegral $ M.size d)
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _size v `shouldBe` Left ("Function 'size only supports strings, lists and dictionaries\n was: " ++ show v)
+
+    it "rejects numbers" $ do
+        property $ \n -> do
+            let v = PzNum n
+            _size v `shouldBe` Left ("Function 'size only supports strings, lists and dictionaries\n was: " ++ show v)
+
+    it "rejects symbols" $ do
+        property $ \s -> do
+            let v = PzSymb s
+            _size v `shouldBe` Left ("Function 'size only supports strings, lists and dictionaries\n was: " ++ show v)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f -> do
+            let v = PzFunc d f
+            _size v `shouldBe` Left ("Function 'size only supports strings, lists and dictionaries\n was: " ++ show v)
 
 ifThenElseSpec :: Spec
 ifThenElseSpec = describe "simulate if-then-else with not-or-and" $ do

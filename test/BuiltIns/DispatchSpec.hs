@@ -16,6 +16,11 @@ spec = describe "dispatch" $ do
             dispatch undefined [v1, v2] "eq" `shouldBe` Right (Impls._eq v1 v2)
             dispatch undefined [v1, v2] "lt" `shouldBe` Right (Impls._lt v1 v2)
 
+    it "dispatches to semi-generic functions" $ do
+        property $ \v -> do
+            dispatch undefined [v] "is_empty" `shouldBe` Impls._isEmpty v
+            dispatch undefined [v] "size" `shouldBe` Impls._size v
+
     it "dispatches to boolean functions" $ do
         property $ \v1 v2 -> do
             dispatch undefined [v1] "not" `shouldBe` Right (Impls._not v1)
