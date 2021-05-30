@@ -225,8 +225,13 @@ _numSpec = describe "_num" $ do
 _addSpec :: Spec
 _addSpec = describe "_add" $ do
     it "handles numbers" $ do
-        property $ \(SmallInt d1) (SmallInt d2) -> do
+        property $ \d1 d2 -> do
             _add (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ d1 + d2)
+
+    it "rejects invalid result" $ do
+        property $ \d2 -> do
+            let d1 = 1/0
+            _add (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Left ("Invalid addition: " ++ show d1 ++ " + " ++ show d2)
 
     it "rejects the unit type" $ do
         property $ \y -> do
@@ -263,12 +268,16 @@ _addSpec = describe "_add" $ do
             let x = PzFunc d f
             _add x y `shouldBe` Left ("Function 'add only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
             _add y x `shouldBe` Left ("Function 'add only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
-
 _subSpec :: Spec
 _subSpec = describe "_sub" $ do
     it "handles numbers" $ do
-        property $ \(SmallInt d1) (SmallInt d2) -> do
+        property $ \d1 d2 -> do
             _sub (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ d1 - d2)
+
+    it "rejects invalid result" $ do
+        property $ \d2 -> do
+            let d1 = 1/0
+            _sub (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Left ("Invalid substraction: " ++ show d1 ++ " - " ++ show d2)
 
     it "rejects the unit type" $ do
         property $ \y -> do
@@ -309,8 +318,13 @@ _subSpec = describe "_sub" $ do
 _multSpec :: Spec
 _multSpec = describe "_mult" $ do
     it "handles numbers" $ do
-        property $ \(SmallInt d1) (SmallInt d2) -> do
+        property $ \d1 d2 -> do
             _mult (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ d1 * d2)
+
+    it "rejects invalid result" $ do
+        property $ \d2 -> do
+            let d1 = 1/0
+            _mult (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Left ("Invalid multiplication: " ++ show d1 ++ " * " ++ show d2)
 
     it "rejects the unit type" $ do
         property $ \y -> do
@@ -351,8 +365,14 @@ _multSpec = describe "_mult" $ do
 _divSpec :: Spec
 _divSpec = describe "_div" $ do
     it "handles numbers" $ do
-        property $ \(SmallInt d1) (SmallInt d2) -> do
-            _div (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ d1 / d2)
+        let d1 = 2
+            d2 = 5
+        _div (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ d1 / d2)
+
+    it "rejects invalid result" $ do
+        let d1 = 1
+            d2 = 0
+        _div (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Left ("Invalid division: " ++ show d1 ++ " / " ++ show d2)
 
     it "rejects the unit type" $ do
         property $ \y -> do
@@ -393,8 +413,14 @@ _divSpec = describe "_div" $ do
 _remSpec :: Spec
 _remSpec = describe "_rem" $ do
     it "handles numbers" $ do
-        property $ \(SmallInt d1) (SmallInt d2) -> do
-            _rem (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ fromIntegral $ truncate d1 `rem` truncate d2)
+        let d1 = 2
+            d2 = 5
+        _rem (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ fromIntegral $ truncate d1 `rem` truncate d2)
+
+    it "rejects invalid result" $ do
+        let d1 = 1
+            d2 = 0
+        _rem (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Left ("Invalid remainder: " ++ show d1 ++ " % " ++ show d2)
 
     it "rejects the unit type" $ do
         property $ \y -> do
@@ -435,8 +461,14 @@ _remSpec = describe "_rem" $ do
 _expSpec :: Spec
 _expSpec = describe "_exp" $ do
     it "handles numbers" $ do
-        property $ \(SmallInt d1) (SmallInt d2) -> do
-            _exp (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ d1 ** d2)
+        let d1 = 2
+            d2 = 5
+        _exp (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ d1 ** d2)
+
+    it "rejects invalid result" $ do
+        let d1 = 1/0
+            d2 = 1
+        _exp (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Left ("Invalid exponentiation: " ++ show d1 ++ " ^ " ++ show d2)
 
     it "rejects the unit type" $ do
         property $ \y -> do
@@ -477,8 +509,14 @@ _expSpec = describe "_exp" $ do
 _logSpec :: Spec
 _logSpec = describe "_log" $ do
     it "handles numbers" $ do
-        property $ \(SmallInt d1) (SmallInt d2) -> do
-            _log (PzNum $ Numb $ d1 + 1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ logBase (d1 + 1) d2)
+        let d1 = 2
+            d2 = 5
+        _log (PzNum $ Numb $ d1 + 1) (PzNum $ Numb d2) `shouldBe` Right (PzNum $ Numb $ logBase (d1 + 1) d2)
+
+    it "rejects invalid result" $ do
+        let d1 = 1/0
+            d2 = 0
+        _log (PzNum $ Numb d1) (PzNum $ Numb d2) `shouldBe` Left ("Invalid logarithm: log (base " ++ show d1 ++ ") " ++ show d2)
 
     it "rejects the unit type" $ do
         property $ \y -> do
@@ -837,7 +875,3 @@ _getArgsSpec = describe "_getArgs" $ do
 _getBodySpec :: Spec
 _getBodySpec = describe "_getBody" $ do
     it "moos" $ pending
-
--- Utils
-newtype SmallInt = SmallInt Double deriving (Show, Eq)
-instance Arbitrary SmallInt where arbitrary = SmallInt . fromIntegral <$> chooseInt (1, 5)

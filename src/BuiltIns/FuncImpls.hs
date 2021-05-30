@@ -64,7 +64,11 @@ _num v = case v of
 
 _add :: PzVal -> PzVal -> Result PzVal
 _add a b = case (a, b) of
-    (PzNum (Numb x), PzNum (Numb y)) -> return $ PzNum $ Numb $ x + y
+    (PzNum (Numb x), PzNum (Numb y)) ->
+        let result = x + y
+        in if isValidNum result
+            then return $ PzNum $ Numb result
+            else Left $ "Invalid addition: " ++ show x ++ " + " ++ show y
     _             -> Left $
         "Function 'add only supports numbers"
             ++ "\n was: " ++ show a
@@ -72,7 +76,11 @@ _add a b = case (a, b) of
 
 _sub :: PzVal -> PzVal -> Result PzVal
 _sub a b = case (a, b) of
-    (PzNum (Numb x), PzNum (Numb y)) -> return $ PzNum $ Numb $ x - y
+    (PzNum (Numb x), PzNum (Numb y)) ->
+        let result = x - y
+        in if isValidNum result
+            then return $ PzNum $ Numb result
+            else Left $ "Invalid substraction: " ++ show x ++ " - " ++ show y
     _             -> Left $
         "Function 'sub only supports numbers"
             ++ "\n was: " ++ show a
@@ -80,7 +88,11 @@ _sub a b = case (a, b) of
 
 _mult :: PzVal -> PzVal -> Result PzVal
 _mult a b = case (a, b) of
-    (PzNum (Numb x), PzNum (Numb y)) -> return $ PzNum $ Numb $ x * y
+    (PzNum (Numb x), PzNum (Numb y)) ->
+        let result = x * y
+        in if isValidNum result
+            then return $ PzNum $ Numb result
+            else Left $ "Invalid multiplication: " ++ show x ++ " * " ++ show y
     _             -> Left $
         "Function 'mult only supports numbers"
             ++ "\n was: " ++ show a
@@ -88,7 +100,11 @@ _mult a b = case (a, b) of
 
 _div :: PzVal -> PzVal -> Result PzVal
 _div a b = case (a, b) of
-    (PzNum (Numb x), PzNum (Numb y)) -> return $ PzNum $ Numb $ x / y
+    (PzNum (Numb x), PzNum (Numb y)) ->
+        let result = x / y
+        in if y /= 0 && isValidNum result
+            then return $ PzNum $ Numb result
+            else Left $ "Invalid division: " ++ show x ++ " / " ++ show y
     _             -> Left $
         "Function 'div only supports numbers"
             ++ "\n was: " ++ show a
@@ -96,7 +112,11 @@ _div a b = case (a, b) of
 
 _rem :: PzVal -> PzVal -> Result PzVal
 _rem a b = case (a, b) of
-    (PzNum (Numb x), PzNum (Numb y)) -> return $ PzNum $ Numb $ fromIntegral $ truncate x `rem` truncate y
+    (PzNum (Numb x), PzNum (Numb y)) ->
+        let result = fromIntegral $ truncate x `rem` truncate y
+        in if  y /= 0 && isValidNum result
+            then return $ PzNum $ Numb result
+            else Left $ "Invalid remainder: " ++ show x ++ " % " ++ show y
     _             -> Left $
         "Function 'rem only supports numbers"
             ++ "\n was: " ++ show a
@@ -104,7 +124,11 @@ _rem a b = case (a, b) of
 
 _exp :: PzVal -> PzVal -> Result PzVal
 _exp a b = case (a, b) of
-    (PzNum (Numb x), PzNum (Numb y)) -> return $ PzNum $ Numb $ x ** y
+    (PzNum (Numb x), PzNum (Numb y)) ->
+        let result = x ** y
+        in if isValidNum result
+            then return $ PzNum $ Numb result
+            else Left $ "Invalid exponentiation: " ++ show x ++ " ^ " ++ show y
     _             -> Left $
         "Function 'exp only supports numbers"
             ++ "\n was: " ++ show a
@@ -112,7 +136,11 @@ _exp a b = case (a, b) of
 
 _log :: PzVal -> PzVal -> Result PzVal
 _log a b = case (a, b) of
-    (PzNum (Numb x), PzNum (Numb y)) -> return $ PzNum $ Numb $ logBase x y
+    (PzNum (Numb x), PzNum (Numb y)) ->
+        let result = logBase x y
+        in if isValidNum result
+            then return $ PzNum $ Numb result
+            else Left $ "Invalid logarithm: log (base " ++ show x ++ ") " ++ show y
     _             -> Left $
         "Function 'log only supports numbers"
             ++ "\n was: " ++ show a
@@ -249,3 +277,6 @@ toBool p = if p then pzSymbTrue else pzSymbFalse
 
 toInt :: Int -> PzVal
 toInt = PzNum . Numb . fromIntegral
+
+isValidNum :: Double -> Bool
+isValidNum d = not $ isNaN d || isInfinite d
