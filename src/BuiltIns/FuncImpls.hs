@@ -265,10 +265,18 @@ _get k = \case
             ++ "\n was: " ++ show v
 
 _put :: PzVal -> PzVal -> PzVal -> Result PzVal
-_put = undefined
+_put k v = \case
+    PzDict d -> return $ PzDict $ M.insert (DictKey k) v d
+    v -> Left $
+        "Function 'put only supports dictionaries (third arg)"
+            ++ "\n was: " ++ show v
 
 _del :: PzVal -> PzVal -> Result PzVal
-_del = undefined
+_del k = \case
+    PzDict d -> return $ PzDict $ M.delete (DictKey k) d
+    v -> Left $
+        "Function 'del only supports dictionaries (second arg)"
+            ++ "\n was: " ++ show v
 
 -- functions
 _func :: Dict -> [PzVal] -> Result PzVal
