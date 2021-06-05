@@ -3,8 +3,10 @@ module BuiltIns.FuncImpls where
 
 import qualified Data.Map as M
 
+import Control.Monad ( liftM2 )
+import Data.List ( intercalate, stripPrefix )
 import Data.Maybe ( fromMaybe, isJust )
-import Eval ( evalFuncCustom )
+import Eval ( evalFuncCustom, uneval )
 import Ops.Boolish ( boolish )
 import Ops.Numb ( parseNumb )
 import Ops.Func.ArgPass ( argPassToSymb )
@@ -12,7 +14,7 @@ import Ops.Func.FuncCustom ( fromFuncCustom )
 import Ops.Func.FuncImpureArgs ( getArgPass, getExplCtx )
 import Ops.PzVal ( unDictKey )
 import Ops.Symb ( getNbrQuotes, parseSymb )
-import Symbs
+import Symbs ( pzSymbFalse, pzSymbTrue, pzSymbFunc, pzSymbDict, pzSymbList, pzSymbSymb, pzSymbStr, pzSymbNum )
 import Text.Parsec ( parse )
 import Types.Boolish ( Boolish(..) )
 import Types.Func ( Func(..) )
@@ -22,7 +24,7 @@ import Types.Func.FuncImpureArgs ( FuncImpureArgs(..) )
 import Types.Numb ( Numb(..) )
 import Types.PzVal ( Dict, DictKey(..), PzVal(..) )
 import Types.Str ( Str(..) )
-import Utils ( Result )
+import Utils ( Result, unparse )
 
 -- generic
 _typeOf :: PzVal -> PzVal
@@ -185,13 +187,41 @@ _trunc v = case v of
 
 -- strings
 _str :: [PzVal] -> PzVal
-_str = undefined
+_str = PzStr . Str . concatMap toStr where
+    toStr (PzStr (Str s)) = s
+    toStr v = unparse $ uneval v
 
 _split :: PzVal -> PzVal -> Result PzVal
-_split = undefined
+_split a b = case (a, b) of
+    (PzStr (Str x), PzStr (Str y)) -> return $ PzList $ map (PzStr . Str) $ actualSplit x y
+    _ -> Left $
+        "Function 'split only supports strings"
+            ++ "\n was: " ++ show a
+            ++ "\n and: " ++ show b
 
 _join :: [PzVal] -> Result PzVal
-_join = undefined
+_join =
+    let flatten = \case
+            [] -> return []
+            x:xs -> liftM2 (flip (++)) (flatten xs) $ case x of
+                PzStr (Str s) -> return [s]
+                PzList ys -> flatten ys
+                x -> Left $ "Function 'join only support strings or lists of strings (second or more arg)"
+                        ++ "\n was: " ++ show x
+
+    in \case
+        [] -> Left "Function 'join requires at least two arguments, but got zero"
+        [x] -> Left $ "Function 'join requires at least two arguments, but got one"
+            ++ "\n was: " ++ show x
+
+        x:xs -> do
+            sep <- case x of
+                PzStr (Str s) -> return s
+                v -> Left $ "Function 'join only support strings (first arg)"
+                    ++ "\n was: " ++ show v
+
+            ss <- flatten xs
+            return $ PzStr $ Str $ actualJoin sep ss
 
 -- symbols
 _symb :: PzVal -> Result PzVal
@@ -275,31 +305,31 @@ _assocs = \case
             ++ "\n was: " ++ show v
 
 _contains :: PzVal -> PzVal -> Result PzVal
-_contains k = \case
+_contains x k = case x of
     PzDict d -> return $ toBool $ isJust $ M.lookup (DictKey k) d
     v -> Left $
-        "Function 'contains only supports dictionaries (second arg)"
+        "Function 'contains only supports dictionaries (first arg)"
             ++ "\n was: " ++ show v
 
 _get :: PzVal -> PzVal -> Result PzVal
-_get k = \case
+_get x k = case x of
     PzDict d -> return $ fromMaybe PzUnit $ M.lookup (DictKey k) d
     v -> Left $
-        "Function 'get only supports dictionaries (second arg)"
+        "Function 'get only supports dictionaries (first arg)"
             ++ "\n was: " ++ show v
 
 _put :: PzVal -> PzVal -> PzVal -> Result PzVal
-_put k v = \case
+_put x k v = case x of
     PzDict d -> return $ PzDict $ M.insert (DictKey k) v d
     v -> Left $
-        "Function 'put only supports dictionaries (third arg)"
+        "Function 'put only supports dictionaries (first arg)"
             ++ "\n was: " ++ show v
 
 _del :: PzVal -> PzVal -> Result PzVal
-_del k = \case
+_del x k = case x of
     PzDict d -> return $ PzDict $ M.delete (DictKey k) d
     v -> Left $
-        "Function 'del only supports dictionaries (second arg)"
+        "Function 'del only supports dictionaries (first arg)"
             ++ "\n was: " ++ show v
 
 -- functions
@@ -367,3 +397,18 @@ toInt = PzNum . Numb . fromIntegral
 
 isValidNum :: Double -> Bool
 isValidNum d = not $ isNaN d || isInfinite d
+
+actualSplit :: String -> String -> [String]
+actualSplit "" = map (:[])
+actualSplit sep = go [] "" where
+    addPrefix acc prefix = (++acc) $ case prefix of
+        "" -> []
+        cs -> [reverse cs]
+
+    go acc prefix "" = reverse $ addPrefix acc prefix
+    go acc prefix suffix@(c:cs) = case stripPrefix sep suffix of
+        Nothing -> go acc (c:prefix) cs
+        Just s -> go (addPrefix acc prefix) "" s
+    
+actualJoin :: String -> [String] -> String
+actualJoin = intercalate

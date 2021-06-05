@@ -44,6 +44,12 @@ spec = describe "dispatch" $ do
             dispatch undefined [v1] "ceil" `shouldBe` Impls._ceil v1
             dispatch undefined [v1] "trunc" `shouldBe` Impls._trunc v1
 
+    it "dispatches to string functions" $ do
+        property $ \(UnparseValids as) v1 v2 vs -> do
+            dispatch undefined as "str" `shouldBe` Right (Impls._str as)
+            dispatch undefined [v1, v2] "split" `shouldBe` Impls._split v1 v2
+            dispatch undefined vs "join" `shouldBe` Impls._join vs
+
     it "dispatches to symbol functions" $ do
         property $ \v -> do
             dispatch undefined [v] "symb" `shouldBe` Impls._symb v

@@ -39,7 +39,7 @@ uneval v = case v of
     PzStr _ -> v
     PzSymb s -> PzSymb $ quoteSymb s
     PzList l -> PzList $ (pzSymbList:) $ map uneval l
-    PzDict m -> PzList $ (pzSymbDict:) $ flip map (M.assocs m) $ \(DictKey k, v) -> PzList [uneval k, uneval v]
+    PzDict m -> PzList $ (pzSymbDict:) $ flip map (M.assocs m) $ \(DictKey k, v) -> PzList [pzSymbList, uneval k, uneval v]
     PzFunc _ f -> case toFuncCustom f of
         Left s -> PzSymb s
         Right fc -> PzList $ unevalFuncCustom fc

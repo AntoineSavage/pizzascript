@@ -171,7 +171,7 @@ unevalSpec = describe "uneval" $ do
     it "converts dict to list, unevaled recursively, prepended with dict symbol" $ do
         property $ \(ArbDict d) -> do
             uneval (PzDict d) `shouldBe` (PzList $ (pzSymbDict:) $ flip map (M.assocs d) $
-                \(DictKey k, v) -> PzList $ [uneval k, uneval v])
+                \(DictKey k, v) -> PzList $ [pzSymbList, uneval k, uneval v])
 
     it "converts built-in function to quoted identifier" $ do
         property $ \(ArbDict implCtx) impArgs args s -> do

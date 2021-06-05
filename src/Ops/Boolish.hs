@@ -8,11 +8,16 @@ import Types.Numb ( Numb(..) )
 import Types.Str ( Str(..) )
 import Types.PzVal ( PzVal(..) )
 
+cases :: M.Map PzVal Boolish
+cases = M.fromList
+  [ (pzSymbFalse, FalseReal)
+  , (pzSymbTrue, TrueReal)
+  ]
+
 boolish :: PzVal -> Boolish
-boolish v
-  | v == pzSymbFalse = FalseReal
-  | v == pzSymbTrue = TrueReal
-  | otherwise = case v of
+boolish v = case M.lookup v cases of
+  Just b -> b
+  _ -> case v of
     PzUnit -> Falsish
     PzNum (Numb 0) -> Falsish
     PzStr (Str "") -> Falsish
