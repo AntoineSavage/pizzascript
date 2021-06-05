@@ -51,9 +51,11 @@ spec = describe "dispatch" $ do
             dispatch undefined [v1, v2] "and" `shouldBe` Right (Impls._and v1 v2)
 
     it "dispatches to dictionary functions" $ do
-        property $ \v1 -> do
+        property $ \v1 v2 -> do
             dispatch undefined [v1] "keys" `shouldBe` Impls._keys v1
             dispatch undefined [v1] "assocs" `shouldBe` Impls._assocs v1
+            dispatch undefined [v1, v2] "contains" `shouldBe` Impls._contains v1 v2
+            dispatch undefined [v1, v2] "get" `shouldBe` Impls._get v1 v2
 
     it "dispatches to func functions" $ do
         property $ \v1 v2 (ArbDict d) vs -> do

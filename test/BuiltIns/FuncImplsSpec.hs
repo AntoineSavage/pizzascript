@@ -908,11 +908,87 @@ _assocsSpec = describe "_assocs" $ do
 
 _containsSpec :: Spec
 _containsSpec = describe "_contains" $ do
-    it "moos" $ pending
+    it "handles dictionaries (found)" $ do
+        property $ \k v (ArbDict d') -> do
+            let d = M.insert (DictKey k) v d'
+            _contains k (PzDict d) `shouldBe` Right pzSymbTrue
+
+    it "handles dictionaries (not found)" $ do
+        property $ \k (ArbDict d') -> do
+            let d = M.delete (DictKey k) d'
+            _contains k (PzDict d) `shouldBe` Right pzSymbFalse
+
+    it "rejects the unit type" $ do
+        property $ \x -> do
+            let y = PzUnit
+            _contains x y `shouldBe` Left ("Function 'contains only supports dictionaries (second arg)\n was: " ++ show y)
+
+    it "rejects numbers" $ do
+        property $ \x n -> do
+            let y = PzNum n
+            _contains x y `shouldBe` Left ("Function 'contains only supports dictionaries (second arg)\n was: " ++ show y)
+
+    it "rejects strings" $ do
+        property $ \x s -> do
+            let y = PzStr s
+            _contains x y `shouldBe` Left ("Function 'contains only supports dictionaries (second arg)\n was: " ++ show y)
+
+    it "rejects symbols" $ do
+        property $ \x s -> do
+            let y = PzSymb s
+            _contains x y `shouldBe` Left ("Function 'contains only supports dictionaries (second arg)\n was: " ++ show y)
+
+    it "rejects lists" $ do
+        property $ \x  (Few xs) -> do
+            let y = PzList xs
+            _contains x y `shouldBe` Left ("Function 'contains only supports dictionaries (second arg)\n was: " ++ show y)
+
+    it "rejects functions" $ do
+        property $ \x (ArbDict d) f -> do
+            let y = PzFunc d f
+            _contains x y `shouldBe` Left ("Function 'contains only supports dictionaries (second arg)\n was: " ++ show y)
 
 _getSpec :: Spec
 _getSpec = describe "_get" $ do
-    it "moos" $ pending
+    it "handles dictionaries (found)" $ do
+        property $ \k v (ArbDict d') -> do
+            let d = M.insert (DictKey k) v d'
+            _get k (PzDict d) `shouldBe` Right v
+
+    it "handles dictionaries (not found)" $ do
+        property $ \k (ArbDict d') -> do
+            let d = M.delete (DictKey k) d'
+            _get k (PzDict d) `shouldBe` Right PzUnit
+
+    it "rejects the unit type" $ do
+        property $ \x -> do
+            let y = PzUnit
+            _get x y `shouldBe` Left ("Function 'get only supports dictionaries (second arg)\n was: " ++ show y)
+
+    it "rejects numbers" $ do
+        property $ \x n -> do
+            let y = PzNum n
+            _get x y `shouldBe` Left ("Function 'get only supports dictionaries (second arg)\n was: " ++ show y)
+
+    it "rejects strings" $ do
+        property $ \x s -> do
+            let y = PzStr s
+            _get x y `shouldBe` Left ("Function 'get only supports dictionaries (second arg)\n was: " ++ show y)
+
+    it "rejects symbols" $ do
+        property $ \x s -> do
+            let y = PzSymb s
+            _get x y `shouldBe` Left ("Function 'get only supports dictionaries (second arg)\n was: " ++ show y)
+
+    it "rejects lists" $ do
+        property $ \x  (Few xs) -> do
+            let y = PzList xs
+            _get x y `shouldBe` Left ("Function 'get only supports dictionaries (second arg)\n was: " ++ show y)
+
+    it "rejects functions" $ do
+        property $ \x (ArbDict d) f -> do
+            let y = PzFunc d f
+            _get x y `shouldBe` Left ("Function 'get only supports dictionaries (second arg)\n was: " ++ show y)
 
 _putSpec :: Spec
 _putSpec = describe "_put" $ do

@@ -3,6 +3,7 @@ module BuiltIns.FuncImpls where
 
 import qualified Data.Map as M
 
+import Data.Maybe ( fromMaybe, isJust )
 import Eval ( evalFuncCustom )
 import Ops.Boolish ( boolish )
 import Ops.Numb ( parseNumb )
@@ -250,10 +251,18 @@ _assocs = \case
             ++ "\n was: " ++ show v
 
 _contains :: PzVal -> PzVal -> Result PzVal
-_contains = undefined
+_contains k = \case
+    PzDict d -> return $ toBool $ isJust $ M.lookup (DictKey k) d
+    v -> Left $
+        "Function 'contains only supports dictionaries (second arg)"
+            ++ "\n was: " ++ show v
 
 _get :: PzVal -> PzVal -> Result PzVal
-_get = undefined
+_get k = \case
+    PzDict d -> return $ fromMaybe PzUnit $ M.lookup (DictKey k) d
+    v -> Left $
+        "Function 'get only supports dictionaries (second arg)"
+            ++ "\n was: " ++ show v
 
 _put :: PzVal -> PzVal -> PzVal -> Result PzVal
 _put = undefined
