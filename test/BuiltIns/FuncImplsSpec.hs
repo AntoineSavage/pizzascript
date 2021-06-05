@@ -15,6 +15,7 @@ import Ops.BoolishSpec
 import Ops.Func.ArgPass
 import Ops.Func.FuncCustom
 import Ops.Func.FuncImpureArgs
+import Ops.PzVal
 import Ops.PzValSpec
 import Symbs
 import TestUtils
@@ -837,11 +838,73 @@ _tailSpec = describe "_tail" $ do
 
 _keysSpec :: Spec
 _keysSpec = describe "_keys" $ do
-    it "moos" $ pending
+    it "handles dictionaries" $ do
+        property $ \(ArbDict d) -> do
+            _keys (PzDict d) `shouldBe` Right (PzList $ map unDictKey $ M.keys d)
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _keys v `shouldBe` Left ("Function 'keys only supports dictionaries\n was: " ++ show v)
+
+    it "rejects numbers" $ do
+        property $ \n -> do
+            let v = PzNum n
+            _keys v `shouldBe` Left ("Function 'keys only supports dictionaries\n was: " ++ show v)
+
+    it "rejects strings" $ do
+        property $ \s -> do
+            let v = PzStr s
+            _keys v `shouldBe` Left ("Function 'keys only supports dictionaries\n was: " ++ show v)
+
+    it "rejects symbols" $ do
+        property $ \s -> do
+            let v = PzSymb s
+            _keys v `shouldBe` Left ("Function 'keys only supports dictionaries\n was: " ++ show v)
+
+    it "rejects lists" $ do
+        property $ \(Few xs) -> do
+            let v = PzList xs
+            _keys v `shouldBe` Left ("Function 'keys only supports dictionaries\n was: " ++ show v)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f -> do
+            let v = PzFunc d f
+            _keys v `shouldBe` Left ("Function 'keys only supports dictionaries\n was: " ++ show v)
 
 _assocsSpec :: Spec
 _assocsSpec = describe "_assocs" $ do
-    it "moos" $ pending
+    it "handles dictionaries" $ do
+        property $ \(ArbDict d) -> do
+            _assocs (PzDict d) `shouldBe` Right (PzList $ flip map (M.assocs d) $ \(DictKey k, v) -> PzList [k, v])
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _assocs v `shouldBe` Left ("Function 'assocs only supports dictionaries\n was: " ++ show v)
+
+    it "rejects numbers" $ do
+        property $ \n -> do
+            let v = PzNum n
+            _assocs v `shouldBe` Left ("Function 'assocs only supports dictionaries\n was: " ++ show v)
+
+    it "rejects strings" $ do
+        property $ \s -> do
+            let v = PzStr s
+            _assocs v `shouldBe` Left ("Function 'assocs only supports dictionaries\n was: " ++ show v)
+
+    it "rejects symbols" $ do
+        property $ \s -> do
+            let v = PzSymb s
+            _assocs v `shouldBe` Left ("Function 'assocs only supports dictionaries\n was: " ++ show v)
+
+    it "rejects lists" $ do
+        property $ \(Few xs) -> do
+            let v = PzList xs
+            _assocs v `shouldBe` Left ("Function 'assocs only supports dictionaries\n was: " ++ show v)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f -> do
+            let v = PzFunc d f
+            _assocs v `shouldBe` Left ("Function 'assocs only supports dictionaries\n was: " ++ show v)
 
 _containsSpec :: Spec
 _containsSpec = describe "_contains" $ do

@@ -9,6 +9,7 @@ import Ops.Numb ( parseNumb )
 import Ops.Func.ArgPass ( argPassToSymb )
 import Ops.Func.FuncCustom ( fromFuncCustom )
 import Ops.Func.FuncImpureArgs ( getArgPass, getExplCtx )
+import Ops.PzVal ( unDictKey )
 import Symbs
 import Text.Parsec ( parse )
 import Types.Boolish ( Boolish(..) )
@@ -235,10 +236,18 @@ _tail = undefined
 
 -- dictionaries
 _keys :: PzVal -> Result PzVal
-_keys = undefined
+_keys = \case
+    PzDict d -> return $ PzList $ map unDictKey $ M.keys d
+    v -> Left $
+        "Function 'keys only supports dictionaries"
+            ++ "\n was: " ++ show v
 
 _assocs :: PzVal -> Result PzVal
-_assocs = undefined
+_assocs = \case
+    PzDict d -> return $ PzList $ flip map (M.assocs d) $ \(DictKey k, v) -> PzList [k, v]
+    v -> Left $
+        "Function 'assocs only supports dictionaries"
+            ++ "\n was: " ++ show v
 
 _contains :: PzVal -> PzVal -> Result PzVal
 _contains = undefined
