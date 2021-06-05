@@ -6,7 +6,9 @@ import qualified Data.Map as M
 import Eval ( evalFuncCustom )
 import Ops.Boolish ( boolish )
 import Ops.Numb ( parseNumb )
+import Ops.Func.ArgPass ( argPassToSymb )
 import Ops.Func.FuncCustom ( fromFuncCustom )
+import Ops.Func.FuncImpureArgs ( getArgPass, getExplCtx )
 import Symbs
 import Text.Parsec ( parse )
 import Types.Boolish ( Boolish(..) )
@@ -264,17 +266,27 @@ _setImplCtx :: PzVal -> PzVal -> Result PzVal
 _setImplCtx = undefined
 
 _getExplCtx :: PzVal -> Result PzVal
-_getExplCtx = undefined
+_getExplCtx = \case
+    PzFunc _ (Func ia _ _) -> return $ case getExplCtx ia of
+        Just ec -> PzSymb ec
+        _       -> PzUnit
+    v -> Left $
+        "Function 'get_expl_ctx only supports functions"
+            ++ "\n was: " ++ show v
 
 _getArgPass :: PzVal -> Result PzVal
-_getArgPass = undefined
+_getArgPass = \case
+    PzFunc _ (Func ia _ _) -> return $ PzSymb $ argPassToSymb $ getArgPass ia
+    v -> Left $
+        "Function 'get_arg_pass only supports functions"
+            ++ "\n was: " ++ show v
 
 _getArgs :: PzVal -> Result PzVal
 _getArgs = \case
     PzFunc _ (Func _ a _) -> case a of
         ArgsVaria s -> return $ PzSymb s
         ArgsArity ss -> return $ PzList $ map PzSymb ss
-    v             -> Left $
+    v -> Left $
         "Function 'get_args only supports functions"
             ++ "\n was: " ++ show v
 
@@ -283,7 +295,7 @@ _getBody = \case
     PzFunc _ (Func _ _ b) -> case b of
         BodyBuiltIn s -> return $ PzSymb s
         BodyCustom x xs -> return $ PzList $ x:xs
-    v             -> Left $
+    v -> Left $
         "Function 'get_body only supports functions"
             ++ "\n was: " ++ show v
 

@@ -10,12 +10,15 @@ import BuiltIns.FuncImpls
 import BuiltIns.FuncValues
 import Control.Monad
 import Ops.BoolishSpec
+import Ops.Func.ArgPass
+import Ops.Func.FuncImpureArgs
 import Ops.PzValSpec
 import Symbs
 import TestUtils
 import Types.Func
 import Types.Func.FuncArgs
 import Types.Func.FuncBody
+import Types.Func.FuncImpureArgsSpec
 import Types.Numb
 import Types.PzVal
 import Types.PzValSpec
@@ -865,11 +868,76 @@ _setImplCtxSpec = describe "_setImplCtx" $ do
 
 _getExplCtxSpec :: Spec
 _getExplCtxSpec = describe "_getExplCtx" $ do
-    it "moos" $ pending
+    it "handles functions" $ do
+        property $ \ia -> do
+            let r = case getExplCtx ia of
+                    Just ec -> PzSymb ec
+                    _       -> PzUnit
+            _getExplCtx (PzFunc undefined $ Func ia undefined undefined) `shouldBe` Right r
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _getExplCtx v `shouldBe` Left ("Function 'get_expl_ctx only supports functions\n was: " ++ show v)
+
+    it "rejects numbers" $ do
+        property $ \n -> do
+            let v = PzNum n
+            _getExplCtx v `shouldBe` Left ("Function 'get_expl_ctx only supports functions\n was: " ++ show v)
+
+    it "rejects strings" $ do
+        property $ \s -> do
+            let v = PzStr s
+            _getExplCtx v `shouldBe` Left ("Function 'get_expl_ctx only supports functions\n was: " ++ show v)
+
+    it "rejects symbols" $ do
+        property $ \s -> do
+            let v = PzSymb s
+            _getExplCtx v `shouldBe` Left ("Function 'get_expl_ctx only supports functions\n was: " ++ show v)
+
+    it "rejects lists" $ do
+        property $ \(Few xs) -> do
+            let v = PzList xs
+            _getExplCtx v `shouldBe` Left ("Function 'get_expl_ctx only supports functions\n was: " ++ show v)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) -> do
+            let v = PzDict d
+            _getExplCtx v `shouldBe` Left ("Function 'get_expl_ctx only supports functions\n was: " ++ show v)
 
 _getArgPassSpec :: Spec
 _getArgPassSpec = describe "_getArgPass" $ do
-    it "moos" $ pending
+    it "handles functions" $ do
+        property $ \ia -> do
+            _getArgPass (PzFunc undefined $ Func ia undefined undefined) `shouldBe` Right (PzSymb $ argPassToSymb $ getArgPass ia)
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _getArgPass v `shouldBe` Left ("Function 'get_arg_pass only supports functions\n was: " ++ show v)
+
+    it "rejects numbers" $ do
+        property $ \n -> do
+            let v = PzNum n
+            _getArgPass v `shouldBe` Left ("Function 'get_arg_pass only supports functions\n was: " ++ show v)
+
+    it "rejects strings" $ do
+        property $ \s -> do
+            let v = PzStr s
+            _getArgPass v `shouldBe` Left ("Function 'get_arg_pass only supports functions\n was: " ++ show v)
+
+    it "rejects symbols" $ do
+        property $ \s -> do
+            let v = PzSymb s
+            _getArgPass v `shouldBe` Left ("Function 'get_arg_pass only supports functions\n was: " ++ show v)
+
+    it "rejects lists" $ do
+        property $ \(Few xs) -> do
+            let v = PzList xs
+            _getArgPass v `shouldBe` Left ("Function 'get_arg_pass only supports functions\n was: " ++ show v)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) -> do
+            let v = PzDict d
+            _getArgPass v `shouldBe` Left ("Function 'get_arg_pass only supports functions\n was: " ++ show v)
 
 _getArgsSpec :: Spec
 _getArgsSpec = describe "_getArgs" $ do

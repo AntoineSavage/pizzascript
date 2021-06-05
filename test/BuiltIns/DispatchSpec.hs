@@ -47,6 +47,13 @@ spec = describe "dispatch" $ do
             dispatch undefined [v1, v2] "or" `shouldBe` Right (Impls._or v1 v2)
             dispatch undefined [v1, v2] "and" `shouldBe` Right (Impls._and v1 v2)
 
+    it "dispatches to func functions" $ do
+        property $ \v1 -> do
+            dispatch undefined [v1] "get_expl_ctx" `shouldBe` Impls._getExplCtx v1
+            dispatch undefined [v1] "get_arg_pass" `shouldBe` Impls._getArgPass v1
+            dispatch undefined [v1] "get_args" `shouldBe` Impls._getArgs v1
+            dispatch undefined [v1] "get_body" `shouldBe` Impls._getBody v1
+
     it "rejects unsupported built-in function" $ do
         property $ \nameSuffix -> do
             let funcName = "$" ++ nameSuffix
