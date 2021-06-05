@@ -18,6 +18,7 @@ import Types.SymbSpec
 spec :: Spec
 spec = do
     symbSpec
+    getNbrQuotesSpec
     parseSymbVsUnparseSymbSpec
     parseSymbSpec
     unparseSymbSpec
@@ -33,6 +34,20 @@ symbSpec = describe "symb" $ do
     it "converts non-string to symb" $ do
         property $ \f ns -> do
             symb (f:ns) `shouldBe` Symb Z f ns
+
+getNbrQuotesSpec :: Spec
+getNbrQuotesSpec = describe "getNbrQuotes" $ do
+    it "returns 0" $ do
+        getNbrQuotes (Symb Z '_' "") `shouldBe` 0
+
+    it "returns 1" $ do
+        getNbrQuotes (Symb (S Z) '_' "") `shouldBe` 1
+
+    it "returns 2" $ do
+        getNbrQuotes (Symb (S (S Z)) '_' "") `shouldBe` 2
+
+    it "returns 3" $ do
+        getNbrQuotes (Symb (S (S (S Z))) '_' "") `shouldBe` 3
 
 parseSymbVsUnparseSymbSpec :: Spec
 parseSymbVsUnparseSymbSpec = describe "parseSymb vs unparseSymb" $ do

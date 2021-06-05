@@ -11,6 +11,7 @@ import Ops.Func.ArgPass ( argPassToSymb )
 import Ops.Func.FuncCustom ( fromFuncCustom )
 import Ops.Func.FuncImpureArgs ( getArgPass, getExplCtx )
 import Ops.PzVal ( unDictKey )
+import Ops.Symb ( getNbrQuotes, parseSymb )
 import Symbs
 import Text.Parsec ( parse )
 import Types.Boolish ( Boolish(..) )
@@ -194,10 +195,21 @@ _join = undefined
 
 -- symbols
 _symb :: PzVal -> Result PzVal
-_symb = undefined
+_symb v = case v of
+    PzStr (Str s) -> case parse parseSymb "Call to function 'symb" s of
+        Right sym -> return $ PzSymb sym
+        Left err -> Left $ show err
+    PzSymb s -> return v
+    _ -> Left $
+        "Function 'symb only supports strings and symbols"
+            ++ "\n was: " ++ show v
 
 _nbrQuotes :: PzVal -> Result PzVal
-_nbrQuotes = undefined
+_nbrQuotes = \case
+    PzSymb s -> return $ PzNum $ Numb $ fromIntegral $ getNbrQuotes s
+    v -> Left $
+        "Function 'nbr_quotes only supports symbols"
+            ++ "\n was: " ++ show v
 
 -- booleans
 _not :: PzVal -> PzVal

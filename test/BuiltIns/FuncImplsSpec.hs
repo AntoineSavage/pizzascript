@@ -17,6 +17,7 @@ import Ops.Func.FuncCustom
 import Ops.Func.FuncImpureArgs
 import Ops.PzVal
 import Ops.PzValSpec
+import Ops.Symb
 import Symbs
 import TestUtils
 import Types.Func
@@ -720,11 +721,73 @@ _joinSpec = describe "_join" $ do
 
 _symbSpec :: Spec
 _symbSpec = describe "_symb" $ do
-    it "moos" $ pending
+    it "handles strings" $ do
+        property $ \s sym -> do
+            _symb (PzStr $ Str $ unparseSymb sym) `shouldBe` Right (PzSymb sym)
+            leftAsStr (_symb (PzStr $ Str $ '$':s)) `shouldContain` "Call to function 'symb"
+
+    it "handles symbols" $ do
+        property $ \s -> do
+            _symb (PzSymb s) `shouldBe` Right (PzSymb s)
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _symb v `shouldBe` Left ("Function 'symb only supports strings and symbols\n was: " ++ show v)
+
+    it "rejects numbers" $ do
+        property $ \n -> do
+            let v = PzNum n
+            _symb v `shouldBe` Left ("Function 'symb only supports strings and symbols\n was: " ++ show v)
+
+    it "rejects lists" $ do
+        property $ \(Few xs) -> do
+            let v = PzList xs
+            _symb v `shouldBe` Left ("Function 'symb only supports strings and symbols\n was: " ++ show v)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) -> do
+            let v = PzDict d
+            _symb v `shouldBe` Left ("Function 'symb only supports strings and symbols\n was: " ++ show v)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f -> do
+            let v = PzFunc d f
+            _symb v `shouldBe` Left ("Function 'symb only supports strings and symbols\n was: " ++ show v)
 
 _nbrQuotesSpec :: Spec
 _nbrQuotesSpec = describe "_nbrQuotes" $ do
-    it "moos" $ pending
+    it "handles symbols" $ do
+        property $ \s -> do
+            _nbrQuotes (PzSymb s) `shouldBe` Right (PzNum $ Numb $ fromIntegral $ getNbrQuotes s)
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _nbrQuotes v `shouldBe` Left ("Function 'nbr_quotes only supports symbols\n was: " ++ show v)
+
+    it "rejects numbers" $ do
+        property $ \n -> do
+            let v = PzNum n
+            _nbrQuotes v `shouldBe` Left ("Function 'nbr_quotes only supports symbols\n was: " ++ show v)
+
+    it "rejects strings" $ do
+        property $ \s -> do
+            let v = PzStr s
+            _nbrQuotes v `shouldBe` Left ("Function 'nbr_quotes only supports symbols\n was: " ++ show v)
+
+    it "rejects lists" $ do
+        property $ \(Few xs) -> do
+            let v = PzList xs
+            _nbrQuotes v `shouldBe` Left ("Function 'nbr_quotes only supports symbols\n was: " ++ show v)
+
+    it "rejects dictionaries" $ do
+        property $ \(ArbDict d) -> do
+            let v = PzDict d
+            _nbrQuotes v `shouldBe` Left ("Function 'nbr_quotes only supports symbols\n was: " ++ show v)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f -> do
+            let v = PzFunc d f
+            _nbrQuotes v `shouldBe` Left ("Function 'nbr_quotes only supports symbols\n was: " ++ show v)
 
 ifThenElseSpec :: Spec
 ifThenElseSpec = describe "simulate if-then-else with not-or-and" $ do

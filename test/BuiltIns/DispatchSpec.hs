@@ -44,6 +44,11 @@ spec = describe "dispatch" $ do
             dispatch undefined [v1] "ceil" `shouldBe` Impls._ceil v1
             dispatch undefined [v1] "trunc" `shouldBe` Impls._trunc v1
 
+    it "dispatches to symbol functions" $ do
+        property $ \v -> do
+            dispatch undefined [v] "symb" `shouldBe` Impls._symb v
+            dispatch undefined [v] "nbr_quotes" `shouldBe` Impls._nbrQuotes v
+
     it "dispatches to boolean functions" $ do
         property $ \v1 v2 -> do
             dispatch undefined [v1] "not" `shouldBe` Right (Impls._not v1)

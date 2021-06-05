@@ -1,5 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
-module Ops.Symb ( parseSymb, quoteSymb, symb, unparseSymb, unquoteSymb ) where
+module Ops.Symb ( getNbrQuotes, parseSymb, quoteSymb, symb, unparseSymb, unquoteSymb ) where
 
 import Ops.Nat ( len, unlen )
 import Text.Parsec ( alphaNum, char, letter, (<|>), many )
@@ -11,6 +11,11 @@ symb :: String -> Symb
 symb = \case
     []  -> error "Symbols must contain at least one character"
     c:s -> Symb Z c s
+
+getNbrQuotes :: Symb -> Int
+getNbrQuotes (Symb n _ _) = go n where
+    go Z = 0
+    go (S k) = 1 + go k
 
 -- The output symbol is considered a quotation
 -- i.e. n=Z corresponds to a quoted identifier
