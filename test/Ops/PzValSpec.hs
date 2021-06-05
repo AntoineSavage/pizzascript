@@ -22,6 +22,7 @@ import Types.PzValSpec
 
 spec :: Spec
 spec = do
+    unDictKeySpec
     parseValVsUnparseValSpec
     parseValSpec
     unparseValSpec
@@ -31,6 +32,12 @@ spec = do
     parseManyVsUnparseManySpec
     parseManySpec
     unparseManySpec
+
+unDictKeySpec :: Spec
+unDictKeySpec = describe "unDictKey" $ do
+    it "composes with DictKey into id" $ do
+        property $ \v -> do
+            unDictKey (DictKey v) `shouldBe` v
 
 parseValVsUnparseValSpec :: Spec
 parseValVsUnparseValSpec = describe "parseVal vs unparseVal" $ do

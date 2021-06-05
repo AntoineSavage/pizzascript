@@ -1,5 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
-module Ops.PzVal ( parseList, parseMany, parseVal, unparseList, unparseMany, unparseVal ) where
+module Ops.PzVal ( parseList, parseMany, parseVal, unDictKey, unparseList, unparseMany, unparseVal ) where
 
 import qualified Data.Map as M
 
@@ -10,7 +10,10 @@ import Ops.Symb ( parseSymb, unparseSymb )
 import Symbs ( pzSymbDict, pzSymbList )
 import Text.Parsec ( char, choice, optionMaybe, (<?>), (<|>) )
 import Text.Parsec.String ( Parser )
-import Types.PzVal ( PzVal(..) )
+import Types.PzVal ( DictKey(..), PzVal(..) )
+
+unDictKey :: DictKey -> PzVal
+unDictKey (DictKey v) = v
 
 parseVal :: Parser () -> Parser PzVal -> Parser PzVal
 parseVal ign p =
