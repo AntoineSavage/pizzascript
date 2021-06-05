@@ -9,8 +9,11 @@ import qualified Data.Map as M
 import BuiltIns.FuncImpls
 import BuiltIns.FuncValues
 import Control.Monad
+import Data.Either
+import Eval
 import Ops.BoolishSpec
 import Ops.Func.ArgPass
+import Ops.Func.FuncCustom
 import Ops.Func.FuncImpureArgs
 import Ops.PzValSpec
 import Symbs
@@ -18,6 +21,7 @@ import TestUtils
 import Types.Func
 import Types.Func.FuncArgs
 import Types.Func.FuncBody
+import Types.Func.FuncCustomSpec
 import Types.Func.FuncImpureArgsSpec
 import Types.Numb
 import Types.PzVal
@@ -274,6 +278,7 @@ _addSpec = describe "_add" $ do
             let x = PzFunc d f
             _add x y `shouldBe` Left ("Function 'add only supports numbers\n was: " ++ show x ++ "\n and: " ++ show y)
             _add y x `shouldBe` Left ("Function 'add only supports numbers\n was: " ++ show y ++ "\n and: " ++ show x)
+
 _subSpec :: Spec
 _subSpec = describe "_sub" $ do
     it "handles numbers" $ do
@@ -856,7 +861,16 @@ _delSpec = describe "_del" $ do
 
 _funcSpec :: Spec
 _funcSpec = describe "_func" $ do
-    it "moos" $ pending
+    it "handles valid" $ do
+        property $ \(ArbDict d) fc -> do
+            let elems = unevalFuncCustom fc
+                f = fromFuncCustom fc
+            _func d elems `shouldBe` (Right $ PzList [PzDict d, PzFunc d f])
+
+    it "handles invalid" $ do
+        property $ \(ArbDict d) vs -> do
+            let elems = PzUnit : vs
+            isLeft (_func d elems) `shouldBe` True
 
 _getImplCtxSpec :: Spec
 _getImplCtxSpec = describe "_getImplCtx" $ do

@@ -6,9 +6,12 @@ import Test.QuickCheck
 import BuiltIns.Dispatch
 import BuiltIns.FuncImpls as Impls
 import Control.Exception
+import Eval
 import Ops.PzValSpec
 import Types.Numb
+import Types.Func.FuncCustomSpec
 import Types.PzVal
+import Types.PzValSpec
 
 spec :: Spec
 spec = describe "dispatch" $ do
@@ -48,7 +51,8 @@ spec = describe "dispatch" $ do
             dispatch undefined [v1, v2] "and" `shouldBe` Right (Impls._and v1 v2)
 
     it "dispatches to func functions" $ do
-        property $ \v1 v2 -> do
+        property $ \v1 v2 (ArbDict d) vs -> do
+            dispatch d vs "func" `shouldBe` Impls._func d vs
             dispatch undefined [v1] "get_impl_ctx" `shouldBe` Impls._getImplCtx v1
             dispatch undefined [v1, v2] "set_impl_ctx" `shouldBe` Impls._setImplCtx v1 v2
             dispatch undefined [v1] "get_expl_ctx" `shouldBe` Impls._getExplCtx v1
