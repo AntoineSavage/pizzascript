@@ -5,11 +5,15 @@ import qualified Data.Map as M
 
 import Eval ( evalFuncCustom )
 import Ops.Boolish ( boolish )
-import Ops.Numb
+import Ops.Numb ( parseNumb )
 import Ops.Func.FuncCustom ( fromFuncCustom )
 import Symbs
 import Text.Parsec ( parse )
 import Types.Boolish ( Boolish(..) )
+import Types.Func ( Func(..) )
+import Types.Func.FuncArgs ( FuncArgs(..) )
+import Types.Func.FuncBody ( FuncBody(..) )
+import Types.Func.FuncImpureArgs ( FuncImpureArgs(..) )
 import Types.Numb ( Numb(..) )
 import Types.PzVal ( Dict, DictKey(..), PzVal(..) )
 import Types.Str ( Str(..) )
@@ -266,10 +270,22 @@ _getArgPass :: PzVal -> Result PzVal
 _getArgPass = undefined
 
 _getArgs :: PzVal -> Result PzVal
-_getArgs = undefined
+_getArgs = \case
+    PzFunc _ (Func _ a _) -> case a of
+        ArgsVaria s -> return $ PzSymb s
+        ArgsArity ss -> return $ PzList $ map PzSymb ss
+    v             -> Left $
+        "Function 'get_args only supports functions"
+            ++ "\n was: " ++ show v
 
 _getBody :: PzVal -> Result PzVal
-_getBody = undefined
+_getBody = \case
+    PzFunc _ (Func _ _ b) -> case b of
+        BodyBuiltIn s -> return $ PzSymb s
+        BodyCustom x xs -> return $ PzList $ x:xs
+    v             -> Left $
+        "Function 'get_body only supports functions"
+            ++ "\n was: " ++ show v
 
 -- Utils
 toBool :: Bool -> PzVal

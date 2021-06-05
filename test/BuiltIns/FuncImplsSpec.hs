@@ -13,6 +13,9 @@ import Ops.BoolishSpec
 import Ops.PzValSpec
 import Symbs
 import TestUtils
+import Types.Func
+import Types.Func.FuncArgs
+import Types.Func.FuncBody
 import Types.Numb
 import Types.PzVal
 import Types.PzValSpec
@@ -870,8 +873,78 @@ _getArgPassSpec = describe "_getArgPass" $ do
 
 _getArgsSpec :: Spec
 _getArgsSpec = describe "_getArgs" $ do
-    it "moos" $ pending
+    it "handles functions (varia)" $ do
+        property $ \s -> do
+            _getArgs (PzFunc undefined $ Func undefined (ArgsVaria s) undefined) `shouldBe` Right (PzSymb s)
+
+    it "handles functions (arity)" $ do
+        property $ \ss -> do
+            _getArgs (PzFunc undefined $ Func undefined (ArgsArity ss) undefined) `shouldBe` Right (PzList $ map PzSymb ss)
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _getArgs v `shouldBe` Left ("Function 'get_args only supports functions\n was: " ++ show v)
+
+    it "rejects numbers" $ do
+        property $ \n -> do
+            let v = PzNum n
+            _getArgs v `shouldBe` Left ("Function 'get_args only supports functions\n was: " ++ show v)
+
+    it "rejects strings" $ do
+        property $ \s -> do
+            let v = PzStr s
+            _getArgs v `shouldBe` Left ("Function 'get_args only supports functions\n was: " ++ show v)
+
+    it "rejects symbols" $ do
+        property $ \s -> do
+            let v = PzSymb s
+            _getArgs v `shouldBe` Left ("Function 'get_args only supports functions\n was: " ++ show v)
+
+    it "rejects lists" $ do
+        property $ \(Few xs) -> do
+            let v = PzList xs
+            _getArgs v `shouldBe` Left ("Function 'get_args only supports functions\n was: " ++ show v)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) -> do
+            let v = PzDict d
+            _getArgs v `shouldBe` Left ("Function 'get_args only supports functions\n was: " ++ show v)
 
 _getBodySpec :: Spec
 _getBodySpec = describe "_getBody" $ do
-    it "moos" $ pending
+    it "handles functions (built-in)" $ do
+        property $ \s -> do
+            _getBody (PzFunc undefined $ Func undefined undefined $ BodyBuiltIn s) `shouldBe` Right (PzSymb s)
+
+    it "handles functions (custom)" $ do
+        property $ \x xs -> do
+            _getBody (PzFunc undefined $ Func undefined undefined $ BodyCustom x xs) `shouldBe` Right (PzList $ x:xs)
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _getBody v `shouldBe` Left ("Function 'get_body only supports functions\n was: " ++ show v)
+
+    it "rejects numbers" $ do
+        property $ \n -> do
+            let v = PzNum n
+            _getBody v `shouldBe` Left ("Function 'get_body only supports functions\n was: " ++ show v)
+
+    it "rejects strings" $ do
+        property $ \s -> do
+            let v = PzStr s
+            _getBody v `shouldBe` Left ("Function 'get_body only supports functions\n was: " ++ show v)
+
+    it "rejects symbols" $ do
+        property $ \s -> do
+            let v = PzSymb s
+            _getBody v `shouldBe` Left ("Function 'get_body only supports functions\n was: " ++ show v)
+
+    it "rejects lists" $ do
+        property $ \(Few xs) -> do
+            let v = PzList xs
+            _getBody v `shouldBe` Left ("Function 'get_body only supports functions\n was: " ++ show v)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) -> do
+            let v = PzDict d
+            _getBody v `shouldBe` Left ("Function 'get_body only supports functions\n was: " ++ show v)
