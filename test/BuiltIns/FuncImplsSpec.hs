@@ -860,11 +860,116 @@ _funcSpec = describe "_func" $ do
 
 _getImplCtxSpec :: Spec
 _getImplCtxSpec = describe "_getImplCtx" $ do
-    it "moos" $ pending
+    it "handles functions" $ do
+        property $ \(ArbDict d) -> do
+            _getImplCtx (PzFunc d undefined) `shouldBe` Right (PzDict d)
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _getImplCtx v `shouldBe` Left ("Function 'get_impl_ctx only supports functions\n was: " ++ show v)
+
+    it "rejects numbers" $ do
+        property $ \n -> do
+            let v = PzNum n
+            _getImplCtx v `shouldBe` Left ("Function 'get_impl_ctx only supports functions\n was: " ++ show v)
+
+    it "rejects strings" $ do
+        property $ \s -> do
+            let v = PzStr s
+            _getImplCtx v `shouldBe` Left ("Function 'get_impl_ctx only supports functions\n was: " ++ show v)
+
+    it "rejects symbols" $ do
+        property $ \s -> do
+            let v = PzSymb s
+            _getImplCtx v `shouldBe` Left ("Function 'get_impl_ctx only supports functions\n was: " ++ show v)
+
+    it "rejects lists" $ do
+        property $ \(Few xs) -> do
+            let v = PzList xs
+            _getImplCtx v `shouldBe` Left ("Function 'get_impl_ctx only supports functions\n was: " ++ show v)
+
+    it "rejects dictionaires" $ do
+        property $ \(ArbDict d) -> do
+            let v = PzDict d
+            _getImplCtx v `shouldBe` Left ("Function 'get_impl_ctx only supports functions\n was: " ++ show v)
 
 _setImplCtxSpec :: Spec
 _setImplCtxSpec = describe "_setImplCtx" $ do
-    it "moos" $ pending
+    it "handles functions" $ do
+        property $ \(ArbDict d) f -> do
+            _setImplCtx (PzFunc undefined f) (PzDict d) `shouldBe` Right (PzFunc d f)
+
+    it "rejects the unit type (first arg)" $ do
+        property $ \(ArbDict d) -> do
+            let x = PzUnit
+                y = PzDict d
+            _setImplCtx x y `shouldBe` Left ("Function 'set_impl_ctx only supports functions (first arg) and dictionaries (second arg)\n was: " ++ show x ++ "\n and: " ++ show y)
+
+    it "rejects numbers (first arg)" $ do
+        property $ \n (ArbDict d) -> do
+            let x = PzNum n
+                y = PzDict d
+            _setImplCtx x y `shouldBe` Left ("Function 'set_impl_ctx only supports functions (first arg) and dictionaries (second arg)\n was: " ++ show x ++ "\n and: " ++ show y)
+
+    it "rejects strings (first arg)" $ do
+        property $ \s (ArbDict d) -> do
+            let x = PzStr s
+                y = PzDict d
+            _setImplCtx x y `shouldBe` Left ("Function 'set_impl_ctx only supports functions (first arg) and dictionaries (second arg)\n was: " ++ show x ++ "\n and: " ++ show y)
+
+    it "rejects symbols (first arg)" $ do
+        property $ \s (ArbDict d) -> do
+            let x = PzSymb s
+                y = PzDict d
+            _setImplCtx x y `shouldBe` Left ("Function 'set_impl_ctx only supports functions (first arg) and dictionaries (second arg)\n was: " ++ show x ++ "\n and: " ++ show y)
+
+    it "rejects lists (first arg)" $ do
+        property $ \(Few xs) (ArbDict d) -> do
+            let x = PzList xs
+                y = PzDict d
+            _setImplCtx x y `shouldBe` Left ("Function 'set_impl_ctx only supports functions (first arg) and dictionaries (second arg)\n was: " ++ show x ++ "\n and: " ++ show y)
+
+    it "rejects dictionaires (first arg)" $ do
+        property $ \(ArbDict d) -> do
+            let x = PzDict d
+                y = PzDict d
+            _setImplCtx x y `shouldBe` Left ("Function 'set_impl_ctx only supports functions (first arg) and dictionaries (second arg)\n was: " ++ show x ++ "\n and: " ++ show y)
+
+    it "rejects the unit type (second arg)" $ do
+        property $ \(ArbDict d) f -> do
+            let x = PzFunc d f
+                y = PzUnit
+            _setImplCtx x y `shouldBe` Left ("Function 'set_impl_ctx only supports functions (first arg) and dictionaries (second arg)\n was: " ++ show x ++ "\n and: " ++ show y)
+
+    it "rejects numbers (second arg)" $ do
+        property $ \(ArbDict d) f n -> do
+            let x = PzFunc d f
+                y = PzNum n
+            _setImplCtx x y `shouldBe` Left ("Function 'set_impl_ctx only supports functions (first arg) and dictionaries (second arg)\n was: " ++ show x ++ "\n and: " ++ show y)
+
+    it "rejects strings (second arg)" $ do
+        property $ \(ArbDict d) f s -> do
+            let x = PzFunc d f
+                y = PzStr s
+            _setImplCtx x y `shouldBe` Left ("Function 'set_impl_ctx only supports functions (first arg) and dictionaries (second arg)\n was: " ++ show x ++ "\n and: " ++ show y)
+
+    it "rejects symbols (second arg)" $ do
+        property $ \(ArbDict d) f s -> do
+            let x = PzFunc d f
+                y = PzSymb s
+            _setImplCtx x y `shouldBe` Left ("Function 'set_impl_ctx only supports functions (first arg) and dictionaries (second arg)\n was: " ++ show x ++ "\n and: " ++ show y)
+
+    it "rejects lists (second arg)" $ do
+        property $ \(ArbDict d) f (Few xs) -> do
+            let x = PzFunc d f
+                y = PzList xs
+            _setImplCtx x y `shouldBe` Left ("Function 'set_impl_ctx only supports functions (first arg) and dictionaries (second arg)\n was: " ++ show x ++ "\n and: " ++ show y)
+
+    it "rejects functions (second arg)" $ do
+        property $ \(ArbDict d) f -> do
+            let x = PzFunc d f
+                y = PzFunc d f
+            _setImplCtx x y `shouldBe` Left ("Function 'set_impl_ctx only supports functions (first arg) and dictionaries (second arg)\n was: " ++ show x ++ "\n and: " ++ show y)
 
 _getExplCtxSpec :: Spec
 _getExplCtxSpec = describe "_getExplCtx" $ do

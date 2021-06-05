@@ -260,10 +260,19 @@ _func ctx elems = do
     return $ PzList [PzDict ctx, PzFunc ctx f]
 
 _getImplCtx :: PzVal -> Result PzVal
-_getImplCtx = undefined
+_getImplCtx = \case
+    PzFunc d _ -> return $ PzDict d
+    v -> Left $
+        "Function 'get_impl_ctx only supports functions"
+            ++ "\n was: " ++ show v
 
 _setImplCtx :: PzVal -> PzVal -> Result PzVal
-_setImplCtx = undefined
+_setImplCtx x y = case (x, y) of
+    (PzFunc _ f, PzDict d) -> return $ PzFunc d f
+    v -> Left $
+        "Function 'set_impl_ctx only supports functions (first arg) and dictionaries (second arg)"
+            ++ "\n was: " ++ show x
+            ++ "\n and: " ++ show y
 
 _getExplCtx :: PzVal -> Result PzVal
 _getExplCtx = \case

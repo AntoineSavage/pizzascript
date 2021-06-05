@@ -48,7 +48,9 @@ spec = describe "dispatch" $ do
             dispatch undefined [v1, v2] "and" `shouldBe` Right (Impls._and v1 v2)
 
     it "dispatches to func functions" $ do
-        property $ \v1 -> do
+        property $ \v1 v2 -> do
+            dispatch undefined [v1] "get_impl_ctx" `shouldBe` Impls._getImplCtx v1
+            dispatch undefined [v1, v2] "set_impl_ctx" `shouldBe` Impls._setImplCtx v1 v2
             dispatch undefined [v1] "get_expl_ctx" `shouldBe` Impls._getExplCtx v1
             dispatch undefined [v1] "get_arg_pass" `shouldBe` Impls._getArgPass v1
             dispatch undefined [v1] "get_args" `shouldBe` Impls._getArgs v1
