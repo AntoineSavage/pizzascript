@@ -50,6 +50,12 @@ spec = describe "dispatch" $ do
             dispatch undefined [v1, v2] "or" `shouldBe` Right (Impls._or v1 v2)
             dispatch undefined [v1, v2] "and" `shouldBe` Right (Impls._and v1 v2)
 
+    it "dispatches to list functions" $ do
+        property $ \v1 v2 -> do
+            dispatch undefined [v1, v2] "cons" `shouldBe` Impls._cons v1 v2
+            dispatch undefined [v1] "head" `shouldBe` Impls._head v1
+            dispatch undefined [v1] "tail" `shouldBe` Impls._tail v1
+
     it "dispatches to dictionary functions" $ do
         property $ \v1 v2 v3 -> do
             dispatch undefined [v1] "keys" `shouldBe` Impls._keys v1

@@ -826,15 +826,121 @@ _andSpec = describe "_and (falsest wins)" $ do
 
 _consSpec :: Spec
 _consSpec = describe "_cons" $ do
-    it "moos" $ pending
+    it "handles lists (empty)" $ do
+        property $ \x -> do
+            _cons x (PzList []) `shouldBe` Right (PzList [x])
+
+    it "handles lists (non-empty)" $ do
+        property $ \x (Few xs) -> do
+            _cons x (PzList xs) `shouldBe` Right (PzList $ x:xs)
+
+    it "rejects the unit type" $ do
+        property $ \x -> do
+            let y = PzUnit
+            _cons x y `shouldBe` Left ("Function 'cons only supports lists (second arg)\n was: " ++ show y)
+
+    it "rejects numbers" $ do
+        property $ \x n -> do
+            let y = PzNum n
+            _cons x y `shouldBe` Left ("Function 'cons only supports lists (second arg)\n was: " ++ show y)
+
+    it "rejects strings" $ do
+        property $ \x s -> do
+            let y = PzStr s
+            _cons x y `shouldBe` Left ("Function 'cons only supports lists (second arg)\n was: " ++ show y)
+
+    it "rejects symbols" $ do
+        property $ \x s -> do
+            let y = PzSymb s
+            _cons x y `shouldBe` Left ("Function 'cons only supports lists (second arg)\n was: " ++ show y)
+
+    it "rejects dictionaries" $ do
+        property $ \x (ArbDict d) -> do
+            let y = PzDict d
+            _cons x y `shouldBe` Left ("Function 'cons only supports lists (second arg)\n was: " ++ show y)
+
+    it "rejects functions" $ do
+        property $ \x (ArbDict d) f -> do
+            let y = PzFunc d f
+            _cons x y `shouldBe` Left ("Function 'cons only supports lists (second arg)\n was: " ++ show y)
 
 _headSpec :: Spec
 _headSpec = describe "_head" $ do
-    it "moos" $ pending
+    it "handles lists (non-empty)" $ do
+        property $ \x -> do
+            _head (PzList $ x:undefined) `shouldBe` Right x
+
+    it "handles lists (empty)" $ do
+        let v = PzList []
+        _head v `shouldBe` Left ("Function 'head only supports non-empty lists\n was: " ++ show v)
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _head v `shouldBe` Left ("Function 'head only supports non-empty lists\n was: " ++ show v)
+
+    it "rejects numbers" $ do
+        property $ \n -> do
+            let v = PzNum n
+            _head v `shouldBe` Left ("Function 'head only supports non-empty lists\n was: " ++ show v)
+
+    it "rejects strings" $ do
+        property $ \s -> do
+            let v = PzStr s
+            _head v `shouldBe` Left ("Function 'head only supports non-empty lists\n was: " ++ show v)
+
+    it "rejects symbols" $ do
+        property $ \s -> do
+            let v = PzSymb s
+            _head v `shouldBe` Left ("Function 'head only supports non-empty lists\n was: " ++ show v)
+
+    it "rejects dictionaries" $ do
+        property $ \(ArbDict d) -> do
+            let v = PzDict d
+            _head v `shouldBe` Left ("Function 'head only supports non-empty lists\n was: " ++ show v)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f -> do
+            let v = PzFunc d f
+            _head v `shouldBe` Left ("Function 'head only supports non-empty lists\n was: " ++ show v)
 
 _tailSpec :: Spec
 _tailSpec = describe "_tail" $ do
-    it "moos" $ pending
+    it "handles lists (non-empty)" $ do
+        property $ \(Few xs) -> do
+            _tail (PzList $ undefined:xs) `shouldBe` Right (PzList xs)
+
+    it "handles lists (empty)" $ do
+        let v = PzList []
+        _tail v `shouldBe` Left ("Function 'tail only supports non-empty lists\n was: " ++ show v)
+
+    it "rejects the unit type" $ do
+        let v = PzUnit
+        _tail v `shouldBe` Left ("Function 'tail only supports non-empty lists\n was: " ++ show v)
+
+    it "rejects numbers" $ do
+        property $ \n -> do
+            let v = PzNum n
+            _tail v `shouldBe` Left ("Function 'tail only supports non-empty lists\n was: " ++ show v)
+
+    it "rejects strings" $ do
+        property $ \s -> do
+            let v = PzStr s
+            _tail v `shouldBe` Left ("Function 'tail only supports non-empty lists\n was: " ++ show v)
+
+    it "rejects symbols" $ do
+        property $ \s -> do
+            let v = PzSymb s
+            _tail v `shouldBe` Left ("Function 'tail only supports non-empty lists\n was: " ++ show v)
+
+    it "rejects dictionaries" $ do
+        property $ \(ArbDict d) -> do
+            let v = PzDict d
+            _tail v `shouldBe` Left ("Function 'tail only supports non-empty lists\n was: " ++ show v)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f -> do
+            let v = PzFunc d f
+            _tail v `shouldBe` Left ("Function 'tail only supports non-empty lists\n was: " ++ show v)
 
 _keysSpec :: Spec
 _keysSpec = describe "_keys" $ do

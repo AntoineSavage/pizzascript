@@ -227,13 +227,25 @@ _and x y = case (boolish x, boolish y) of
 
 -- lists
 _cons :: PzVal -> PzVal -> Result PzVal
-_cons = undefined
+_cons x = \case
+    PzList xs -> return $ PzList $ x:xs
+    v -> Left $
+        "Function 'cons only supports lists (second arg)"
+            ++ "\n was: " ++ show v
 
 _head :: PzVal -> Result PzVal
-_head = undefined
+_head = \case
+    PzList (x:_) -> return x
+    v -> Left $
+        "Function 'head only supports non-empty lists"
+            ++ "\n was: " ++ show v
 
 _tail :: PzVal -> Result PzVal
-_tail = undefined
+_tail = \case
+    PzList (_:xs) -> return $ PzList xs
+    v -> Left $
+        "Function 'tail only supports non-empty lists"
+            ++ "\n was: " ++ show v
 
 -- dictionaries
 _keys :: PzVal -> Result PzVal
