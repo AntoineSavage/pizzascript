@@ -120,7 +120,7 @@ evalSpec = describe "eval" $ do
             let k = PzSymb $ Symb Z f ns
                 ctx = M.delete (DictKey k) c
             leftAsStr (eval ctx k) `shouldContain`
-                (show $ "Error: Undefined identifier: " ++ unparseSymb (Symb Z f ns)
+                (show $ "Error: Undefined identifier: " ++ unparseSymb (Symb (S Z) f ns)
                     ++ "\n context keys: " ++ show (M.keys ctx)
                 )
 
@@ -329,11 +329,11 @@ evalQuotedIdentSpec = describe "evalQuotedIdent" $ do
             evalQuotedIdent (M.insert (DictKey k) v c) k `shouldBe` Right v
 
     it "rejects undefined identifier" $ do
-        property $ \(ArbDict c) s -> do
-            let k = PzSymb s
+        property $ \(ArbDict c) (Symb n f cs) -> do
+            let k = PzSymb $ Symb n f cs
                 ctx = M.delete (DictKey k) c
             leftAsStr (evalQuotedIdent ctx k) `shouldContain`
-                    (show $ "Error: Undefined identifier: " ++ unparseSymb s ++ "\n context keys: " ++ show (M.keys ctx))
+                    (show $ "Error: Undefined identifier: " ++ unparseSymb (Symb (S n) f cs) ++ "\n context keys: " ++ show (M.keys ctx))
 
 validateNoDuplicateQuotedIdentsSpec :: Spec
 validateNoDuplicateQuotedIdentsSpec = describe "validateNoDuplicateQuotedIdents" $ do
@@ -405,18 +405,22 @@ unconsFuncBodySpec = describe "unconsFuncBody" $ do
   
     it "uncons one element" $ do
         property $ \v -> do
+            let _ = v :: PzVal Evaled
             unconsFuncBody [v] `shouldBe` Right (v, [])
   
     it "uncons two elements" $ do
         property $ \v1 v2 -> do
+            let _ = v1 :: PzVal Evaled
             unconsFuncBody [v1, v2] `shouldBe` Right (v1, [v2])
   
     it "uncons three elements" $ do
         property $ \v1 v2 v3 -> do
+            let _ = v1 :: PzVal Evaled
             unconsFuncBody [v1, v2, v3] `shouldBe` Right (v1, [v2, v3])
   
     it "uncons N+1 elements" $ do
         property $ \v vs -> do
+            let _ = v :: PzVal Evaled
             unconsFuncBody (v:vs) `shouldBe` Right (v, vs)
 
 getQuotedIdentSpec :: Spec
@@ -441,7 +445,8 @@ getQuotedIdentSpec = describe "getQuotedIdent" $ do
                 (show $ "Expected identifier\n was: " ++ show (PzSymb s))
 
     it "rejects list" $ do
-        property $ \(Few l) ->
+        property $ \(Few l) -> do
+            let _ = l :: [PzVal Evaled]
             leftAsStr (getQuotedIdent (PzList l)) `shouldContain`
                 (show $ "Expected identifier\n was: " ++ show (PzList l))
 

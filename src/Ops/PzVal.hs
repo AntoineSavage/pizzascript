@@ -1,5 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
-module Ops.PzVal ( parseList, parseMany, parseVal, unDictKey, unparseList, unparseMany, unparseVal ) where
+module Ops.PzVal ( fromQuoted, parseList, parseMany, parseVal, unDictKey, unparseList, unparseMany, unparseVal ) where
 
 import qualified Data.Map as M
 
@@ -10,19 +10,27 @@ import Ops.Symb ( parseSymb, unparseSymb )
 import Symbs ( pzSymbDict, pzSymbList )
 import Text.Parsec ( char, choice, optionMaybe, (<?>), (<|>) )
 import Text.Parsec.String ( Parser )
-import Types.PzVal ( DictKey(..), PzVal(..) )
+import Types.PzVal ( DictKey(..), Evaled, PzVal(..), Quoted )
 
-unDictKey :: DictKey -> PzVal
+fromQuoted :: PzVal Quoted -> PzVal Evaled
+fromQuoted = \case
+    PzNum n -> PzNum n
+    PzStr s -> PzStr s
+    PzSymb s -> PzSymb s
+    PzList xs -> PzList $ map fromQuoted xs
+    v -> error $ "Can only convert quoted values: " ++ show v
+
+unDictKey :: DictKey -> PzVal Evaled
 unDictKey (DictKey v) = v
 
-parseVal :: Parser () -> Parser PzVal -> Parser PzVal
+parseVal :: Parser () -> Parser (PzVal Quoted) -> Parser (PzVal Quoted)
 parseVal ign p =
-        PzNum <$> (parseNumb <?> "number")
-    <|> PzStr <$> (parseStr <?> "string")
-    <|> PzSymb <$> (parseSymb <?> "symbol (or identifier)")
-    <|> PzList <$> (parseList pzSymbList pzSymbDict ign p <?> "list (or dictionary or function)")
+        (PzNum <$> parseNumb <?> "number")
+    <|> (PzStr <$> parseStr <?> "string")
+    <|> (PzSymb <$> parseSymb <?> "symbol (or identifier)")
+    <|> (PzList <$> parseList pzSymbList pzSymbDict ign p <?> "list (or dictionary or function)")
 
-unparseVal :: (PzVal -> Bool -> String) -> PzVal -> String
+unparseVal :: (PzVal Quoted -> Bool -> String) -> PzVal Quoted -> String
 unparseVal f = \case
     PzNum n -> unparseNumb n
     PzStr s -> unparseStr s

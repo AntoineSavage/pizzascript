@@ -6,15 +6,15 @@ import Symbs ( pzSymbFalse, pzSymbTrue )
 import Types.Boolish ( Boolish(..) )
 import Types.Numb ( Numb(..) )
 import Types.Str ( Str(..) )
-import Types.PzVal ( PzVal(..) )
+import Types.PzVal ( Evaled, PzVal(..) )
 
-cases :: M.Map PzVal Boolish
+cases :: M.Map (PzVal Evaled) Boolish
 cases = M.fromList
   [ (pzSymbFalse, FalseReal)
   , (pzSymbTrue, TrueReal)
   ]
 
-boolish :: PzVal -> Boolish
+boolish :: PzVal Evaled -> Boolish
 boolish v = case M.lookup v cases of
   Just b -> b
   _ -> case v of

@@ -34,7 +34,7 @@ unparseSpec = describe "unparseMaybeVal" $ do
 
     it "unparses to itself using provided func" $ do
         let f v last  = unparseVal f v ++ if last then "" else " "
-        property $ \(UnparseValid v) -> do
+        property $ \v -> do
             unparse v `shouldBe` unparseVal f v
 
 getDuplicatesSpec :: Spec

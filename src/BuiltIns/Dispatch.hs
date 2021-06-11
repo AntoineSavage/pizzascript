@@ -2,12 +2,19 @@ module BuiltIns.Dispatch where
 
 import qualified BuiltIns.FuncImpls as Impls
 
-import Types.PzVal ( Dict, PzVal )
+import Types.PzVal ( Dict, Evaled, PzVal, Quoted )
 import Types.Symb ( Symb(..) )
 import Utils ( f1, f2, f3, Result )
 
-dispatch :: Dict -> [PzVal] -> String -> Result PzVal
-dispatch ctx args funcName = case funcName of
+dispatchQuoted :: Dict -> [PzVal Quoted] -> String -> Result (PzVal Evaled)
+dispatchQuoted ctx args funcName = case funcName of
+    -- functions
+    "func" -> Impls._func ctx args
+
+    _ -> error $ "Built-in function '" ++ funcName ++ "' not supported"
+
+dispatch :: [PzVal Evaled] -> String -> Result (PzVal Evaled)
+dispatch args funcName = case funcName of
     -- generic
     "type_of" -> f1 args $ Right . Impls._typeOf
     "eq" -> f2 args $ Right .* Impls._eq
@@ -59,7 +66,6 @@ dispatch ctx args funcName = case funcName of
     "del" -> f2 args Impls._del
 
     -- functions
-    "func" -> Impls._func ctx args
     "get_impl_ctx" -> f1 args Impls._getImplCtx
     "set_impl_ctx" -> f2 args Impls._setImplCtx
     "get_expl_ctx" -> f1 args Impls._getExplCtx

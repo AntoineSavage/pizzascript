@@ -817,7 +817,7 @@ _getBodySpec = describe "_getBody" $ do
 
     it "handles functions (custom)" $ do
         property $ \x xs -> do
-            _getBody (PzFunc undefined $ Func undefined undefined $ BodyCustom x xs) `shouldBe` Right (PzList $ x:xs)
+            _getBody (PzFunc undefined $ Func undefined undefined $ BodyCustom x xs) `shouldBe` Right (PzList $ map fromQuoted $ x:xs)
 
     it "rejects other types" $ do
         property $ \n s sym (Few xs) (ArbDict d) -> do

@@ -3,9 +3,9 @@ module Utils where
 import qualified Data.Set as S
 
 import Ops.PzVal ( unparseVal )
-import Types.PzVal ( Dict, PzVal )
+import Types.PzVal ( Dict, PzVal, Quoted )
 
-unparse :: PzVal -> String
+unparse :: PzVal Quoted -> String
 unparse = unparseVal f where
     f v last  = unparseVal f v ++ if last then "" else " "
 

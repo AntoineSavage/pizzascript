@@ -52,7 +52,7 @@ boolishSpec = describe "boolish" $ do
             boolish v `shouldBe` Truish
 
 -- Utils
-newtype PzFalsish = PzFalsish PzVal deriving (Show, Eq)
+newtype PzFalsish = PzFalsish (PzVal Evaled) deriving (Show, Eq)
 instance Arbitrary PzFalsish where
     arbitrary = do
         fmap PzFalsish $ elements $
@@ -63,7 +63,7 @@ instance Arbitrary PzFalsish where
             , PzDict M.empty
             ]
 
-newtype PzTruish = PzTruish PzVal deriving (Show, Eq)
+newtype PzTruish = PzTruish (PzVal Evaled) deriving (Show, Eq)
 instance Arbitrary PzTruish where
     arbitrary = fmap PzTruish $ oneof
             [ PzNum . Numb . getNonZero <$> arbitrary

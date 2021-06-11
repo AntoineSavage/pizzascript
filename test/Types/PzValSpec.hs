@@ -1,9 +1,11 @@
+{-# LANGUAGE FlexibleInstances #-}
 module Types.PzValSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
 import Control.Monad
+import Symbs
 import TestUtils
 import Types.FuncSpec
 import Types.NumbSpec
@@ -38,6 +40,7 @@ spec = do
     describe "PzVal" $ do
         it "implements Show" $ do
             property $ \n s sym (Few xs) (ArbDict d) f -> do
+                let _ = xs :: [PzVal Evaled]
                 show PzUnit `shouldBe` "PzUnit"
                 show (PzNum n) `shouldBe` "PzNum (" ++ show n ++ ")"
                 show (PzStr s) `shouldBe` "PzStr (" ++ show s ++ ")"
@@ -48,6 +51,7 @@ spec = do
 
         it "implements Eq" $ do
             property $ \nx ny sx sy symx symy (Few xs) (Few ys) (ArbDict dx) (ArbDict dy) fx fy -> do
+                let _ = xs :: [PzVal Evaled]
                 PzUnit == PzUnit `shouldBe` True
                 PzUnit == PzNum u `shouldBe` False
                 PzUnit == PzStr u `shouldBe` False
@@ -113,6 +117,7 @@ spec = do
 
         it "implements Ord" $ do
             property $ \nx ny sx sy symx symy (Few xs) (Few ys) (ArbDict dx) (ArbDict dy) fx fy -> do
+                let _ = xs :: [PzVal Evaled]
                 PzUnit <= PzUnit `shouldBe` True
                 PzUnit <= PzNum u `shouldBe` True
                 PzUnit <= PzStr u `shouldBe` True
@@ -177,12 +182,12 @@ spec = do
                 PzFunc dx fx <= PzFunc dx fy `shouldBe` fx <= fy
 
 -- Utils
-isFunc :: PzVal -> Bool
+isFunc :: PzVal Evaled -> Bool
 isFunc (PzFunc _ _) = True
 isFunc _            = False
 
-instance Arbitrary PzVal where arbitrary = arbDepth
-instance ArbWithDepth PzVal where
+instance Arbitrary (PzVal Evaled) where arbitrary = arbDepth
+instance ArbWithDepth (PzVal Evaled) where
     arbWithDepth depth = oneof $
         [ return PzUnit
         , PzNum <$> arbitrary
@@ -202,3 +207,18 @@ instance ArbWithDepth ArbDict where arbWithDepth depth = ArbDict <$> arbWithDept
 
 instance Arbitrary DictKey where arbitrary = arbDepth
 instance ArbWithDepth DictKey where arbWithDepth depth = DictKey <$> arbWithDepth depth
+
+instance Arbitrary (PzVal Quoted) where arbitrary = arbDepth
+instance ArbWithDepth (PzVal Quoted) where
+    arbWithDepth depth = oneof $
+        [ return $ PzList []
+        , PzNum <$> arbitrary
+        , PzStr <$> arbitrary
+        , PzSymb <$> arbitrary
+        ] ++
+        ( if depth <= 0 then [] else
+            [ PzList . (PzSymb symbList:) <$> arbWithDepth depth
+            , PzList . (PzSymb symbDict:) <$> arbWithDepth depth
+            , PzList <$> arbWithDepth depth
+            ]
+        )

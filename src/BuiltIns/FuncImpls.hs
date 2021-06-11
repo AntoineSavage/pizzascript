@@ -12,7 +12,7 @@ import Ops.Numb ( parseNumb )
 import Ops.Func.ArgPass ( argPassToSymb )
 import Ops.Func.FuncCustom ( fromFuncCustom )
 import Ops.Func.FuncImpureArgs ( getArgPass, getExplCtx )
-import Ops.PzVal ( unDictKey )
+import Ops.PzVal ( fromQuoted, unDictKey )
 import Ops.Symb ( getNbrQuotes, parseSymb )
 import Symbs ( pzSymbFalse, pzSymbTrue, pzSymbFunc, pzSymbDict, pzSymbList, pzSymbSymb, pzSymbStr, pzSymbNum )
 import Text.Parsec ( parse )
@@ -22,12 +22,12 @@ import Types.Func.FuncArgs ( FuncArgs(..) )
 import Types.Func.FuncBody ( FuncBody(..) )
 import Types.Func.FuncImpureArgs ( FuncImpureArgs(..) )
 import Types.Numb ( Numb(..) )
-import Types.PzVal ( Dict, DictKey(..), PzVal(..) )
+import Types.PzVal ( Dict, DictKey(..), Evaled, PzVal(..), Quoted )
 import Types.Str ( Str(..) )
 import Utils ( Result, unparse )
 
 -- generic
-_typeOf :: PzVal -> PzVal
+_typeOf :: PzVal Evaled -> PzVal Evaled
 _typeOf = \case
     PzUnit -> PzUnit
     PzNum _ -> pzSymbNum
@@ -37,14 +37,14 @@ _typeOf = \case
     PzDict _ -> pzSymbDict
     PzFunc _ _ -> pzSymbFunc
 
-_eq :: PzVal -> PzVal -> PzVal
+_eq :: PzVal Evaled -> PzVal Evaled -> PzVal Evaled
 _eq x y = toBool $ DictKey x == DictKey y
 
-_lt :: PzVal -> PzVal -> PzVal
+_lt :: PzVal Evaled -> PzVal Evaled -> PzVal Evaled
 _lt x y = toBool $ DictKey x < DictKey y
 
 -- semi-generic
-_isEmpty :: PzVal -> Result PzVal
+_isEmpty :: PzVal Evaled -> Result (PzVal Evaled)
 _isEmpty v = toBool <$> case v of
     PzStr (Str s) -> return $ null s
     PzList l      -> return $ null l
@@ -53,7 +53,7 @@ _isEmpty v = toBool <$> case v of
         "Function 'is_empty only supports strings, lists and dictionaries"
             ++ "\n was: " ++ show v
 
-_size :: PzVal -> Result PzVal
+_size :: PzVal Evaled -> Result (PzVal Evaled)
 _size v = toInt <$> case v of
     PzStr (Str s) -> return $ length s
     PzList l      -> return $ length l
@@ -63,7 +63,7 @@ _size v = toInt <$> case v of
             ++ "\n was: " ++ show v
 
 -- numbers
-_num :: PzVal -> Result PzVal
+_num :: PzVal Evaled -> Result (PzVal Evaled)
 _num v = case v of
     PzNum _ -> return v
     PzStr (Str s) -> case parse parseNumb "Call to function 'num" s of
@@ -73,7 +73,7 @@ _num v = case v of
         "Function 'num only supports numbers and strings"
             ++ "\n was: " ++ show v
 
-_add :: PzVal -> PzVal -> Result PzVal
+_add :: PzVal Evaled -> PzVal Evaled -> Result (PzVal Evaled)
 _add a b = case (a, b) of
     (PzNum (Numb x), PzNum (Numb y)) ->
         let result = x + y
@@ -85,7 +85,7 @@ _add a b = case (a, b) of
             ++ "\n was: " ++ show a
             ++ "\n and: " ++ show b
 
-_sub :: PzVal -> PzVal -> Result PzVal
+_sub :: PzVal Evaled -> PzVal Evaled -> Result (PzVal Evaled)
 _sub a b = case (a, b) of
     (PzNum (Numb x), PzNum (Numb y)) ->
         let result = x - y
@@ -97,7 +97,7 @@ _sub a b = case (a, b) of
             ++ "\n was: " ++ show a
             ++ "\n and: " ++ show b
 
-_mult :: PzVal -> PzVal -> Result PzVal
+_mult :: PzVal Evaled -> PzVal Evaled -> Result (PzVal Evaled)
 _mult a b = case (a, b) of
     (PzNum (Numb x), PzNum (Numb y)) ->
         let result = x * y
@@ -109,7 +109,7 @@ _mult a b = case (a, b) of
             ++ "\n was: " ++ show a
             ++ "\n and: " ++ show b
 
-_div :: PzVal -> PzVal -> Result PzVal
+_div :: PzVal Evaled -> PzVal Evaled -> Result (PzVal Evaled)
 _div a b = case (a, b) of
     (PzNum (Numb x), PzNum (Numb y)) ->
         let result = x / y
@@ -121,7 +121,7 @@ _div a b = case (a, b) of
             ++ "\n was: " ++ show a
             ++ "\n and: " ++ show b
 
-_rem :: PzVal -> PzVal -> Result PzVal
+_rem :: PzVal Evaled -> PzVal Evaled -> Result (PzVal Evaled)
 _rem a b = case (a, b) of
     (PzNum (Numb x), PzNum (Numb y)) ->
         let result = fromIntegral $ truncate x `rem` truncate y
@@ -133,7 +133,7 @@ _rem a b = case (a, b) of
             ++ "\n was: " ++ show a
             ++ "\n and: " ++ show b
 
-_exp :: PzVal -> PzVal -> Result PzVal
+_exp :: PzVal Evaled -> PzVal Evaled -> Result (PzVal Evaled)
 _exp a b = case (a, b) of
     (PzNum (Numb x), PzNum (Numb y)) ->
         let result = x ** y
@@ -145,7 +145,7 @@ _exp a b = case (a, b) of
             ++ "\n was: " ++ show a
             ++ "\n and: " ++ show b
 
-_log :: PzVal -> PzVal -> Result PzVal
+_log :: PzVal Evaled -> PzVal Evaled -> Result (PzVal Evaled)
 _log a b = case (a, b) of
     (PzNum (Numb x), PzNum (Numb y)) ->
         let result = logBase x y
@@ -157,28 +157,28 @@ _log a b = case (a, b) of
             ++ "\n was: " ++ show a
             ++ "\n and: " ++ show b
 
-_round :: PzVal -> Result PzVal
+_round :: PzVal Evaled -> Result (PzVal Evaled)
 _round v = case v of
     PzNum (Numb x) -> return $ PzNum $ Numb $ fromIntegral $ round x
     _              -> Left $
         "Function 'round only supports numbers"
             ++ "\n was: " ++ show v
 
-_floor :: PzVal -> Result PzVal
+_floor :: PzVal Evaled -> Result (PzVal Evaled)
 _floor v = case v of
     PzNum (Numb x) -> return $ PzNum $ Numb $ fromIntegral $ floor x
     _              -> Left $
         "Function 'floor only supports numbers"
             ++ "\n was: " ++ show v
 
-_ceil :: PzVal -> Result PzVal
+_ceil :: PzVal Evaled -> Result (PzVal Evaled)
 _ceil v = case v of
     PzNum (Numb x) -> return $ PzNum $ Numb $ fromIntegral $ ceiling x
     _              -> Left $
         "Function 'ceil only supports numbers"
             ++ "\n was: " ++ show v
 
-_trunc :: PzVal -> Result PzVal
+_trunc :: PzVal Evaled -> Result (PzVal Evaled)
 _trunc v = case v of
     PzNum (Numb x) -> return $ PzNum $ Numb $ fromIntegral $ truncate x
     _              -> Left $
@@ -186,12 +186,12 @@ _trunc v = case v of
             ++ "\n was: " ++ show v
 
 -- strings
-_str :: [PzVal] -> PzVal
+_str :: [PzVal Evaled] -> PzVal Evaled
 _str = PzStr . Str . concatMap toStr where
     toStr (PzStr (Str s)) = s
     toStr v = unparse $ uneval v
 
-_split :: PzVal -> PzVal -> Result PzVal
+_split :: PzVal Evaled -> PzVal Evaled -> Result (PzVal Evaled)
 _split a b = case (a, b) of
     (PzStr (Str x), PzStr (Str y)) -> return $ PzList $ map (PzStr . Str) $ actualSplit x y
     _ -> Left $
@@ -199,7 +199,7 @@ _split a b = case (a, b) of
             ++ "\n was: " ++ show a
             ++ "\n and: " ++ show b
 
-_join :: [PzVal] -> Result PzVal
+_join :: [PzVal Evaled] -> Result (PzVal Evaled)
 _join =
     let flatten = \case
             [] -> return []
@@ -224,7 +224,7 @@ _join =
             return $ PzStr $ Str $ actualJoin sep ss
 
 -- symbols
-_symb :: PzVal -> Result PzVal
+_symb :: PzVal Evaled -> Result (PzVal Evaled)
 _symb v = case v of
     PzStr (Str s) -> case parse parseSymb "Call to function 'symb" s of
         Right sym -> return $ PzSymb sym
@@ -234,7 +234,7 @@ _symb v = case v of
         "Function 'symb only supports strings and symbols"
             ++ "\n was: " ++ show v
 
-_nbrQuotes :: PzVal -> Result PzVal
+_nbrQuotes :: PzVal Evaled -> Result (PzVal Evaled)
 _nbrQuotes = \case
     PzSymb s -> return $ PzNum $ Numb $ fromIntegral $ getNbrQuotes s
     v -> Left $
@@ -242,14 +242,14 @@ _nbrQuotes = \case
             ++ "\n was: " ++ show v
 
 -- booleans
-_not :: PzVal -> PzVal
+_not :: PzVal Evaled -> PzVal Evaled
 _not x = case boolish x of
     FalseReal -> pzSymbTrue
     Falsish -> pzSymbTrue
     Truish -> pzSymbFalse
     TrueReal -> pzSymbFalse
 
-_or :: PzVal -> PzVal -> PzVal
+_or :: PzVal Evaled -> PzVal Evaled -> PzVal Evaled
 _or x y = case (boolish x, boolish y) of
     (TrueReal , _)            -> x
     (Truish   , TrueReal)     -> y
@@ -258,7 +258,7 @@ _or x y = case (boolish x, boolish y) of
     (Falsish  , _)            -> y
     (FalseReal, _)            -> y
 
-_and :: PzVal -> PzVal -> PzVal
+_and :: PzVal Evaled -> PzVal Evaled -> PzVal Evaled
 _and x y = case (boolish x, boolish y) of
     (FalseReal, _)            -> x
     (Falsish  , FalseReal)    -> y
@@ -268,21 +268,21 @@ _and x y = case (boolish x, boolish y) of
     (TrueReal , _)            -> y
 
 -- lists
-_cons :: PzVal -> PzVal -> Result PzVal
+_cons :: PzVal Evaled -> PzVal Evaled -> Result (PzVal Evaled)
 _cons x = \case
     PzList xs -> return $ PzList $ x:xs
     v -> Left $
         "Function 'cons only supports lists (second arg)"
             ++ "\n was: " ++ show v
 
-_head :: PzVal -> Result PzVal
+_head :: PzVal Evaled -> Result (PzVal Evaled)
 _head = \case
     PzList (x:_) -> return x
     v -> Left $
         "Function 'head only supports non-empty lists"
             ++ "\n was: " ++ show v
 
-_tail :: PzVal -> Result PzVal
+_tail :: PzVal Evaled -> Result (PzVal Evaled)
 _tail = \case
     PzList (_:xs) -> return $ PzList xs
     v -> Left $
@@ -290,42 +290,42 @@ _tail = \case
             ++ "\n was: " ++ show v
 
 -- dictionaries
-_keys :: PzVal -> Result PzVal
+_keys :: PzVal Evaled -> Result (PzVal Evaled)
 _keys = \case
     PzDict d -> return $ PzList $ map unDictKey $ M.keys d
     v -> Left $
         "Function 'keys only supports dictionaries"
             ++ "\n was: " ++ show v
 
-_assocs :: PzVal -> Result PzVal
+_assocs :: PzVal Evaled -> Result (PzVal Evaled)
 _assocs = \case
     PzDict d -> return $ PzList $ flip map (M.assocs d) $ \(DictKey k, v) -> PzList [k, v]
     v -> Left $
         "Function 'assocs only supports dictionaries"
             ++ "\n was: " ++ show v
 
-_contains :: PzVal -> PzVal -> Result PzVal
+_contains :: PzVal Evaled -> PzVal Evaled -> Result (PzVal Evaled)
 _contains x k = case x of
     PzDict d -> return $ toBool $ isJust $ M.lookup (DictKey k) d
     v -> Left $
         "Function 'contains only supports dictionaries (first arg)"
             ++ "\n was: " ++ show v
 
-_get :: PzVal -> PzVal -> Result PzVal
+_get :: PzVal Evaled -> PzVal Evaled -> Result (PzVal Evaled)
 _get x k = case x of
     PzDict d -> return $ fromMaybe PzUnit $ M.lookup (DictKey k) d
     v -> Left $
         "Function 'get only supports dictionaries (first arg)"
             ++ "\n was: " ++ show v
 
-_put :: PzVal -> PzVal -> PzVal -> Result PzVal
+_put :: PzVal Evaled -> PzVal Evaled -> PzVal Evaled -> Result (PzVal Evaled)
 _put x k v = case x of
     PzDict d -> return $ PzDict $ M.insert (DictKey k) v d
     v -> Left $
         "Function 'put only supports dictionaries (first arg)"
             ++ "\n was: " ++ show v
 
-_del :: PzVal -> PzVal -> Result PzVal
+_del :: PzVal Evaled -> PzVal Evaled -> Result (PzVal Evaled)
 _del x k = case x of
     PzDict d -> return $ PzDict $ M.delete (DictKey k) d
     v -> Left $
@@ -333,20 +333,20 @@ _del x k = case x of
             ++ "\n was: " ++ show v
 
 -- functions
-_func :: Dict -> [PzVal] -> Result PzVal
+_func :: Dict -> [PzVal Quoted] -> Result (PzVal Evaled)
 _func ctx elems = do
     fc <- evalFuncCustom elems
     let f = fromFuncCustom fc
     return $ PzList [PzDict ctx, PzFunc ctx f]
 
-_getImplCtx :: PzVal -> Result PzVal
+_getImplCtx :: PzVal Evaled -> Result (PzVal Evaled)
 _getImplCtx = \case
     PzFunc d _ -> return $ PzDict d
     v -> Left $
         "Function 'get_impl_ctx only supports functions"
             ++ "\n was: " ++ show v
 
-_setImplCtx :: PzVal -> PzVal -> Result PzVal
+_setImplCtx :: PzVal Evaled -> PzVal Evaled -> Result (PzVal Evaled)
 _setImplCtx x y = case (x, y) of
     (PzFunc _ f, PzDict d) -> return $ PzFunc d f
     v -> Left $
@@ -354,7 +354,7 @@ _setImplCtx x y = case (x, y) of
             ++ "\n was: " ++ show x
             ++ "\n and: " ++ show y
 
-_getExplCtx :: PzVal -> Result PzVal
+_getExplCtx :: PzVal Evaled -> Result (PzVal Evaled)
 _getExplCtx = \case
     PzFunc _ (Func ia _ _) -> return $ case getExplCtx ia of
         Just ec -> PzSymb ec
@@ -363,14 +363,14 @@ _getExplCtx = \case
         "Function 'get_expl_ctx only supports functions"
             ++ "\n was: " ++ show v
 
-_getArgPass :: PzVal -> Result PzVal
+_getArgPass :: PzVal Evaled -> Result (PzVal Evaled)
 _getArgPass = \case
     PzFunc _ (Func ia _ _) -> return $ PzSymb $ argPassToSymb $ getArgPass ia
     v -> Left $
         "Function 'get_arg_pass only supports functions"
             ++ "\n was: " ++ show v
 
-_getArgs :: PzVal -> Result PzVal
+_getArgs :: PzVal Evaled -> Result (PzVal Evaled)
 _getArgs = \case
     PzFunc _ (Func _ a _) -> case a of
         ArgsVaria s -> return $ PzSymb s
@@ -379,20 +379,20 @@ _getArgs = \case
         "Function 'get_args only supports functions"
             ++ "\n was: " ++ show v
 
-_getBody :: PzVal -> Result PzVal
+_getBody :: PzVal Evaled -> Result (PzVal Evaled)
 _getBody = \case
     PzFunc _ (Func _ _ b) -> case b of
         BodyBuiltIn s -> return $ PzSymb s
-        BodyCustom x xs -> return $ PzList $ x:xs
+        BodyCustom x xs -> return $ PzList $ map fromQuoted $ x:xs
     v -> Left $
         "Function 'get_body only supports functions"
             ++ "\n was: " ++ show v
 
 -- Utils
-toBool :: Bool -> PzVal
+toBool :: Bool -> PzVal Evaled
 toBool p = if p then pzSymbTrue else pzSymbFalse
 
-toInt :: Int -> PzVal
+toInt :: Int -> PzVal Evaled
 toInt = PzNum . Numb . fromIntegral
 
 isValidNum :: Double -> Bool

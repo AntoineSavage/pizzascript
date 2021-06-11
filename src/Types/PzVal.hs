@@ -7,10 +7,13 @@ import Types.Numb ( Numb )
 import Types.Str ( Str )
 import Types.Symb ( Symb )
 
-type Dict = M.Map DictKey PzVal
+data Quoted;
+data Evaled;
+
+type Dict = M.Map DictKey (PzVal Evaled)
 
 -- Ignore PzFunc impl ctx when in dict key
-newtype DictKey = DictKey PzVal
+newtype DictKey = DictKey (PzVal Evaled)
 instance Show DictKey where
     show (DictKey (PzFunc _ f)) = "PzFunc <implCtx> (" ++ show f ++ ")"
     show (DictKey v)            = show v
@@ -23,17 +26,17 @@ instance Ord DictKey where
     DictKey (PzFunc _ x) <= DictKey (PzFunc _ y) = x <= y
     DictKey x            <= DictKey y            = x <= y
 
-data PzVal
+data PzVal f
     = PzUnit
     | PzNum Numb
     | PzStr Str
     | PzSymb Symb
-    | PzList [PzVal]
+    | PzList [PzVal f]
     | PzDict Dict
-    | PzFunc Dict (Func PzVal)
+    | PzFunc Dict (Func (PzVal Quoted))
     deriving (Show, Eq)
 
-instance Ord PzVal where
+instance Ord (PzVal a) where
     PzUnit <= _ = True
 
     PzNum _ <= PzUnit  = False

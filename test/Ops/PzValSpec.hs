@@ -22,6 +22,7 @@ import Types.PzValSpec
 
 spec :: Spec
 spec = do
+    fromQuotedSpec
     unDictKeySpec
     parseValVsUnparseValSpec
     parseValSpec
@@ -33,6 +34,38 @@ spec = do
     parseManySpec
     unparseManySpec
 
+fromQuotedSpec :: Spec
+fromQuotedSpec = describe "fromQuoted" $ do
+    it "rejects unit" $ do
+        let v = PzUnit
+        evaluate (fromQuoted v) `shouldThrow` errorCall ("Can only convert quoted values: " ++ show v)
+
+    it "handles numbers as id" $ do
+        property $ \n -> do
+            fromQuoted (PzNum n) `shouldBe` PzNum n
+
+    it "handles strings as id" $ do
+        property $ \s -> do
+            fromQuoted (PzStr s) `shouldBe` PzStr s
+
+    it "handles symbols as id" $ do
+        property $ \s -> do
+            fromQuoted (PzSymb s) `shouldBe` PzSymb s
+
+    it "handles lists as id" $ do
+        property $ \(Few xs) -> do
+            fromQuoted (PzList xs) `shouldBe` PzList (map fromQuoted xs)
+
+    it "rejects dictionaries" $ do
+        property $ \(ArbDict d) -> do
+            let v = PzDict d
+            evaluate (fromQuoted v) `shouldThrow` errorCall ("Can only convert quoted values: " ++ show v)
+
+    it "rejects functions" $ do
+        property $ \(ArbDict d) f -> do
+            let v = PzFunc d f
+            evaluate (fromQuoted v) `shouldThrow` errorCall ("Can only convert quoted values: " ++ show v)
+
 unDictKeySpec :: Spec
 unDictKeySpec = describe "unDictKey" $ do
     it "composes with DictKey into id" $ do
@@ -43,7 +76,7 @@ parseValVsUnparseValSpec :: Spec
 parseValVsUnparseValSpec = describe "parseVal vs unparseVal" $ do
     it "composes parseVal and unparseVal into id" $ do
         let f v last  = unparseVal f v ++ if last then "" else " "
-        property $ \(UnparseValid v) -> do
+        property $ \v -> do
             let s = unparseVal f v
             parse pv "tests" s `shouldBe` Right v
             unparseVal f <$> parse pv "tests" s `shouldBe` Right s
@@ -68,7 +101,7 @@ parseValSpec = describe "parseVal" $ do
 
     it "parses list" $ do
         let f v last  = unparseVal f v ++ if last then "" else " "
-        property $ \(UnparseValids xs) -> do
+        property $ \(Few xs) -> do
             parse (parseVal ignore pv) "tests" (unparseList pzSymbList pzSymbDict f xs) `shouldBe` Right (PzList xs)
 
 unparseValSpec :: Spec
@@ -101,7 +134,7 @@ unparseValSpec = describe "unparseVal" $ do
 
     it "unparses list" $ do
         let f v last  = unparseVal f v ++ if last then "" else " "
-        property $ \(UnparseValids xs) -> do
+        property $ \(Few xs) -> do
             unparseVal f (PzList xs) `shouldBe` unparseList pzSymbList pzSymbDict f xs
 
 parseListVsUnparseListSpec :: Spec
@@ -258,35 +291,3 @@ parseElem = Elem . read <$> many1 digit
 
 unparseElem :: Elem -> Bool -> String
 unparseElem (Elem x) last = show x ++ if last then "" else " "
-
-newtype UnparseValid = UnparseValid PzVal deriving (Show, Eq)
-instance Arbitrary UnparseValid where arbitrary = arbDepth
-instance ArbWithDepth UnparseValid where
-    arbWithDepth depth = fmap UnparseValid $ oneof $
-        [ PzNum <$> arbitrary
-        , PzStr <$> arbitrary
-        , PzSymb <$> arbitrary
-        ] ++
-        ( if depth <= 0 then [] else
-            [ do UnparseValids es <- arbWithDepth depth; return $ PzList es
-            ]
-        )
-
-newtype UnparseValids = UnparseValids [PzVal] deriving (Show, Eq)
-instance Arbitrary UnparseValids where arbitrary = arbDepth
-instance ArbWithDepth UnparseValids where
-    arbWithDepth depth = fmap UnparseValids $ oneof $
-        [return $ []
-        ] ++
-        ( if depth <= 0 then [] else let sub = arbUnparseValidWithDepth $ depth-1 in
-            [ (PzSymb symbList:) <$> arbFew sub
-            , (PzSymb symbDict:) <$> arbFew sub
-            , arbFew sub
-            ]
-        )
-
-arbUnparseValid :: Gen PzVal
-arbUnparseValid = do UnparseValid v <- arbitrary; return v
-
-arbUnparseValidWithDepth :: Int -> Gen PzVal
-arbUnparseValidWithDepth depth = do UnparseValid v <- arbWithDepth depth; return v

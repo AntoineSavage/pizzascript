@@ -4,6 +4,7 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Control.Monad
+import Ops.PzVal
 import TestUtils
 import Types.FuncSpec
 import Types.PzVal
@@ -25,14 +26,14 @@ spec = do
 
     describe "StackFrameSpec" $ do
         it "implements Show" $ do
-            property $ \s x (Few xs) (ArbDict d) f -> x /= PzUnit ==> do
-                show (Block xs) `shouldBe` "Block " ++ show xs
+            property $ \s x (Few xs) (Few ys) (ArbDict d) f -> x /= PzUnit ==> do
+                show (Block ys) `shouldBe` "Block " ++ show ys
                 
-                show (Form Nothing PzUnit xs) `shouldBe` "Form Nothing PzUnit " ++ show xs
-                show (Form (Just s) x xs) `shouldBe` "Form (" ++ show (Just s) ++ ") (" ++ show x ++ ") " ++ show xs
+                show (Form Nothing PzUnit ys) `shouldBe` "Form Nothing PzUnit " ++ show ys
+                show (Form (Just s) x ys) `shouldBe` "Form (" ++ show (Just s) ++ ") (" ++ show x ++ ") " ++ show ys
 
                 show (Invoc Nothing d f xs Nothing) `shouldBe` "Invoc Nothing (" ++ show d ++ ") (" ++ show f ++ ") " ++ show xs ++ " Nothing"
-                show (Invoc (Just s) d f xs (Just xs)) `shouldBe` "Invoc (" ++ show (Just s) ++ ") (" ++ show d ++ ") (" ++ show f ++ ") " ++ show xs ++ " (" ++ show (Just xs) ++ ")"
+                show (Invoc (Just s) d f xs (Just ys)) `shouldBe` "Invoc (" ++ show (Just s) ++ ") (" ++ show d ++ ") (" ++ show f ++ ") " ++ show xs ++ " (" ++ show (Just ys) ++ ")"
 
         it "implements Eq" $ do
             property $ \msx msy x y (Few xs) (Few mxs') (Few ys) (Few mys') (ArbDict dx) (ArbDict dy) fx fy -> do
@@ -49,14 +50,16 @@ spec = do
 
                 let mxs = joinListMaybe mxs'
                     mys = joinListMaybe mys'
+                    xs' = map fromQuoted xs
+                    ys' = map fromQuoted ys
                 Invoc u u u u u == Block u `shouldBe` False
                 Invoc u u u u u == Form u u u `shouldBe` False
-                Invoc msx dx fx xs mxs == Invoc msx dx fx xs mxs `shouldBe` True
-                Invoc msx dx fx xs mxs == Invoc msy dx fx xs mxs `shouldBe` msx == msy
-                Invoc msx dx fx xs mxs == Invoc msx dy fx xs mxs `shouldBe` dx == dy
-                Invoc msx dx fx xs mxs == Invoc msx dx fy xs mxs `shouldBe` fx == fy
-                Invoc msx dx fx xs mxs == Invoc msx dx fx ys mxs `shouldBe` xs == ys
-                Invoc msx dx fx xs mxs == Invoc msx dx fx xs mys `shouldBe` mxs == mys
+                Invoc msx dx fx xs' mxs == Invoc msx dx fx xs' mxs `shouldBe` True
+                Invoc msx dx fx xs' mxs == Invoc msy dx fx xs' mxs `shouldBe` msx == msy
+                Invoc msx dx fx xs' mxs == Invoc msx dy fx xs' mxs `shouldBe` dx == dy
+                Invoc msx dx fx xs' mxs == Invoc msx dx fy xs' mxs `shouldBe` fx == fy
+                Invoc msx dx fx xs' mxs == Invoc msx dx fx ys' mxs `shouldBe` xs == ys
+                Invoc msx dx fx xs' mxs == Invoc msx dx fx xs' mys `shouldBe` mxs == mys
 
 -- Utils
 joinListMaybe :: [Maybe a] -> Maybe [a]
