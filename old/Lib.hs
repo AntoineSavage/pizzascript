@@ -190,6 +190,3 @@ toAcc ctx e frames r = case r of
     ExprForm es ->
         let mfi = case getIdent e of Left _ -> Nothing; Right fi -> Just fi in
         return $ Acc Nothing $ Form ctx mfi es : frames
-
-returnFrom :: [StackFrame] -> FuncReturn -> EvalResult
-returnFrom frames x = x >>= \(ctx, r) -> return $ Acc (Just r) $ setCtx ctx frames
