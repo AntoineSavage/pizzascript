@@ -26,11 +26,22 @@ import Types.Symb
 
 spec :: Spec
 spec = do
+    reductionShowSpec
     clsInvokeFuncQuotedSpec
     clsInvokeFuncEvaledSpec
-    invokeFuncResultShowSpec
     invokeFuncSpec
     buildArgImplCtxSpec
+
+reductionShowSpec :: Spec
+reductionShowSpec = describe "Reduction (show instance)" $ do
+    it "shows RedVal" $ do
+        property $ \v -> v /= PzUnit ==> do
+            show (RedVal PzUnit) `shouldBe` "RedVal PzUnit"
+            show (RedVal v) `shouldBe` "RedVal (" ++ show v ++ ")"
+
+    it "shows RedPush" $ do
+        property $ \(ArbDict d) (Few vs) -> do
+            show (RedPush (d, vs)) `shouldBe` "RedPush " ++ show (d, vs)
 
 clsInvokeFuncQuotedSpec :: Spec
 clsInvokeFuncQuotedSpec = describe "clsInvokeFunc (Quoted instance)" $ do
@@ -54,28 +65,17 @@ clsInvokeFuncEvaledSpec = describe "clsInvokeFunc (Evaled instance)" $ do
         property $ \v -> do
             clsToEvaled (v :: PzVal Evaled) `shouldBe` v
 
-invokeFuncResultShowSpec :: Spec
-invokeFuncResultShowSpec = describe "InvokeFuncResult (show instance)" $ do
-    it "shows ResultBuiltIn" $ do
-        property $ \v -> v /= PzUnit ==> do
-            show (ResultBuiltIn PzUnit) `shouldBe` "ResultBuiltIn PzUnit"
-            show (ResultBuiltIn v) `shouldBe` "ResultBuiltIn (" ++ show v ++ ")"
-
-    it "shows ResultCustom" $ do
-        property $ \(ArbDict d) (Few vs) -> do
-            show (ResultCustom (d, vs)) `shouldBe` "ResultCustom " ++ show (d, vs)
-
 invokeFuncSpec :: Spec
 invokeFuncSpec = describe "invokeFunc" $ do
     it "handles built-in func (quoted)" $ do
         property $ \(ArbDict d) impArgs args e es -> do
             let vs = unevalFuncCustom $ FuncCustom impArgs args e es
             invokeFunc d u (Func u u $ BodyBuiltIn $ symb "func") vs `shouldBe`
-                Right (ResultBuiltIn $ PzList [PzDict d, PzFunc d $ Func impArgs args $ BodyCustom e es])
+                Right (RedVal $ PzList [PzDict d, PzFunc d $ Func impArgs args $ BodyCustom e es])
 
     it "handles built-in func (evaled)" $ do
         property $ \v -> do
-            invokeFunc u u (Func u u $ BodyBuiltIn $ symb "type_of") [v] `shouldBe` Right (ResultBuiltIn $ _typeOf v)
+            invokeFunc u u (Func u u $ BodyBuiltIn $ symb "type_of") [v] `shouldBe` Right (RedVal $ _typeOf v)
 
     it "rejects custom func with invalid arity (quoted)" $ do
         property $ \(ArbDict d) impArgs (Few is) e es (Few vs) -> length is /= length vs ==> do
@@ -96,7 +96,7 @@ invokeFuncSpec = describe "invokeFunc" $ do
                 vs = take vs_len $ concat $ repeat vs'
                 argImplCtx = snd $ buildArgImplCtx ctx impArgs args $ map fromQuoted vs
             invokeFunc ctx implCtx (Func impArgs args $ BodyCustom e es) vs `shouldBe`
-                Right (ResultCustom (M.union argImplCtx implCtx, e:es))
+                Right (RedPush (M.union argImplCtx implCtx, e:es))
 
     it "handles custom func (evaled)" $ do
         property $ \(ArbDict ctx) (ArbDict implCtx) impArgs args e es v (Few vs'') -> do
@@ -105,7 +105,7 @@ invokeFuncSpec = describe "invokeFunc" $ do
                 vs = take vs_len $ concat $ repeat vs'
                 argImplCtx = snd $ buildArgImplCtx ctx impArgs args vs
             invokeFunc ctx implCtx (Func impArgs args $ BodyCustom e es) vs `shouldBe`
-                Right (ResultCustom (M.union argImplCtx implCtx, e:es))
+                Right (RedPush (M.union argImplCtx implCtx, e:es))
 
 
 buildArgImplCtxSpec :: Spec

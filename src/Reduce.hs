@@ -20,6 +20,11 @@ import Utils ( Result, invalidArityMsg )
 --    = Acc ReturnValue [StackFrame]
 --    deriving (Show, Eq)
 
+data Reduction
+    = RedVal (PzVal Evaled)
+    | RedPush (Dict, [PzVal Quoted])
+    deriving (Show, Eq)
+
 class ClsInvokeFunc a where
     clsDispatch :: Dict -> [PzVal a] -> String -> Result (PzVal Evaled)
     clsToEvaled :: PzVal a -> PzVal Evaled
@@ -27,20 +32,15 @@ class ClsInvokeFunc a where
 instance ClsInvokeFunc Quoted where clsDispatch = dispatchQuoted; clsToEvaled = fromQuoted
 instance ClsInvokeFunc Evaled where clsDispatch _ = dispatch; clsToEvaled = id
 
-data InvokeFuncResult
-    = ResultBuiltIn (PzVal Evaled)
-    | ResultCustom (Dict, [PzVal Quoted])
-    deriving (Show, Eq)
-
-invokeFunc :: ClsInvokeFunc a => Dict -> Dict -> PzFunc -> [PzVal a] -> Result InvokeFuncResult
+invokeFunc :: ClsInvokeFunc a => Dict -> Dict -> PzFunc -> [PzVal a] -> Result Reduction
 invokeFunc ctx implCtx (Func impArgs args body) vs = case body of
-    BodyBuiltIn (Symb _ f cs) -> ResultBuiltIn <$> clsDispatch ctx vs (f:cs)
+    BodyBuiltIn (Symb _ f cs) -> RedVal <$> clsDispatch ctx vs (f:cs)
     BodyCustom e es -> do
         let (expLen, argImplCtx) = buildArgImplCtx ctx impArgs args $ map clsToEvaled vs
             finalImplCtx = M.union argImplCtx implCtx
         if length vs /= expLen
             then Left $ invalidArityMsg expLen vs
-            else return $ ResultCustom (finalImplCtx, e:es)
+            else return $ RedPush (finalImplCtx, e:es)
 
 -- Utils
 buildArgImplCtx :: Dict -> FuncImpureArgs -> FuncArgs -> [PzVal Evaled] -> (Int, Dict)
