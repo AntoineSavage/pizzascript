@@ -24,13 +24,8 @@ class ClsInvokeFunc a where
     clsDispatch :: Dict -> [PzVal a] -> String -> Result (PzVal Evaled)
     clsToEvaled :: PzVal a -> PzVal Evaled
 
-instance ClsInvokeFunc Quoted where
-    clsDispatch = dispatchQuoted
-    clsToEvaled = fromQuoted
-
-instance ClsInvokeFunc Evaled where
-    clsDispatch _ = dispatch
-    clsToEvaled = id
+instance ClsInvokeFunc Quoted where clsDispatch = dispatchQuoted; clsToEvaled = fromQuoted
+instance ClsInvokeFunc Evaled where clsDispatch _ = dispatch; clsToEvaled = id
 
 data InvokeFuncResult
     = ResultBuiltIn (PzVal Evaled)
@@ -41,12 +36,11 @@ invokeFunc :: ClsInvokeFunc a => Dict -> Dict -> Func (PzVal Quoted) -> [PzVal a
 invokeFunc ctx implCtx (Func impArgs args body) vs = case body of
     BodyBuiltIn (Symb _ f cs) -> ResultBuiltIn <$> clsDispatch ctx vs (f:cs)
     BodyCustom e es -> do
-        let actLen = length vs
-            (expLen, argImplCtx) = buildArgImplCtx ctx impArgs args $ map clsToEvaled vs
+        let (expLen, argImplCtx) = buildArgImplCtx ctx impArgs args $ map clsToEvaled vs
             finalImplCtx = M.union argImplCtx implCtx
-        if actLen == expLen
-            then return $ ResultCustom (finalImplCtx, es)
-            else Left $ invalidArityMsg expLen vs
+        if length vs /= expLen
+            then Left $ invalidArityMsg expLen vs
+            else return $ ResultCustom (finalImplCtx, es)
 
 -- Utils
 buildArgImplCtx :: Dict -> FuncImpureArgs -> FuncArgs -> [PzVal Evaled] -> (Int, Dict)
