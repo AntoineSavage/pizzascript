@@ -11,7 +11,7 @@ dispatchQuoted ctx args funcName = case funcName of
     -- functions
     "func" -> Impls._func ctx args
 
-    _ -> error $ "Built-in function '" ++ funcName ++ "' not supported"
+    _ -> error $ "Built-in function '" ++ funcName ++ "' not supported (dispatchQuoted)"
 
 dispatch :: [PzVal Evaled] -> String -> Result (PzVal Evaled)
 dispatch args funcName = case funcName of
@@ -73,7 +73,7 @@ dispatch args funcName = case funcName of
     "get_args" -> f1 args Impls._getArgs
     "get_body" -> f1 args Impls._getBody
 
-    _ -> error $ "Built-in function '" ++ funcName ++ "' not supported"
+    _ -> error $ "Built-in function '" ++ funcName ++ "' not supported (dispatch)"
 
 (.*) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
 (.*) f g x y = f $ g x y

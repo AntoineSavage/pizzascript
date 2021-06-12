@@ -5,7 +5,10 @@ import Test.QuickCheck
 
 import qualified Data.Map as M
 
+import BuiltIns.Dispatch
+import Control.Exception
 import Reduce
+import Ops.PzVal
 import TestUtils
 import Types.Func.FuncArgs
 import Types.Func.FuncImpureArgs
@@ -23,26 +26,35 @@ spec = do
 clsInvokeFuncQuotedSpec :: Spec
 clsInvokeFuncQuotedSpec = describe "clsInvokeFunc (Quoted instance)" $ do
     it "dispatches to quoted built-in func" $ do
-        pending
+        property $ \s -> do
+            let funcName = '$':s
+            evaluate (clsDispatch undefined (undefined :: [PzVal Quoted]) funcName) `shouldThrow` errorCall ("Built-in function '" ++ funcName ++ "' not supported (dispatchQuoted)")
 
     it "converts to evaled using fromQuoted" $ do
-        pending
+        property $ \v -> do
+            clsToEvaled v `shouldBe` fromQuoted v
 
 clsInvokeFuncEvaledSpec :: Spec
 clsInvokeFuncEvaledSpec = describe "clsInvokeFunc (Evaled instance)" $ do
     it "dispatches to unquoted built-in func" $ do
-        pending
+        property $ \s -> do
+            let funcName = '$':s
+            evaluate (clsDispatch undefined (undefined :: [PzVal Evaled]) funcName) `shouldThrow` errorCall ("Built-in function '" ++ funcName ++ "' not supported (dispatch)")
 
     it "converts to evaled as id" $ do
-        pending
+        property $ \v -> do
+            clsToEvaled (v :: PzVal Evaled) `shouldBe` v
 
 invokeFuncResultShowSpec :: Spec
 invokeFuncResultShowSpec = describe "InvokeFuncResult (show instance)" $ do
     it "shows ResultBuiltIn" $ do
-        pending
+        property $ \v -> v /= PzUnit ==> do
+            show (ResultBuiltIn PzUnit) `shouldBe` "ResultBuiltIn PzUnit"
+            show (ResultBuiltIn v) `shouldBe` "ResultBuiltIn (" ++ show v ++ ")"
 
     it "shows ResultCustom" $ do
-        pending
+        property $ \(ArbDict d) (Few vs) -> do
+            show (ResultCustom (d, vs)) `shouldBe` "ResultCustom " ++ show (d, vs)
 
 invokeFuncSpec :: Spec
 invokeFuncSpec = describe "invokeFunc" $ do

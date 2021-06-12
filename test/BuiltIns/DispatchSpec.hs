@@ -29,7 +29,7 @@ dispatchQuotedSpec = describe "dispatchQuoted" $ do
         property $ \nameSuffix -> do
             let funcName = "$" ++ nameSuffix
             evaluate (dispatchQuoted undefined undefined funcName) `shouldThrow`
-                errorCall ("Built-in function '" ++ funcName ++ "' not supported")
+                errorCall ("Built-in function '" ++ funcName ++ "' not supported (dispatchQuoted)")
 
 dispatchSpec :: Spec
 dispatchSpec = describe "dispatch" $ do
@@ -107,4 +107,4 @@ dispatchSpec = describe "dispatch" $ do
         property $ \nameSuffix -> do
             let funcName = "$" ++ nameSuffix
             evaluate (dispatch undefined funcName) `shouldThrow`
-                errorCall ("Built-in function '" ++ funcName ++ "' not supported")
+                errorCall ("Built-in function '" ++ funcName ++ "' not supported (dispatch)")
