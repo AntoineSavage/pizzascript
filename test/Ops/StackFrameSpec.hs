@@ -28,7 +28,12 @@ setCtxSpec = describe "setCtx" $ do
         property $ \(ArbDict ctx) mfs e (Few es) (Few fs) -> do
             setCtx ctx (StackFrame undefined (Form mfs e es) :fs) `shouldBe` StackFrame ctx (Form mfs e es) :fs
 
-    it "sets context on invoc frame " $ do
+    it "sets context on invoc frame (quoted)" $ do
         property $ \(ArbDict ctx) mfs f (Few as) (Few es) (Few fs) -> do
-            setCtx ctx (StackFrame undefined (Invoc mfs ctx f as $ Just es) :fs) `shouldBe` StackFrame ctx (Invoc mfs ctx f as $ Just es) :fs
-            setCtx ctx (StackFrame undefined (Invoc mfs ctx f as Nothing) :fs) `shouldBe` StackFrame ctx (Invoc mfs ctx f as Nothing) :fs
+            setCtx ctx (StackFrame undefined (InvocQuoted $ Invoc mfs ctx f as $ Just es) :fs) `shouldBe` StackFrame ctx (InvocQuoted $ Invoc mfs ctx f as $ Just es) :fs
+            setCtx ctx (StackFrame undefined (InvocQuoted $ Invoc mfs ctx f as Nothing) :fs) `shouldBe` StackFrame ctx (InvocQuoted $ Invoc mfs ctx f as Nothing) :fs
+
+    it "sets context on invoc frame (evaled)" $ do
+        property $ \(ArbDict ctx) mfs f (Few as) (Few es) (Few fs) -> do
+            setCtx ctx (StackFrame undefined (InvocEvaled $ Invoc mfs ctx f as $ Just es) :fs) `shouldBe` StackFrame ctx (InvocEvaled $ Invoc mfs ctx f as $ Just es) :fs
+            setCtx ctx (StackFrame undefined (InvocEvaled $ Invoc mfs ctx f as Nothing) :fs) `shouldBe` StackFrame ctx (InvocEvaled $ Invoc mfs ctx f as Nothing) :fs

@@ -16,10 +16,15 @@ type RemArgs = [PzVal Quoted]
 
 type ImplCtx = Dict
 type InvocFunc = Func (PzVal Quoted)
-type RdyArgs = [PzVal Evaled]
+type RdyArgs a = [PzVal a]
 
 data StackFrameSpec
     = Block Stmts
     | Form FuncSymb FuncArg RemArgs
-    | Invoc FuncSymb ImplCtx InvocFunc RdyArgs (Maybe RemArgs)
+    | InvocQuoted (Invoc Quoted)
+    | InvocEvaled (Invoc Evaled)
+    deriving (Show, Eq)
+
+data Invoc a
+    = Invoc FuncSymb ImplCtx InvocFunc (RdyArgs a) (Maybe RemArgs)
     deriving (Show, Eq)
