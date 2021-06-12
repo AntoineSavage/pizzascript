@@ -32,8 +32,8 @@ data InvokeFuncResult
     | ResultCustom (Dict, [PzVal Quoted])
     deriving (Show, Eq)
 
-invokeFunc :: ClsInvokeFunc a => Dict -> Dict -> Func (PzVal Quoted) -> [PzVal a] -> Result InvokeFuncResult
-invokeFunc ctx implCtx (Func impArgs args body) vs = case body of
+invokeFunc :: ClsInvokeFunc a => Dict -> Dict -> FuncImpureArgs -> FuncArgs -> FuncBody (PzVal Quoted) -> [PzVal a] -> Result InvokeFuncResult
+invokeFunc ctx implCtx impArgs args body vs = case body of
     BodyBuiltIn (Symb _ f cs) -> ResultBuiltIn <$> clsDispatch ctx vs (f:cs)
     BodyCustom e es -> do
         let (expLen, argImplCtx) = buildArgImplCtx ctx impArgs args $ map clsToEvaled vs
