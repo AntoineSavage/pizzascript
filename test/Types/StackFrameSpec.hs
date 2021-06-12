@@ -38,9 +38,8 @@ spec = do
                 show (FormEvaled x ys) `shouldBe` "FormEvaled (" ++ show x ++ ") " ++ show ys
 
                 show (InvocQuoted d f ys) `shouldBe` "InvocQuoted (" ++ show d ++ ") (" ++ show f ++ ") " ++ show ys
-
-                show (InvocEvaled d f xs Nothing) `shouldBe` "InvocEvaled (" ++ show d ++ ") (" ++ show f ++ ") " ++ show xs ++ " Nothing"
-                show (InvocEvaled d f xs (Just ys)) `shouldBe` "InvocEvaled (" ++ show d ++ ") (" ++ show f ++ ") " ++ show xs ++ " (" ++ show (Just ys) ++ ")"
+                show (InvocArgs d f xs ys) `shouldBe` "InvocArgs (" ++ show d ++ ") (" ++ show f ++ ") " ++ show xs ++ " " ++ show ys
+                show (InvocEvaled d f xs) `shouldBe` "InvocEvaled (" ++ show d ++ ") (" ++ show f ++ ") " ++ show xs
 
         it "implements Eq" $ do
             property $ \x y qx qy (Few xs) (Few ys) (Few qxs) (Few qys) (ArbDict dx) (ArbDict dy) fx fy -> do
@@ -49,7 +48,8 @@ spec = do
                 Block u == FormQuoted u u `shouldBe` False
                 Block u == FormEvaled u u `shouldBe` False
                 Block u == InvocQuoted u u u `shouldBe` False
-                Block u == InvocEvaled u u u u `shouldBe` False
+                Block u == InvocArgs u u u u `shouldBe` False
+                Block u == InvocEvaled u u u `shouldBe` False
 
                 FormQuoted u u == Block u `shouldBe` False
                 FormQuoted qx qxs == FormQuoted qx qxs `shouldBe` True
@@ -57,7 +57,8 @@ spec = do
                 FormQuoted qx qxs == FormQuoted qx qys `shouldBe` qxs == qys
                 FormQuoted u u == FormEvaled u u `shouldBe` False
                 FormQuoted u u == InvocQuoted u u u `shouldBe` False
-                FormQuoted u u == InvocEvaled u u u u `shouldBe` False
+                FormQuoted u u == InvocArgs u u u u `shouldBe` False
+                FormQuoted u u == InvocEvaled u u u `shouldBe` False
 
                 FormEvaled u u == Block u `shouldBe` False
                 FormEvaled u u == FormQuoted u u `shouldBe` False
@@ -65,7 +66,8 @@ spec = do
                 FormEvaled x qxs == FormEvaled y qxs `shouldBe` x == y
                 FormEvaled x qxs == FormEvaled x qys `shouldBe` qxs == qys
                 FormEvaled u u == InvocQuoted u u u `shouldBe` False
-                FormEvaled u u == InvocEvaled u u u u `shouldBe` False
+                FormEvaled u u == InvocArgs u u u u `shouldBe` False
+                FormEvaled u u == InvocEvaled u u u `shouldBe` False
 
                 InvocQuoted u u u == Block u `shouldBe` False
                 InvocQuoted u u u == FormQuoted u u `shouldBe` False
@@ -74,18 +76,29 @@ spec = do
                 InvocQuoted dx fx qxs == InvocQuoted dy fx qxs `shouldBe` dx == dy
                 InvocQuoted dx fx qxs == InvocQuoted dx fy qxs `shouldBe` fx == fy
                 InvocQuoted dx fx qxs == InvocQuoted dx fx qys `shouldBe` qxs == qys
-                InvocQuoted u u u == InvocEvaled u u u u `shouldBe` False
+                InvocQuoted u u u == InvocArgs u u u u `shouldBe` False
+                InvocQuoted u u u == InvocEvaled u u u `shouldBe` False
 
-                forM_ [Nothing, Just qxs] $ \mqxs -> do
-                    InvocEvaled u u u u == Block u `shouldBe` False
-                    InvocEvaled u u u u == FormQuoted u u `shouldBe` False
-                    InvocEvaled u u u u == FormEvaled u u `shouldBe` False
-                    InvocEvaled u u u u == InvocQuoted u u u `shouldBe` False
-                    InvocEvaled dx fx xs mqxs == InvocEvaled dx fx xs mqxs `shouldBe` True
-                    InvocEvaled dx fx xs mqxs == InvocEvaled dy fx xs mqxs `shouldBe` dx == dy
-                    InvocEvaled dx fx xs mqxs == InvocEvaled dx fy xs mqxs `shouldBe` fx == fy
-                    InvocEvaled dx fx xs mqxs == InvocEvaled dx fx ys mqxs `shouldBe` xs == ys
-                    InvocEvaled dx fx xs mqxs == InvocEvaled dx fx xs (Just qys) `shouldBe` mqxs == Just qys
+                InvocArgs u u u u == Block u `shouldBe` False
+                InvocArgs u u u u == FormQuoted u u `shouldBe` False
+                InvocArgs u u u u == FormEvaled u u `shouldBe` False
+                InvocArgs u u u u == InvocQuoted u u u `shouldBe` False
+                InvocArgs dx fx xs qxs == InvocArgs dx fx xs qxs `shouldBe` True
+                InvocArgs dx fx xs qxs == InvocArgs dy fx xs qxs `shouldBe` dx == dy
+                InvocArgs dx fx xs qxs == InvocArgs dx fy xs qxs `shouldBe` fx == fy
+                InvocArgs dx fx xs qxs == InvocArgs dx fx ys qxs `shouldBe` xs == ys
+                InvocArgs dx fx xs qxs == InvocArgs dx fx xs qys `shouldBe` qxs == qys
+                InvocArgs u u u u == InvocEvaled u u u `shouldBe` False
+
+                InvocEvaled u u u == Block u `shouldBe` False
+                InvocEvaled u u u == FormQuoted u u `shouldBe` False
+                InvocEvaled u u u == FormEvaled u u `shouldBe` False
+                InvocEvaled u u u == InvocQuoted u u u `shouldBe` False
+                InvocEvaled u u u == InvocArgs u u u u `shouldBe` False
+                InvocEvaled dx fx xs == InvocEvaled dx fx xs `shouldBe` True
+                InvocEvaled dx fx xs == InvocEvaled dy fx xs `shouldBe` dx == dy
+                InvocEvaled dx fx xs == InvocEvaled dx fy xs `shouldBe` fx == fy
+                InvocEvaled dx fx xs == InvocEvaled dx fx ys `shouldBe` xs == ys
 
 -- Utils
 joinListMaybe :: [Maybe a] -> Maybe [a]
@@ -108,5 +121,6 @@ instance ArbWithDepth StackFrameSpec where
             , liftM2 FormQuoted sub sub
             , liftM2 FormEvaled sub sub
             , liftM3 InvocQuoted sub sub sub
-            , liftM4 InvocEvaled sub sub sub sub
+            , liftM4 InvocArgs sub sub sub sub
+            , liftM3 InvocEvaled sub sub sub
             ]
