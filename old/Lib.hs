@@ -176,26 +176,12 @@ invokeFunc ctx implCtx (Func impArgs args body) as frames =
 
 invokeFuncCustom :: Dict -> [PzVal] -> Dict -> FuncImpureArgs -> FuncArgs -> [AstExpr] -> [StackFrame] -> EvalResult
 invokeFuncCustom explCtx as implCtx impArgs args es frames =
-    let toExpr = PzSymb .symb
-        explCtxPairs = case impArgs of
-            Both _ i -> [ (toExpr i, PzDict explCtx) ]
-            _ -> []
-     
-        actLen = length as
-        (expLen, argPairs) = case args of
-            ArgsVaria i -> (actLen, [ (toExpr i, PzList as) ])
-            ArgsArity is -> (length is, zip (map toExpr is) as)
-
-        pairs = explCtxPairs ++ argPairs
-        f acc (k, v) = M.insert k v acc
-        finalImplCtx = foldl f implCtx pairs
+    let actLen = length as
+        (expLen, finalImplCtx) = getImplCtx explCtx as implCtx impArgs
 
     in if actLen == expLen
             then return $ Acc Nothing $ Block finalImplCtx es : frames
-            else Left $
-                "Error: Invoking function with incorrect number of arguments:"
-                ++ "\n expected: " ++ show expLen
-                ++ "\n received: " ++ show actLen
+            else Left $ invalidArityMsg expLen as
 
 -- Utils
 toAcc :: Dict -> AstExpr -> [StackFrame] -> ExprEvalResult -> EvalResult

@@ -27,6 +27,21 @@ instance Arbitrary a => Arbitrary (Few a) where arbitrary = Few <$> arbFew arbit
 newtype Uniques a = Uniques [a] deriving (Show, Eq)
 instance (Eq a, Arbitrary a) => Arbitrary (Uniques a) where arbitrary = Uniques . nub <$> arbMany 1 10 arbitrary
 
+data Uniques2 a = Uniques2 a a deriving (Show, Eq)
+instance (Eq a, Arbitrary a) => Arbitrary (Uniques2 a) where
+    arbitrary = do
+        x <- arbitrary
+        y <- arbitrary
+        if nub [x, y] /= [x, y] then arbitrary else return $ Uniques2 x y
+
+data Uniques3 a = Uniques3 a a a deriving (Show, Eq)
+instance (Eq a, Arbitrary a) => Arbitrary (Uniques3 a) where
+    arbitrary = do
+        x <- arbitrary
+        y <- arbitrary
+        z <- arbitrary
+        if nub [x, y, z] /= [x, y, z] then arbitrary else return $ Uniques3 x y z
+
 arbFew :: Gen a -> Gen [a]
 arbFew = arbMany 0 2
 
