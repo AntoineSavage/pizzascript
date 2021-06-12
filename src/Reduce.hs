@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 module Reduce where
 
 import Eval ( EvalResult(..), eval )
@@ -104,19 +105,13 @@ reduceInvocEvaled ctx ic f vs (Acc rval frames) = case rval of
         _ -> return $ Acc (Just r) frames
 
 reduceInvoc :: ClsInvokeFunc a => Dict -> Dict -> PzFunc -> [PzVal a] -> [StackFrame] -> Result Acc
-reduceInvoc ctx ic f vs frames = case invokeFunc ctx ic f vs of
+reduceInvoc ctx ic f vs frames = invokeFunc ctx ic f vs >>= \case
 
-    -- function invocation error
-    Left s -> Left s
+    -- built-in function: return value and pop frame
+    ResultEvaled r -> return $ Acc (Just r) frames
 
-    -- function invocation result
-    Right r -> case r of
-
-        -- built-in function: return value and pop frame
-        ResultEvaled r -> return $ Acc (Just r) frames
-
-        -- custom function: push frame
-        ResultPushBlock (ctx', es) -> return $ Acc Nothing $ StackFrame ctx' (Block es) : frames
+    -- custom function: push frame
+    ResultPushBlock (ctx', es) -> return $ Acc Nothing $ StackFrame ctx' (Block es) : frames
 
 -- Utils
 toAcc :: Dict -> [StackFrame] -> StackFrameSpec -> EvalResult -> Result Acc
