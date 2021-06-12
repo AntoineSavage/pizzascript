@@ -79,7 +79,7 @@ reduceInvocArgs ctx ic f vs qvs (Acc rval frames) = case rval of
     Just v -> return $ Acc Nothing $ StackFrame ctx (InvocArgs ic f (v:vs) qvs) : frames
 
 reduceInvocEvaled :: Dict -> Dict -> PzFunc -> [PzVal Evaled] -> Acc -> Result Acc
-reduceInvocEvaled ctx ic f vs (Acc rval frames) = case rval of
+reduceInvocEvaled ctx ic f vs acc@(Acc rval frames) = case rval of
 
     -- no return value to process: invoke function
     Nothing -> reduceInvoc ctx ic f vs $ StackFrame ctx (InvocEvaled ic f vs) : frames
@@ -102,7 +102,7 @@ reduceInvocEvaled ctx ic f vs (Acc rval frames) = case rval of
                 ++ "\n was: " ++ show r
 
         -- Pure function: normal output format
-        _ -> return $ Acc (Just r) frames
+        _ -> return acc
 
 reduceInvoc :: ClsInvokeFunc a => Dict -> Dict -> PzFunc -> [PzVal a] -> [StackFrame] -> Result Acc
 reduceInvoc ctx ic f vs frames = invokeFunc ctx ic f vs >>= \case
