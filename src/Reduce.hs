@@ -29,7 +29,7 @@ reduce (Acc rval (StackFrame ctx spec :frames)) =
         InvocEvaled ic f vs -> reduceInvocEvaled ctx ic f vs acc
 
 reduceBlock :: Dict -> [PzVal Quoted] -> Acc -> Result Acc
-reduceBlock ctx vs acc@(Acc rval frames) = case vs of
+reduceBlock ctx vs acc@(Acc _ frames) = case vs of
 
     -- block is finished: pop frame
     [] -> return acc
@@ -47,7 +47,7 @@ reduceFormQuoted ctx v vs (Acc rval frames) = case rval of
     Just r -> return $ Acc Nothing $ StackFrame ctx (FormEvaled r vs) : frames
 
 reduceFormEvaled :: Dict -> PzVal Evaled -> [PzVal Quoted] -> Acc -> Result Acc
-reduceFormEvaled ctx v vs (Acc rval frames) = case v of
+reduceFormEvaled ctx v vs (Acc _ frames) = case v of
 
     -- replace form with function invocation
     PzFunc ic f -> return $ Acc Nothing $ (:frames) $ StackFrame ctx $ case getArgPass f of
@@ -62,25 +62,10 @@ reduceFormEvaled ctx v vs (Acc rval frames) = case v of
         "Error: Malformed function invocation (first form element must be a function)"
         ++ "\n was: " ++ show v
 
-reduceInvoc :: ClsInvokeFunc a => Dict -> Dict -> PzFunc -> [PzVal a] -> [StackFrame] -> Result Acc
-reduceInvoc ctx ic f vs frames = case invokeFunc ctx ic f vs of
-
-    -- function invocation error
-    Left s -> Left s
-
-    -- function invocation result
-    Right r -> case r of
-
-        -- built-in function: return value and pop frame
-        ResultEvaled r -> return $ Acc (Just r) frames
-
-        -- custom function: push frame
-        ResultPushBlock (ctx', es) -> return $ Acc Nothing $ StackFrame ctx' (Block es) : frames
-
 reduceInvocArgs :: Dict -> Dict -> PzFunc -> [PzVal Evaled] -> [PzVal Quoted] -> Acc -> Result Acc
 reduceInvocArgs ctx ic f vs qvs (Acc rval frames) = case rval of
 
-    -- no return value: eval arg if possible
+    -- no return value: eval args
     Nothing -> case qvs of
 
         -- all args evaled: mark for invocation
@@ -117,6 +102,21 @@ reduceInvocEvaled ctx ic f vs (Acc rval frames) = case rval of
 
         -- Pure function: normal output format
         _ -> return $ Acc (Just r) frames
+
+reduceInvoc :: ClsInvokeFunc a => Dict -> Dict -> PzFunc -> [PzVal a] -> [StackFrame] -> Result Acc
+reduceInvoc ctx ic f vs frames = case invokeFunc ctx ic f vs of
+
+    -- function invocation error
+    Left s -> Left s
+
+    -- function invocation result
+    Right r -> case r of
+
+        -- built-in function: return value and pop frame
+        ResultEvaled r -> return $ Acc (Just r) frames
+
+        -- custom function: push frame
+        ResultPushBlock (ctx', es) -> return $ Acc Nothing $ StackFrame ctx' (Block es) : frames
 
 -- Utils
 toAcc :: Dict -> [StackFrame] -> StackFrameSpec -> EvalResult -> Result Acc
