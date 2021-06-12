@@ -1,4 +1,5 @@
 replace AstExpr with quoted PzVal (eval becomes unquote, quote becomes id, unquote becomes double-unquote, etc)
+add mfi (maybe function identifier) to error messages
 add back enough pos stuff to have stack traces and debug info
 
 error messages use show. Use unparse instead

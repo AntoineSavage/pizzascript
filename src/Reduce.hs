@@ -1,24 +1,89 @@
+{-# LANGUAGE LambdaCase #-}
 module Reduce where
 
 import qualified Data.Map as M
 
 import BuiltIns.Dispatch ( dispatch, dispatchQuoted )
 import Ops.PzVal ( fromQuoted )
-import Ops.Symb ( symb )
+import Ops.Symb ( symb, unparseSymb )
+import Ops.StackFrame ( setCtx )
 import Types.Func ( Func(..) )
 import Types.Func.FuncArgs ( FuncArgs(..) )
 import Types.Func.FuncBody ( FuncBody(..) )
 import Types.Func.FuncImpureArgs ( FuncImpureArgs(..) )
 import Types.PzVal ( Dict, DictKey(..), Evaled, PzFunc, PzVal(..), Quoted )
 import Types.Symb ( Symb(..) )
-import Types.StackFrame ( StackFrame )
+import Types.StackFrame ( FuncSymb, StackFrame(..), StackFrameSpec(..) )
 import Utils ( Result, invalidArityMsg )
 
---type AccResult = Result Acc
---type ReturnValue = Maybe (PzVal Evaled)
---data Acc
---    = Acc ReturnValue [StackFrame]
---    deriving (Show, Eq)
+type ReturnValue = Maybe (PzVal Evaled)
+data Acc
+    = Acc ReturnValue [StackFrame]
+    deriving (Show, Eq)
+
+reduceInvoc :: Dict -> Maybe Symb -> Dict -> PzFunc -> [PzVal Evaled] -> Maybe [PzVal Quoted] -> Acc -> Result Acc
+reduceInvoc ctx mfi implCtx f as mes (Acc rval frames) = case rval of
+
+    -- no return value to process: evaluate arg or invoke function
+    Nothing -> case mes of
+
+        -- evaluate arg according to argument-passing behaviour
+        -- TODO
+        --case eval ctx e (getArgPass f) >>= toAcc ctx e (Invoc ctx mfi implCtx f as (Just es) : frames) of
+        --    Left s -> Left $ addIdentAndPos mfi s
+        --    Right acc -> return acc
+        Just (e:es) -> Left "Not implemented: evaluate arg according to argument-passing behaviour"
+
+        -- all args evaluated: mark for invocation
+        Just [] -> return $ Acc Nothing $ StackFrame ctx (InvocEvaled mfi implCtx f (reverse as) Nothing) : frames
+
+        -- marked for invocation: invoke function
+        Nothing -> case invokeFunc ctx implCtx f as of
+
+            -- function invocation error
+            Left s -> Left s
+
+            -- function invocation result
+            Right fr -> case fr of
+
+                -- built-in function: return value and pop frame
+                ResultBuiltIn r -> return $ Acc (Just r) frames
+
+                -- custom function: push frame
+                ResultCustom (ctx', es) -> return $ Acc Nothing $ StackFrame ctx' (Block es) : frames
+
+    -- process return value: arg evaluation or function invokation
+    Just r -> case mes of
+
+        -- arg evaluation return value
+        Just es -> return $ Acc Nothing $ StackFrame ctx (InvocEvaled mfi implCtx f (r:as) $ Just es) : frames
+
+        -- function invocation return value: handle impure function return value
+        _ -> case impArgs f of
+
+            -- Pure function: normal output format
+            None -> return $ Acc (Just r) frames
+            ArgPass _ -> return $ Acc (Just r) frames
+
+            -- Impure function: special output format:
+            --   size-2 list of: ctx, and normal return value
+            _ -> case r of
+
+                -- Valid output
+                PzList [PzDict ctx', r'] -> return $ Acc (Just r') $ setCtx ctx' frames
+
+                -- Invalid output
+                _ -> Left $
+                    "Error: Invalid impure function return value. Must be a size-2 list containing (in order):"
+                    ++ "\n 1) the output context (a dictionary)"
+                    ++ "\n 2) the normal return value (any type)"
+                    ++ addFunctionQuotedIdent mfi
+                    ++ "\n was: " ++ show r
+
+addFunctionQuotedIdent :: FuncSymb -> String
+addFunctionQuotedIdent = \case
+    Nothing -> ""
+    Just s -> "\n during call to: " ++ unparseSymb s
 
 class ClsInvokeFunc a where
     clsDispatch :: Dict -> [PzVal a] -> String -> Result (PzVal Evaled)
