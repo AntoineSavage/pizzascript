@@ -9,7 +9,7 @@ import Types.Func ( Func(..) )
 import Types.Func.FuncArgs ( FuncArgs(..) )
 import Types.Func.FuncBody ( FuncBody(..) )
 import Types.Func.FuncImpureArgs ( FuncImpureArgs(..) )
-import Types.PzVal ( Dict, DictKey(..), Evaled, PzVal(..), Quoted )
+import Types.PzVal ( Dict, DictKey(..), Evaled, PzFunc, PzVal(..), Quoted )
 import Types.Symb ( Symb(..) )
 import Types.StackFrame ( StackFrame )
 import Utils ( Result, invalidArityMsg )
@@ -32,8 +32,8 @@ data InvokeFuncResult
     | ResultCustom (Dict, [PzVal Quoted])
     deriving (Show, Eq)
 
-invokeFunc :: ClsInvokeFunc a => Dict -> Dict -> FuncImpureArgs -> FuncArgs -> FuncBody (PzVal Quoted) -> [PzVal a] -> Result InvokeFuncResult
-invokeFunc ctx implCtx impArgs args body vs = case body of
+invokeFunc :: ClsInvokeFunc a => Dict -> Dict -> PzFunc -> [PzVal a] -> Result InvokeFuncResult
+invokeFunc ctx implCtx (Func impArgs args body) vs = case body of
     BodyBuiltIn (Symb _ f cs) -> ResultBuiltIn <$> clsDispatch ctx vs (f:cs)
     BodyCustom e es -> do
         let (expLen, argImplCtx) = buildArgImplCtx ctx impArgs args $ map clsToEvaled vs
