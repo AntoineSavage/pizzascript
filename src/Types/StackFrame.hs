@@ -1,7 +1,7 @@
 module Types.StackFrame where
 
 import Types.Func ( Func )
-import Types.PzVal ( Evaled, Dict, PzVal, Quoted )
+import Types.PzVal ( Evaled, Dict, PzFunc, PzVal, Quoted )
 import Types.Symb ( Symb )
 
 data StackFrame
@@ -15,7 +15,7 @@ type FuncArg = PzVal Evaled
 type RemArgs = [PzVal Quoted]
 
 type ImplCtx = Dict
-type InvocFunc = Func (PzVal Quoted)
+type InvocFunc = PzFunc
 type RdyArgs a = [PzVal a]
 
 data StackFrameSpec

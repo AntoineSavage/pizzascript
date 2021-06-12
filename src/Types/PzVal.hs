@@ -11,6 +11,7 @@ data Quoted;
 data Evaled;
 
 type Dict = M.Map DictKey (PzVal Evaled)
+type PzFunc = Func (PzVal Quoted)
 
 -- Ignore PzFunc impl ctx when in dict key
 newtype DictKey = DictKey (PzVal Evaled)
@@ -33,7 +34,7 @@ data PzVal f
     | PzSymb Symb
     | PzList [PzVal f]
     | PzDict Dict
-    | PzFunc Dict (Func (PzVal Quoted))
+    | PzFunc Dict PzFunc
     deriving (Show, Eq)
 
 instance Ord (PzVal a) where
