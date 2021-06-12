@@ -15,5 +15,6 @@ data StackFrameSpec
     | FormQuoted (PzVal Quoted) QArgs
     | FormEvaled (PzVal Evaled) QArgs
     | InvocQuoted Dict PzFunc QArgs
-    | InvocEvaled Dict PzFunc [PzVal Evaled] (Maybe QArgs)
+    | InvocArgs Dict PzFunc [PzVal Evaled] QArgs
+    | InvocEvaled Dict PzFunc [PzVal Evaled]
     deriving (Show, Eq)

@@ -25,10 +25,11 @@ reduce (Acc rval (StackFrame ctx spec :frames)) =
         FormQuoted v vs -> reduceFormQuoted ctx v vs acc
         FormEvaled v vs -> reduceFormEvaled ctx v vs acc
         InvocQuoted ic f vs -> reduceInvoc ctx ic f vs frames
-        InvocEvaled ic f vs qvs -> reduceInvocEvaled ctx ic f vs qvs acc
+        InvocArgs ic f vs qvs -> reduceInvocArgs ctx ic f vs qvs acc
+        InvocEvaled ic f vs -> reduceInvocEvaled ctx ic f vs acc
 
 reduceBlock :: Dict -> [PzVal Quoted] -> Acc -> Result Acc
-reduceBlock ctx qvs acc@(Acc rval frames) = case qvs of
+reduceBlock ctx vs acc@(Acc rval frames) = case vs of
 
     -- block is finished: pop frame
     [] -> return acc
@@ -46,69 +47,23 @@ reduceFormQuoted ctx v vs (Acc rval frames) = case rval of
     Just r -> return $ Acc Nothing $ StackFrame ctx (FormEvaled r vs) : frames
 
 reduceFormEvaled :: Dict -> PzVal Evaled -> [PzVal Quoted] -> Acc -> Result Acc
-reduceFormEvaled ctx v qvs (Acc rval frames) = case v of
+reduceFormEvaled ctx v vs (Acc rval frames) = case v of
 
     -- replace form with function invocation
     PzFunc ic f -> return $ Acc Nothing $ (:frames) $ StackFrame ctx $ case getArgPass f of
 
-        -- Skip evaluating then quoting each argument; invokes function directly
-        Quote -> InvocQuoted ic f qvs
+        -- Skip evaluating and quoting each argument; invokes function directly
+        Quote -> InvocQuoted ic f vs
 
         -- Will evaluate (and possibly quote/unquote) each argument before invocation
-        _ -> InvocEvaled ic f [] $ Just qvs
+        _ -> InvocArgs ic f [] vs
 
     _ -> Left $
         "Error: Malformed function invocation (first form element must be a function)"
         ++ "\n was: " ++ show v
 
-reduceInvocEvaled :: Dict -> Dict -> PzFunc -> [PzVal Evaled] -> Maybe [PzVal Quoted] -> Acc -> Result Acc
-reduceInvocEvaled ctx implCtx f as mes (Acc rval frames) = case rval of
-
-    -- no return value to process: evaluate arg or invoke function
-    Nothing -> case mes of
-
-        -- evaluate arg according to argument-passing behaviour
-        -- TODO
-        --case eval ctx e (getArgPass f) >>= toAcc ctx e (Invoc ctx mfi implCtx f as (Just es) : frames) of
-        --    Left s -> Left $ addIdentAndPos mfi s
-        --    Right acc -> return acc
-        Just (e:es) -> Left "Not implemented: evaluate arg according to argument-passing behaviour"
-
-        -- all args evaluated: mark for invocation
-        Just [] -> return $ Acc Nothing $ StackFrame ctx (InvocEvaled implCtx f (reverse as) Nothing) : frames
-
-        -- marked for invocation: invoke function
-        Nothing -> reduceInvoc ctx implCtx f as frames
-
-    -- process return value: arg evaluation or function invokation
-    Just r -> case mes of
-
-        -- arg evaluation return value
-        Just es -> return $ Acc Nothing $ StackFrame ctx (InvocEvaled implCtx f (r:as) $ Just es) : frames
-
-        -- function invocation return value: handle impure function return value
-        _ -> case impArgs f of
-
-            -- Pure function: normal output format
-            None -> return $ Acc (Just r) frames
-            ArgPass _ -> return $ Acc (Just r) frames
-
-            -- Impure function: special output format:
-            --   size-2 list of: ctx, and normal return value
-            _ -> case r of
-
-                -- Valid output
-                PzList [PzDict ctx', r'] -> return $ Acc (Just r') $ setCtx ctx' frames
-
-                -- Invalid output
-                _ -> Left $
-                    "Error: Invalid impure function return value. Must be a size-2 list containing (in order):"
-                    ++ "\n 1) the output context (a dictionary)"
-                    ++ "\n 2) the normal return value (any type)"
-                    ++ "\n was: " ++ show r
-
 reduceInvoc :: ClsInvokeFunc a => Dict -> Dict -> PzFunc -> [PzVal a] -> [StackFrame] -> Result Acc
-reduceInvoc ctx implCtx f as frames = case invokeFunc ctx implCtx f as of
+reduceInvoc ctx ic f vs frames = case invokeFunc ctx ic f vs of
 
     -- function invocation error
     Left s -> Left s
@@ -122,8 +77,49 @@ reduceInvoc ctx implCtx f as frames = case invokeFunc ctx implCtx f as of
         -- custom function: push frame
         ResultPushBlock (ctx', es) -> return $ Acc Nothing $ StackFrame ctx' (Block es) : frames
 
+reduceInvocArgs :: Dict -> Dict -> PzFunc -> [PzVal Evaled] -> [PzVal Quoted] -> Acc -> Result Acc
+reduceInvocArgs ctx ic f vs qvs (Acc rval frames) = case rval of
+
+    -- no return value: eval arg if possible
+    Nothing -> case qvs of
+
+        -- all args evaled: mark for invocation
+        [] -> return $ Acc Nothing $ StackFrame ctx (InvocEvaled ic f $ reverse vs) : frames
+
+        -- eval arg according to arg-pass behaviour
+        e:es -> Left "Not implemented: evaluate arg according to argument-passing behaviour"
+
+    -- return value: arg evaled
+    Just v -> return $ Acc Nothing $ StackFrame ctx (InvocArgs ic f (v:vs) qvs) : frames
+
+reduceInvocEvaled :: Dict -> Dict -> PzFunc -> [PzVal Evaled] -> Acc -> Result Acc
+reduceInvocEvaled ctx ic f vs (Acc rval frames) = case rval of
+
+    -- no return value to process: invoke function
+    Nothing -> reduceInvoc ctx ic f vs $ StackFrame ctx (InvocEvaled ic f vs) : frames
+
+    -- return value: handle pure/impure output (pop frame)
+    Just r -> case impArgs f of
+
+        -- Impure function: special output format:
+        --   size-2 list of: ctx, and normal return value
+        Both {} -> case r of
+
+            -- Valid output
+            PzList [PzDict ctx', r'] -> return $ Acc (Just r') $ setCtx ctx' frames
+
+            -- Invalid output
+            _ -> Left $
+                "Error: Invalid impure function output. Must be a size-2 list containing (in order):"
+                ++ "\n 1) the output context (a dictionary)"
+                ++ "\n 2) the normal return value (any type)"
+                ++ "\n was: " ++ show r
+
+        -- Pure function: normal output format
+        _ -> return $ Acc (Just r) frames
+
 -- Utils
 toAcc :: Dict -> [StackFrame] -> StackFrameSpec -> EvalResult -> Result Acc
-toAcc ctx frames spec r = let nextFrames = StackFrame ctx spec :frames in case r of
-    Evaled v -> return $ Acc (Just v) nextFrames
-    PushForm v vs -> return $ Acc Nothing $ StackFrame ctx (FormQuoted v vs) :nextFrames
+toAcc ctx frames spec r = let frames' = StackFrame ctx spec :frames in case r of
+    Evaled v -> return $ Acc (Just v) frames'
+    PushForm v vs -> return $ Acc Nothing $ StackFrame ctx (FormQuoted v vs) :frames'
