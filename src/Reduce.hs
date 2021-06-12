@@ -40,7 +40,7 @@ invokeFunc ctx implCtx impArgs args body vs = case body of
             finalImplCtx = M.union argImplCtx implCtx
         if length vs /= expLen
             then Left $ invalidArityMsg expLen vs
-            else return $ ResultCustom (finalImplCtx, es)
+            else return $ ResultCustom (finalImplCtx, e:es)
 
 -- Utils
 buildArgImplCtx :: Dict -> FuncImpureArgs -> FuncArgs -> [PzVal Evaled] -> (Int, Dict)

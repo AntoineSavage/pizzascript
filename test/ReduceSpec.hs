@@ -8,6 +8,7 @@ import qualified Data.Map as M
 import BuiltIns.Dispatch
 import BuiltIns.FuncImpls
 import Control.Exception
+import Data.List
 import Eval
 import Ops.Func.FuncCustom
 import Ops.PzVal
@@ -77,16 +78,35 @@ invokeFuncSpec = describe "invokeFunc" $ do
             invokeFunc u u u u (BodyBuiltIn $ symb "type_of") [v] `shouldBe` Right (ResultBuiltIn $ _typeOf v)
 
     it "rejects custom func with invalid arity (quoted)" $ do
-        pending
+        property $ \(ArbDict d) impArgs (Few is) e es (Few vs) -> length is /= length vs ==> do
+            let _ = vs :: [PzVal Quoted]
+            invokeFunc d u impArgs (ArgsArity is) (BodyCustom e es) vs `shouldBe`
+                Left ("Invalid number of arguments. Expected " ++ show (length is) ++ ", got: " ++ show (length vs))
 
     it "rejects custom func with invalid arity (evaled)" $ do
-        pending
+        property $ \(ArbDict d) impArgs (Few is) e es (Few vs) -> length is /= length vs ==> do
+            let _ = vs :: [PzVal Evaled]
+            invokeFunc d u impArgs (ArgsArity is) (BodyCustom e es) vs `shouldBe`
+                Left ("Invalid number of arguments. Expected " ++ show (length is) ++ ", got: " ++ show (length vs))
 
     it "handles custom func (quoted)" $ do
-        pending
+        property $ \(ArbDict ctx) (ArbDict implCtx) impArgs args e es v (Few vs'') -> do
+            let vs' = v:vs''
+                vs_len = case args of ArgsArity is -> length is; _ -> length vs'
+                vs = take vs_len $ concat $ repeat vs'
+                argImplCtx = snd $ buildArgImplCtx ctx impArgs args $ map fromQuoted vs
+            invokeFunc ctx implCtx impArgs args (BodyCustom e es) vs `shouldBe`
+                Right (ResultCustom (M.union argImplCtx implCtx, e:es))
 
     it "handles custom func (evaled)" $ do
-        pending
+        property $ \(ArbDict ctx) (ArbDict implCtx) impArgs args e es v (Few vs'') -> do
+            let vs' = v:vs''
+                vs_len = case args of ArgsArity is -> length is; _ -> length vs'
+                vs = take vs_len $ concat $ repeat vs'
+                argImplCtx = snd $ buildArgImplCtx ctx impArgs args vs
+            invokeFunc ctx implCtx impArgs args (BodyCustom e es) vs `shouldBe`
+                Right (ResultCustom (M.union argImplCtx implCtx, e:es))
+
 
 buildArgImplCtxSpec :: Spec
 buildArgImplCtxSpec = describe "buildArgImplCtx" $ do
