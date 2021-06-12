@@ -26,6 +26,7 @@ import Types.StackFrameSpec
 
 spec :: Spec
 spec = do
+    accSpec
     reduceSpec
     reduceBlockSpec
     reduceFormQuotedSpec
@@ -34,6 +35,19 @@ spec = do
     reduceInvocEvaledSpec
     reduceInvocSpec
     toAccSpec
+
+accSpec :: Spec
+accSpec = describe "Acc" $ do
+    it "implements Show" $ do
+        property $ \v (Few fs) -> do
+            show (Acc Nothing fs) `shouldBe` "Acc Nothing " ++ show fs
+            show (Acc (Just v) fs) `shouldBe` "Acc (" ++ show (Just v) ++ ") " ++ show fs
+
+    it "implements Eq" $ do
+        property $ \mvx mvy (Few fsx) (Few fsy) -> do
+            Acc mvx fsx == Acc mvx fsx `shouldBe` True
+            Acc mvx fsx == Acc mvy fsx `shouldBe` mvx == mvy
+            Acc mvx fsx == Acc mvx fsy `shouldBe` fsx == fsy
 
 reduceSpec :: Spec
 reduceSpec = describe "reduce" $ do
@@ -55,9 +69,11 @@ reduceSpec = describe "reduce" $ do
             reduce (Acc mv $ StackFrame ctx (FormEvaled v vs) :fs) `shouldBe` reduceFormEvaled ctx v vs (Acc mv fs)
 
     it "reduces invoc (quoted)" $ do
-        property $ \mv (ArbDict ctx) ic impArgs args (Few vs) (Few fs) -> do
-            let f = Func impArgs args $ BodyBuiltIn $ symb "func"
-            reduce (Acc mv $ StackFrame ctx (InvocQuoted ic f vs) :fs) `shouldBe` reduceInvoc ctx ic f vs fs
+        property $ \mv (ArbDict ctx) ic impArgs args e es (Few vs) (Few fs) -> do
+            let f1 = Func impArgs args $ BodyBuiltIn $ symb "func"
+                f2 = Func impArgs args $ BodyCustom e es
+            reduce (Acc mv $ StackFrame ctx (InvocQuoted ic f1 vs) :fs) `shouldBe` reduceInvoc ctx ic f1 vs fs
+            reduce (Acc mv $ StackFrame ctx (InvocQuoted ic f2 vs) :fs) `shouldBe` reduceInvoc ctx ic f2 vs fs
 
     it "reduces invoc (args)" $ do
         property $ \mv (ArbDict ctx) ic f (Few vs) (Few qvs) (Few fs) -> do
@@ -165,10 +181,15 @@ reduceInvocArgsSpec = describe "reduceInvocArgs" $ do
 
 reduceInvocEvaledSpec :: Spec
 reduceInvocEvaledSpec = describe "reduceInvocEvaled" $ do
-    it "invokes function" $ do
+    it "invokes function (built-in)" $ do
         property $ \(ArbDict ctx) (ArbDict ic) impArgs args v (Few fs) -> do
             let f = Func impArgs args $ BodyBuiltIn $ symb "type_of"
             reduceInvocEvaled ctx ic f [v] (Acc Nothing fs) `shouldBe` Right (Acc (Just $ _typeOf v) $ StackFrame ctx (InvocEvaled ic f [v]) : fs)
+
+    it "invokes function (custom)" $ do
+        property $ \(ArbDict ctx) (ArbDict ic) impArgs s e es (Few vs) (Few fs) -> do
+            let f = Func impArgs (ArgsVaria s) $ BodyCustom e es
+            reduceInvocEvaled ctx ic f vs (Acc Nothing fs) `shouldBe` reduceInvoc ctx ic f vs (StackFrame ctx (InvocEvaled ic f vs) : fs)
 
     it "handles pure function output" $ do
         property $ \(ArbDict ctx) (ArbDict ic) args body v (Few vs) (Few fs) -> do
