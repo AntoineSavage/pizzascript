@@ -162,27 +162,6 @@ evalInvoc rval ctx mfi implCtx f as melems frames =
 
                         _ -> return $ Acc (Just r) frames
 
-invokeFuncSpecial :: Dict -> [AstExpr] -> [StackFrame] -> EvalResult
-invokeFuncSpecial ctx es frames = do
-    fc <- evalFuncCustom es
-    let r = PzFunc ctx $ fromFuncCustom fc
-    return $ Acc (Just r) frames
-
-invokeFunc :: Dict -> Dict -> Func -> [PzVal] -> [StackFrame] -> EvalResult
-invokeFunc ctx implCtx (Func impArgs args body) as frames =
-    case body of
-        BodyBuiltIn ident -> invokeFuncBuiltIn ctx as ident frames
-        BodyCustom es -> invokeFuncCustom ctx as implCtx impArgs args es frames
-
-invokeFuncCustom :: Dict -> [PzVal] -> Dict -> FuncImpureArgs -> FuncArgs -> [AstExpr] -> [StackFrame] -> EvalResult
-invokeFuncCustom explCtx as implCtx impArgs args es frames =
-    let actLen = length as
-        (expLen, finalImplCtx) = getImplCtx explCtx as implCtx impArgs
-
-    in if actLen == expLen
-            then return $ Acc Nothing $ Block finalImplCtx es : frames
-            else Left $ invalidArityMsg expLen as
-
 -- Utils
 toAcc :: Dict -> AstExpr -> [StackFrame] -> ExprEvalResult -> EvalResult
 toAcc ctx e frames r = case r of
