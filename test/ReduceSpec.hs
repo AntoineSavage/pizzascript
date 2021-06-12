@@ -14,7 +14,55 @@ import Types.PzValSpec
 
 spec :: Spec
 spec = do
+    clsInvokeFuncQuotedSpec
+    clsInvokeFuncEvaledSpec
+    invokeFuncResultShowSpec
+    invokeFuncSpec
     buildArgImplCtxSpec
+
+clsInvokeFuncQuotedSpec :: Spec
+clsInvokeFuncQuotedSpec = describe "clsInvokeFunc (Quoted instance)" $ do
+    it "dispatches to quoted built-in func" $ do
+        pending
+
+    it "converts to evaled using fromQuoted" $ do
+        pending
+
+clsInvokeFuncEvaledSpec :: Spec
+clsInvokeFuncEvaledSpec = describe "clsInvokeFunc (Evaled instance)" $ do
+    it "dispatches to unquoted built-in func" $ do
+        pending
+
+    it "converts to evaled as id" $ do
+        pending
+
+invokeFuncResultShowSpec :: Spec
+invokeFuncResultShowSpec = describe "InvokeFuncResult (show instance)" $ do
+    it "shows ResultBuiltIn" $ do
+        pending
+
+    it "shows ResultCustom" $ do
+        pending
+
+invokeFuncSpec :: Spec
+invokeFuncSpec = describe "invokeFunc" $ do
+    it "handles built-in func (quoted)" $ do
+        pending
+
+    it "handles built-in func (evaled)" $ do
+        pending
+
+    it "rejects custom func with invalid arity (quoted)" $ do
+        pending
+
+    it "rejects custom func with invalid arity (evaled)" $ do
+        pending
+
+    it "handles custom func (quoted)" $ do
+        pending
+
+    it "handles custom func (evaled)" $ do
+        pending
 
 buildArgImplCtxSpec :: Spec
 buildArgImplCtxSpec = describe "buildArgImplCtx" $ do
