@@ -26,7 +26,7 @@ eval ctx v = let evaled = return . Evaled in case v of
     PzStr s -> evaled $ PzStr s
     PzSymb s -> case s of
         Symb Z _ _  -> Evaled <$> evalQuotedIdent ctx (PzSymb s)
-        _           -> evaled $ PzSymb $ unquoteSymb s
+        _           -> Evaled . PzSymb <$> unquoteSymb s
     PzList l -> case l of
         []  -> evaled PzUnit
         (x:xs)   -> return $ PushForm x xs

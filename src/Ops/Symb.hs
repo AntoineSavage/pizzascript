@@ -38,7 +38,7 @@ quoteSymb (Symb n c s) = Symb (S n) c s
 
 -- The input symbol is considered a quotation
 -- i.e. n=Z corresponds to a quoted identifier
-unquoteSymb :: Symb -> Symb
+unquoteSymb :: Symb -> Either String Symb
 unquoteSymb (Symb n c s) = case n of
-    Z -> error $ "Quoted identifier cannot be unquoted: " ++ c:s
-    S n' -> Symb n' c s
+    Z -> Left $ "Cannot unquote identifier: " ++ c:s
+    S n' -> return $ Symb n' c s

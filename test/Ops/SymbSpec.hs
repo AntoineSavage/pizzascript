@@ -93,8 +93,8 @@ quoteSymbVsUnquoteSymbSpec = describe "quoteSymb vs unquoteSymb" $ do
         property $ \n (Ident f ns) -> do
             let s = Symb n f ns
                 s' = Symb (S n) f ns
-            unquoteSymb (quoteSymb s) `shouldBe` s
-            quoteSymb (unquoteSymb s') `shouldBe` s'
+            unquoteSymb (quoteSymb s) `shouldBe` Right s
+            quoteSymb <$> (unquoteSymb s') `shouldBe` Right s'
 
 quoteSymbSpec :: Spec
 quoteSymbSpec = describe "quoteSymb" $ do
@@ -107,11 +107,11 @@ unquoteSymbSpec = describe "quoteSymb vs unquoteSymb" $ do
     it "rejects quoted identifiers" $ do
         property $ \(Ident f ns) -> do
             let s = Symb Z f ns
-            evaluate (unquoteSymb s) `shouldThrow` errorCall ("Quoted identifier cannot be unquoted: " ++ f:ns)
+            unquoteSymb s `shouldBe` Left ("Cannot unquote identifier: " ++ f:ns)
 
     it "converts quoted symbols to one-less-quoted symbols" $ do
         property $ \n (Ident f ns) -> do
-            unquoteSymb (Symb (S n) f ns) `shouldBe` Symb n f ns
+            unquoteSymb (Symb (S n) f ns) `shouldBe` Right (Symb n f ns)
 
 -- Utils
 newtype QuotedIdent = QuotedIdent Symb deriving (Show, Eq)
