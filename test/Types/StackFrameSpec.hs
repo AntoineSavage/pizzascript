@@ -1,8 +1,9 @@
-{-# LANGUAGE FlexibleContexts, UndecidableInstances #-}
 module Types.StackFrameSpec where
 
 import Test.Hspec
 import Test.QuickCheck
+
+import qualified Data.Map as M
 
 import Control.Monad
 import Ops.PzVal
@@ -27,62 +28,68 @@ spec = do
 
     describe "StackFrameSpec" $ do
         it "implements Show" $ do
-            property $ \s x (Few ys) iq ie -> x /= PzUnit ==> do
+            property $ \s x y (Few xs) (Few ys) (ArbDict d) f -> x /= PzUnit ==> do
                 show (Block ys) `shouldBe` "Block " ++ show ys
                 
-                show (Form Nothing PzUnit ys) `shouldBe` "Form Nothing PzUnit " ++ show ys
-                show (Form (Just s) x ys) `shouldBe` "Form (" ++ show (Just s) ++ ") (" ++ show x ++ ") " ++ show ys
+                show (FormQuoted Nothing PzUnit ys) `shouldBe` "FormQuoted Nothing PzUnit " ++ show ys
+                show (FormQuoted (Just s) y ys) `shouldBe` "FormQuoted (" ++ show (Just s) ++ ") (" ++ show y ++ ") " ++ show ys
+                
+                show (FormEvaled Nothing PzUnit ys) `shouldBe` "FormEvaled Nothing PzUnit " ++ show ys
+                show (FormEvaled (Just s) x ys) `shouldBe` "FormEvaled (" ++ show (Just s) ++ ") (" ++ show x ++ ") " ++ show ys
 
-                show (InvocQuoted iq) `shouldBe` "InvocQuoted (" ++ show iq ++ ")"
-                show (InvocEvaled ie) `shouldBe` "InvocEvaled (" ++ show ie ++ ")"
+                show (InvocQuoted Nothing d f ys) `shouldBe` "InvocQuoted Nothing (" ++ show d ++ ") (" ++ show f ++ ") " ++ show ys
+                show (InvocQuoted (Just s) d f ys) `shouldBe` "InvocQuoted (" ++ show (Just s) ++ ") (" ++ show d ++ ") (" ++ show f ++ ") " ++ show ys
 
-        it "implements Eq" $ do
-            property $ \msx msy x y (Few xs) (Few ys) iqx iqy iex iey -> do
-                Block xs == Block xs `shouldBe` True
-                Block xs == Block ys `shouldBe` xs == ys
-                Block u == Form u u u `shouldBe` False
-                Block u == InvocQuoted u `shouldBe` False
-                Block u == InvocEvaled u `shouldBe` False
-
-                Form u u u == Block u `shouldBe` False
-                Form msx x xs == Form msx x xs `shouldBe` True
-                Form msx x xs == Form msy x xs `shouldBe` msx == msy
-                Form msx x xs == Form msx y xs `shouldBe` x == y
-                Form msx x xs == Form msx x ys `shouldBe` xs == ys
-                Form msx x xs == InvocQuoted u `shouldBe` False
-                Form msx x xs == InvocEvaled u `shouldBe` False
-
-                InvocQuoted u == Block u `shouldBe` False
-                InvocQuoted u == Form u u u `shouldBe` False
-                InvocQuoted iqx == InvocQuoted iqx `shouldBe` True
-                InvocQuoted iqx == InvocQuoted iqy `shouldBe` iqx == iqy
-                InvocQuoted iqx == InvocEvaled u `shouldBe` False
-
-                InvocEvaled u == Block u `shouldBe` False
-                InvocEvaled u == Form u u u `shouldBe` False
-                InvocEvaled u == InvocQuoted u `shouldBe` False
-                InvocEvaled iex == InvocEvaled iex `shouldBe` True
-                InvocEvaled iex == InvocEvaled iey `shouldBe` iex == iey
-   
-    describe "Invoc" $ do
-        it "implements Show" $ do
-            property $ \s (Few xs) (Few ys) (ArbDict d) f -> do
-                let _ = xs :: [PzVal Evaled]
-                show (Invoc Nothing d f xs Nothing) `shouldBe` "Invoc Nothing (" ++ show d ++ ") (" ++ show f ++ ") " ++ show xs ++ " Nothing"
-                show (Invoc (Just s) d f xs (Just ys)) `shouldBe` "Invoc (" ++ show (Just s) ++ ") (" ++ show d ++ ") (" ++ show f ++ ") " ++ show xs ++ " (" ++ show (Just ys) ++ ")"
+                show (InvocEvaled Nothing d f xs Nothing) `shouldBe` "InvocEvaled Nothing (" ++ show d ++ ") (" ++ show f ++ ") " ++ show xs ++ " Nothing"
+                show (InvocEvaled (Just s) d f xs (Just ys)) `shouldBe` "InvocEvaled (" ++ show (Just s) ++ ") (" ++ show d ++ ") (" ++ show f ++ ") " ++ show xs ++ " (" ++ show (Just ys) ++ ")"
 
         it "implements Eq" $ do
-            property $ \msx msy (Few xs) (Few mxs') (Few ys) (Few mys') (ArbDict dx) (ArbDict dy) fx fy -> do
-                let mxs = joinListMaybe mxs'
-                    mys = joinListMaybe mys'
-                    xs' = map fromQuoted xs
-                    ys' = map fromQuoted ys
-                Invoc msx dx fx xs' mxs == Invoc msx dx fx xs' mxs `shouldBe` True
-                Invoc msx dx fx xs' mxs == Invoc msy dx fx xs' mxs `shouldBe` msx == msy
-                Invoc msx dx fx xs' mxs == Invoc msx dy fx xs' mxs `shouldBe` dx == dy
-                Invoc msx dx fx xs' mxs == Invoc msx dx fy xs' mxs `shouldBe` fx == fy
-                Invoc msx dx fx xs' mxs == Invoc msx dx fx ys' mxs `shouldBe` xs == ys
-                Invoc msx dx fx xs' mxs == Invoc msx dx fx xs' mys `shouldBe` mxs == mys
+            property $ \msx msy x y qx qy (Few xs) (Few ys) (Few qxs) (Few qys) (ArbDict dx) (ArbDict dy) fx fy -> do
+                Block qxs == Block qxs `shouldBe` True
+                Block qxs == Block qys `shouldBe` qxs == qys
+                Block u == FormQuoted u u u `shouldBe` False
+                Block u == FormEvaled u u u `shouldBe` False
+                Block u == InvocQuoted u u u u `shouldBe` False
+                Block u == InvocEvaled u u u u u `shouldBe` False
+
+                FormQuoted u u u == Block u `shouldBe` False
+                FormQuoted msx qx qxs == FormQuoted msx qx qxs `shouldBe` True
+                FormQuoted msx qx qxs == FormQuoted msy qx qxs `shouldBe` msx == msy
+                FormQuoted msx qx qxs == FormQuoted msx qy qxs `shouldBe` qx == qy
+                FormQuoted msx qx qxs == FormQuoted msx qx qys `shouldBe` qxs == qys
+                FormQuoted u u u == FormEvaled u u u `shouldBe` False
+                FormQuoted u u u == InvocQuoted u u u u `shouldBe` False
+                FormQuoted u u u == InvocEvaled u u u u u `shouldBe` False
+
+                FormEvaled u u u == Block u `shouldBe` False
+                FormEvaled u u u == FormQuoted u u u `shouldBe` False
+                FormEvaled msx x qxs == FormEvaled msx x qxs `shouldBe` True
+                FormEvaled msx x qxs == FormEvaled msy x qxs `shouldBe` msx == msy
+                FormEvaled msx x qxs == FormEvaled msx y qxs `shouldBe` x == y
+                FormEvaled msx x qxs == FormEvaled msx x qys `shouldBe` qxs == qys
+                FormEvaled u u u == InvocQuoted u u u u `shouldBe` False
+                FormEvaled u u u == InvocEvaled u u u u u `shouldBe` False
+
+                InvocQuoted u u u u == Block u `shouldBe` False
+                InvocQuoted u u u u == FormQuoted u u u `shouldBe` False
+                InvocQuoted u u u u == FormEvaled u u u `shouldBe` False
+                InvocQuoted msx dx fx qxs == InvocQuoted msx dx fx qxs `shouldBe` True
+                InvocQuoted msx dx fx qxs == InvocQuoted msx dy fx qxs `shouldBe` dx == dy
+                InvocQuoted msx dx fx qxs == InvocQuoted msx dx fy qxs `shouldBe` fx == fy
+                InvocQuoted msx dx fx qxs == InvocQuoted msx dx fx qys `shouldBe` qxs == qys
+                InvocQuoted u u u u == InvocEvaled u u u u u `shouldBe` False
+
+                forM_ [Nothing, Just qxs] $ \mqxs -> do
+                    InvocEvaled u u u u u == Block u `shouldBe` False
+                    InvocEvaled u u u u u == FormQuoted u u u `shouldBe` False
+                    InvocEvaled u u u u u == FormEvaled u u u `shouldBe` False
+                    InvocEvaled u u u u u == InvocQuoted u u u u `shouldBe` False
+                    InvocEvaled msx dx fx xs mqxs == InvocEvaled msx dx fx xs mqxs `shouldBe` True
+                    InvocEvaled msx dx fx xs mqxs == InvocEvaled msy dx fx xs mqxs `shouldBe` msx == msy
+                    InvocEvaled msx dx fx xs mqxs == InvocEvaled msx dy fx xs mqxs `shouldBe` dx == dy
+                    InvocEvaled msx dx fx xs mqxs == InvocEvaled msx dx fy xs mqxs `shouldBe` fx == fy
+                    InvocEvaled msx dx fx xs mqxs == InvocEvaled msx dx fx ys mqxs `shouldBe` xs == ys
+                    InvocEvaled msx dx fx xs mqxs == InvocEvaled msx dx fx xs (Just qys) `shouldBe` mqxs == Just qys
 
 -- Utils
 joinListMaybe :: [Maybe a] -> Maybe [a]
@@ -97,19 +104,13 @@ instance ArbWithDepth StackFrame where arbWithDepth depth = liftM2 StackFrame ar
 
 instance Arbitrary StackFrameSpec where arbitrary = arbDepth
 instance ArbWithDepth StackFrameSpec where
-    arbWithDepth depth = oneof
-        [ fmap Block arbDepth
-        , liftM3 Form arbitrary arbDepth arbDepth
-        , fmap InvocQuoted arbDepth
-        , fmap InvocEvaled arbDepth
-        ]
-
-instance ArbWithDepth (PzVal a) => Arbitrary (Invoc a) where arbitrary = arbDepth
-instance ArbWithDepth (PzVal a) => ArbWithDepth (Invoc a) where
-    arbWithDepth depth = do
-        a <- arbitrary
-        b <- arbWithDepth $ depth-1
-        c <- arbWithDepth $ depth-1
-        d <- arbWithDepth $ depth-1
-        e <- arbWithDepth $ depth-1
-        return $ Invoc a b c d e
+    arbWithDepth depth =
+        let sub :: ArbWithDepth a => Gen a
+            sub = arbWithDepth depth
+        in oneof
+            [ fmap Block sub
+            , liftM3 FormQuoted arbitrary sub sub
+            , liftM3 FormEvaled arbitrary sub sub
+            , liftM4 InvocQuoted arbitrary sub sub sub
+            , liftM5 InvocEvaled arbitrary sub sub sub sub
+            ]

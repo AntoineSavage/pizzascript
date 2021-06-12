@@ -70,23 +70,23 @@ invokeFuncSpec = describe "invokeFunc" $ do
     it "handles built-in func (quoted)" $ do
         property $ \(ArbDict d) impArgs args e es -> do
             let vs = unevalFuncCustom $ FuncCustom impArgs args e es
-            invokeFunc d u u u (BodyBuiltIn $ symb "func") vs `shouldBe`
+            invokeFunc d u (Func u u $ BodyBuiltIn $ symb "func") vs `shouldBe`
                 Right (ResultBuiltIn $ PzList [PzDict d, PzFunc d $ Func impArgs args $ BodyCustom e es])
 
     it "handles built-in func (evaled)" $ do
         property $ \v -> do
-            invokeFunc u u u u (BodyBuiltIn $ symb "type_of") [v] `shouldBe` Right (ResultBuiltIn $ _typeOf v)
+            invokeFunc u u (Func u u $ BodyBuiltIn $ symb "type_of") [v] `shouldBe` Right (ResultBuiltIn $ _typeOf v)
 
     it "rejects custom func with invalid arity (quoted)" $ do
         property $ \(ArbDict d) impArgs (Few is) e es (Few vs) -> length is /= length vs ==> do
             let _ = vs :: [PzVal Quoted]
-            invokeFunc d u impArgs (ArgsArity is) (BodyCustom e es) vs `shouldBe`
+            invokeFunc d u (Func impArgs (ArgsArity is) $ BodyCustom e es) vs `shouldBe`
                 Left ("Invalid number of arguments. Expected " ++ show (length is) ++ ", got: " ++ show (length vs))
 
     it "rejects custom func with invalid arity (evaled)" $ do
         property $ \(ArbDict d) impArgs (Few is) e es (Few vs) -> length is /= length vs ==> do
             let _ = vs :: [PzVal Evaled]
-            invokeFunc d u impArgs (ArgsArity is) (BodyCustom e es) vs `shouldBe`
+            invokeFunc d u (Func impArgs (ArgsArity is) $ BodyCustom e es) vs `shouldBe`
                 Left ("Invalid number of arguments. Expected " ++ show (length is) ++ ", got: " ++ show (length vs))
 
     it "handles custom func (quoted)" $ do
@@ -95,7 +95,7 @@ invokeFuncSpec = describe "invokeFunc" $ do
                 vs_len = case args of ArgsArity is -> length is; _ -> length vs'
                 vs = take vs_len $ concat $ repeat vs'
                 argImplCtx = snd $ buildArgImplCtx ctx impArgs args $ map fromQuoted vs
-            invokeFunc ctx implCtx impArgs args (BodyCustom e es) vs `shouldBe`
+            invokeFunc ctx implCtx (Func impArgs args $ BodyCustom e es) vs `shouldBe`
                 Right (ResultCustom (M.union argImplCtx implCtx, e:es))
 
     it "handles custom func (evaled)" $ do
@@ -104,7 +104,7 @@ invokeFuncSpec = describe "invokeFunc" $ do
                 vs_len = case args of ArgsArity is -> length is; _ -> length vs'
                 vs = take vs_len $ concat $ repeat vs'
                 argImplCtx = snd $ buildArgImplCtx ctx impArgs args vs
-            invokeFunc ctx implCtx impArgs args (BodyCustom e es) vs `shouldBe`
+            invokeFunc ctx implCtx (Func impArgs args $ BodyCustom e es) vs `shouldBe`
                 Right (ResultCustom (M.union argImplCtx implCtx, e:es))
 
 
