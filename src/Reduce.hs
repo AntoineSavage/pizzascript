@@ -1,10 +1,12 @@
 {-# LANGUAGE LambdaCase #-}
 module Reduce where
 
-import Eval ( EvalResult(..), eval )
+import Eval ( EvalResult(..), eval, uneval )
 import InvokeFunc ( InvokeFuncResult(..), ClsInvokeFunc, invokeFunc )
 import Ops.Func ( getArgPass )
+import Ops.PzVal ( fromQuoted )
 import Ops.StackFrame ( setCtx )
+import Quote ( quote, unquote )
 import Types.Func ( Func(..) )
 import Types.Func.ArgPass ( ArgPass(..) )
 import Types.Func.FuncImpureArgs ( FuncImpureArgs(..) )
@@ -73,7 +75,12 @@ reduceInvocArgs ctx ic f vs qvs (Acc rval frames) = case rval of
         [] -> return $ Acc Nothing $ StackFrame ctx (InvocEvaled ic f $ reverse vs) : frames
 
         -- eval arg according to arg-pass behaviour
-        e:es -> Left "Not implemented: evaluate arg according to argument-passing behaviour"
+        e:es -> let toAcc' = toAcc ctx frames $ InvocArgs ic f vs es in case getArgPass f of
+            Eval -> eval ctx e >>= toAcc'
+            Quote -> toAcc' $ Evaled $ fromQuoted e
+            Unquote -> unquote e >>= eval ctx >>= toAcc'
+            DeepQuote -> eval ctx e >>= toAcc' . Evaled . fromQuoted . toPzVal
+            DeepUnquote -> eval ctx e >>= unquote . toPzVal >>= eval ctx >>= toAcc'
 
     -- return value: arg evaled
     Just v -> return $ Acc Nothing $ StackFrame ctx (InvocArgs ic f (v:vs) qvs) : frames
@@ -118,3 +125,8 @@ toAcc :: Dict -> [StackFrame] -> StackFrameSpec -> EvalResult -> Result Acc
 toAcc ctx frames spec r = let frames' = StackFrame ctx spec :frames in case r of
     Evaled v -> return $ Acc (Just v) frames'
     PushForm v vs -> return $ Acc Nothing $ StackFrame ctx (FormQuoted v vs) :frames'
+
+toPzVal :: EvalResult -> PzVal Quoted
+toPzVal = \case
+    Evaled v -> uneval v
+    PushForm v vs -> PzList $ v:vs

@@ -1,11 +1,7 @@
-replace AstExpr with quoted PzVal (eval becomes unquote, quote becomes id, unquote becomes double-unquote, etc)
-
 add back maybe function identifier, to error messages
 add back enough pos stuff to have stack traces and debug info
 
 error messages use show. Use unparse instead
-
-test/rename reduce (aka Acc stuff)
 
 error handling context field handling
 I/O context field handling

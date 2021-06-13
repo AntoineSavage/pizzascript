@@ -10,8 +10,10 @@ import Control.Monad
 import Data.Either
 import Eval
 import InvokeFunc
+import Ops.PzVal
 import Ops.StackFrame
 import Ops.Symb
+import Quote
 import Reduce
 import TestUtils
 import Types.Func
@@ -35,6 +37,7 @@ spec = do
     reduceInvocEvaledSpec
     reduceInvocSpec
     toAccSpec
+    toPzValSpec
 
 accSpec :: Spec
 accSpec = describe "Acc" $ do
@@ -87,12 +90,12 @@ reduceSpec = describe "reduce" $ do
 reduceBlockSpec :: Spec
 reduceBlockSpec = describe "reduceBlock" $ do
     it "handles empty block" $ do
-        property $ \mv fs -> do
+        property $ \mv (Few fs) -> do
             let acc = Acc mv fs
             reduceBlock u [] acc `shouldBe` Right acc
 
     it "evals next block element" $ do
-        property $ \(ArbDict ctx) n (Few vs') fs -> do
+        property $ \(ArbDict ctx) n (Few vs') (Few fs) -> do
             let v = PzNum n
                 vs = v:vs'
             reduceBlock ctx vs (Acc u fs) `shouldBe` Right (Acc (Just v) $ StackFrame ctx (Block vs') : fs)
@@ -176,8 +179,40 @@ reduceInvocArgsSpec = describe "reduceInvocArgs" $ do
             reduceInvocArgs ctx ic f vs [] (Acc Nothing fs) `shouldBe`
                 Right (Acc Nothing $ StackFrame ctx (InvocEvaled ic f $ reverse vs) : fs)
 
-    it "evaluates single arg" $ do
-        pending
+    it "evaluates single arg (Eval)" $ do
+        property $ \(ArbDict ctx) (ArbDict ic) args s (Few vs) qv (Few qvs') (Few fs) -> do
+            let f = Func (ArgPass Eval) args $ BodyBuiltIn s
+                qvs = qv:qvs'
+            reduceInvocArgs ctx ic f vs qvs (Acc Nothing fs) `shouldBe`
+                (eval ctx qv >>= toAcc ctx fs (InvocArgs ic f vs qvs'))
+
+    it "evaluates single arg (Quote)" $ do
+        property $ \(ArbDict ctx) (ArbDict ic) args s (Few vs) qv (Few qvs') (Few fs) -> do
+            let f = Func (ArgPass Quote) args $ BodyBuiltIn s
+                qvs = qv:qvs'
+            reduceInvocArgs ctx ic f vs qvs (Acc Nothing fs) `shouldBe`
+                (toAcc ctx fs (InvocArgs ic f vs qvs') $ Evaled $ fromQuoted qv)
+
+    it "evaluates single arg (Unquote)" $ do
+        property $ \(ArbDict ctx) (ArbDict ic) args s (Few vs) qv (Few qvs') (Few fs) -> do
+            let f = Func (ArgPass Unquote) args $ BodyBuiltIn s
+                qvs = qv:qvs'
+            reduceInvocArgs ctx ic f vs qvs (Acc Nothing fs) `shouldBe`
+                (unquote qv >>= eval ctx >>= toAcc ctx fs (InvocArgs ic f vs qvs'))
+
+    it "evaluates single arg (DeepQuote)" $ do
+        property $ \(ArbDict ctx) (ArbDict ic) args s (Few vs) qv (Few qvs') (Few fs) -> do
+            let f = Func (ArgPass DeepQuote) args $ BodyBuiltIn s
+                qvs = qv:qvs'
+            reduceInvocArgs ctx ic f vs qvs (Acc Nothing fs) `shouldBe`
+                (eval ctx qv >>= toAcc ctx fs (InvocArgs ic f vs qvs') . Evaled . fromQuoted . toPzVal)
+
+    it "evaluates single arg (DeepUnquote)" $ do
+        property $ \(ArbDict ctx) (ArbDict ic) args s (Few vs) qv (Few qvs') (Few fs) -> do
+            let f = Func (ArgPass DeepUnquote) args $ BodyBuiltIn s
+                qvs = qv:qvs'
+            reduceInvocArgs ctx ic f vs qvs (Acc Nothing fs) `shouldBe`
+                (eval ctx qv >>= unquote . toPzVal >>= eval ctx >>= toAcc ctx fs (InvocArgs ic f vs qvs'))
 
 reduceInvocEvaledSpec :: Spec
 reduceInvocEvaledSpec = describe "reduceInvocEvaled" $ do
@@ -241,3 +276,13 @@ toAccSpec = describe "toAcc" $ do
         property $ \(ArbDict d) (Few fs) spec v vs -> do
             toAcc d fs spec (PushForm v vs) `shouldBe`
                 Right (Acc Nothing $ StackFrame d (FormQuoted v vs) : StackFrame d spec : fs)
+
+toPzValSpec :: Spec
+toPzValSpec = describe "toPzVal" $ do
+    it "unevals Evaled" $ do
+        property $ \v -> do
+            toPzVal (Evaled v) `shouldBe` uneval v
+
+    it "returns form as is" $ do
+        property $ \v (Few vs) -> do
+            toPzVal (PushForm v vs) `shouldBe` PzList (v:vs)

@@ -12,9 +12,11 @@ symb = \case
     []  -> error "Symbols must contain at least one character"
     c:s -> Symb Z c s
 
+-- The input symbol is considered a quotation
+-- i.e. n=Z corresponds to a quoted identifier
 getNbrQuotes :: Symb -> Int
 getNbrQuotes (Symb n _ _) = go n where
-    go Z = 0
+    go Z = 1
     go (S k) = 1 + go k
 
 -- The output symbol is considered a quotation

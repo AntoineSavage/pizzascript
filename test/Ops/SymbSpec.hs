@@ -37,17 +37,17 @@ symbSpec = describe "symb" $ do
 
 getNbrQuotesSpec :: Spec
 getNbrQuotesSpec = describe "getNbrQuotes" $ do
-    it "returns 0" $ do
-        getNbrQuotes (Symb Z '_' "") `shouldBe` 0
-
     it "returns 1" $ do
-        getNbrQuotes (Symb (S Z) '_' "") `shouldBe` 1
+        getNbrQuotes (Symb Z '_' "") `shouldBe` 1
 
     it "returns 2" $ do
-        getNbrQuotes (Symb (S (S Z)) '_' "") `shouldBe` 2
+        getNbrQuotes (Symb (S Z) '_' "") `shouldBe` 2
 
     it "returns 3" $ do
-        getNbrQuotes (Symb (S (S (S Z))) '_' "") `shouldBe` 3
+        getNbrQuotes (Symb (S (S Z)) '_' "") `shouldBe` 3
+
+    it "returns 4" $ do
+        getNbrQuotes (Symb (S (S (S Z))) '_' "") `shouldBe` 4
 
 parseSymbVsUnparseSymbSpec :: Spec
 parseSymbVsUnparseSymbSpec = describe "parseSymb vs unparseSymb" $ do
